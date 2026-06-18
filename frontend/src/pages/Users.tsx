@@ -5,12 +5,13 @@ import { Plus, Search, Mail, Shield, UserCheck, AlertCircle } from 'lucide-react
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Users() {
-  const { usersList, currentUser } = useAppStore();
+  const { usersList, currentUser, addUser } = useAppStore();
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState<'Admin' | 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator'>('Interior Designer');
 
   const filteredUsers = usersList.filter(user => 
@@ -21,22 +22,23 @@ export default function Users() {
 
   const handleCreateUser = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName || !newEmail) return;
+    if (!newName || !newEmail || !newPassword) return;
 
     const initials = newName.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     const newUser: User = {
       name: newName,
       email: newEmail,
       role: newRole,
-      avatar: initials || 'US'
+      avatar: initials || 'US',
+      password: newPassword
     };
 
-    // Push to store list list directly for demo session
-    usersList.push(newUser);
+    addUser(newUser);
     
     // Reset Form
     setNewName('');
     setNewEmail('');
+    setNewPassword('');
     setNewRole('Interior Designer');
     setShowAddForm(false);
   };
@@ -127,6 +129,18 @@ export default function Users() {
                       <option value="Project Manager">Project Manager</option>
                       <option value="Vendor Coordinator">Vendor Coordinator</option>
                     </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Login Password</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Assign login password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-slate-950 border border-white/10 text-white rounded-xl focus:border-gold outline-none p-3 text-xs"
+                    />
                   </div>
 
                   <div className="flex items-center gap-3 pt-3">

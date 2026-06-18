@@ -9,7 +9,8 @@ import {
   Expense,
   Task,
   SiteVisit,
-  User
+  User,
+  GoogleLoginRequest
 } from '../types';
 
 interface AppState {
@@ -28,6 +29,7 @@ interface AppState {
   isAuthenticated: boolean;
   currentUser: User;
   usersList: User[];
+  googleLoginRequests: GoogleLoginRequest[];
 
   // Actions
   setCurrentTab: (tab: string) => void;
@@ -40,6 +42,10 @@ interface AppState {
   logout: () => void;
   sendPasswordReset: (email: string) => Promise<boolean>;
   updateUserProfile: (name: string, email: string) => void;
+  requestGoogleLogin: (email: string, name: string, role: 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator') => Promise<'pending' | 'accepted' | 'declined'>;
+  googleLogin: (email: string) => Promise<boolean>;
+  acceptGoogleLogin: (email: string) => void;
+  declineGoogleLogin: (email: string) => void;
 
   // Sourcing Actions
   fetchStats: () => Promise<void>;
@@ -89,17 +95,21 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Auth defaults with localStorage persistence
   isAuthenticated: localStorage.getItem('gs_isAuthenticated') === 'true',
   currentUser: JSON.parse(localStorage.getItem('gs_currentUser') || 'null') || {
-    name: 'Nisha Sen',
-    email: 'designer@glorysimon.com',
-    role: 'Interior Designer',
-    avatar: 'NS'
+    name: 'Glory Simon Admin',
+    email: 'admin@glorysimon.com',
+    role: 'Admin',
+    avatar: 'GA'
   },
   usersList: [
     { name: 'Glory Simon Admin', email: 'admin@glorysimon.com', role: 'Admin', avatar: 'GA' },
     { name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', avatar: 'NS' },
     { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD' },
-    { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN' },
-    { name: 'Sidharth Rathod', email: 'client@glorysimon.com', role: 'Client', avatar: 'SR' }
+    { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN' }
+  ],
+  googleLoginRequests: JSON.parse(localStorage.getItem('gs_googleLoginRequests') || 'null') || [
+    { id: 'req_1', name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', status: 'pending', timestamp: new Date(Date.now() - 3600000).toLocaleString() },
+    { id: 'req_2', name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', status: 'pending', timestamp: new Date(Date.now() - 7200000).toLocaleString() },
+    { id: 'req_3', name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', status: 'pending', timestamp: new Date(Date.now() - 10800000).toLocaleString() }
   ],
 
   // State Switchers
@@ -115,19 +125,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Simulate minor network validation delay
     await new Promise(resolve => setTimeout(resolve, 400));
     const mockCredentials: Record<string, string> = {
-      'admin@glorysimon.com': 'Admin123',
-      'designer@glorysimon.com': 'Design123',
-      'pm@glorysimon.com': 'PM123',
-      'vendor@glorysimon.com': 'Vendor123',
-      'client@glorysimon.com': 'Client123'
+      'admin@glorysimon.com': 'Admin123'
     };
 
     const userMap: Record<string, User> = {
-      'admin@glorysimon.com': { name: 'Glory Simon Admin', email: 'admin@glorysimon.com', role: 'Admin', avatar: 'GA' },
-      'designer@glorysimon.com': { name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', avatar: 'NS' },
-      'pm@glorysimon.com': { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD' },
-      'vendor@glorysimon.com': { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN' },
-      'client@glorysimon.com': { name: 'Sidharth Rathod', email: 'client@glorysimon.com', role: 'Client', avatar: 'SR' }
+      'admin@glorysimon.com': { name: 'Glory Simon Admin', email: 'admin@glorysimon.com', role: 'Admin', avatar: 'GA' }
     };
 
     const trimmedEmail = email.trim().toLowerCase();
@@ -144,20 +146,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   logout: () => {
     localStorage.removeItem('gs_isAuthenticated');
     localStorage.removeItem('gs_currentUser');
-    set({ isAuthenticated: false, currentUser: { name: '', email: '', role: 'Client', avatar: '' } });
+    set({ isAuthenticated: false, currentUser: { name: '', email: '', role: 'Admin', avatar: '' } });
   },
 
   sendPasswordReset: async (email) => {
     await new Promise(resolve => setTimeout(resolve, 500));
     const trimmedEmail = email.trim().toLowerCase();
-    const validEmails = [
-      'admin@glorysimon.com',
-      'designer@glorysimon.com',
-      'pm@glorysimon.com',
-      'vendor@glorysimon.com',
-      'client@glorysimon.com'
-    ];
-    return validEmails.includes(trimmedEmail);
+    return trimmedEmail === 'admin@glorysimon.com';
   },
 
   updateUserProfile: (name, email) => {
@@ -167,6 +162,75 @@ export const useAppStore = create<AppState>((set, get) => ({
     const updated: User = { ...currentUser, name, email, avatar: initials || 'GS' };
     localStorage.setItem('gs_currentUser', JSON.stringify(updated));
     set({ currentUser: updated });
+  },
+
+  requestGoogleLogin: async (email, name, role) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const { googleLoginRequests } = get();
+    const existing = googleLoginRequests.find(r => r.email.toLowerCase() === email.toLowerCase());
+    
+    if (existing) {
+      return existing.status;
+    }
+    
+    const newRequest: GoogleLoginRequest = {
+      id: `req_${Date.now()}`,
+      name,
+      email,
+      role,
+      status: 'pending',
+      timestamp: new Date().toLocaleString()
+    };
+    
+    const updated = [...googleLoginRequests, newRequest];
+    localStorage.setItem('gs_googleLoginRequests', JSON.stringify(updated));
+    set({ googleLoginRequests: updated });
+    return 'pending';
+  },
+
+  googleLogin: async (email) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const { googleLoginRequests } = get();
+    const request = googleLoginRequests.find(r => r.email.toLowerCase() === email.toLowerCase());
+    
+    if (request && request.status === 'accepted') {
+      const userMap: Record<string, User> = {
+        'designer@glorysimon.com': { name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', avatar: 'NS' },
+        'pm@glorysimon.com': { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD' },
+        'vendor@glorysimon.com': { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN' }
+      };
+      
+      const user = userMap[email.toLowerCase()] || {
+        name: request.name,
+        email: request.email,
+        role: request.role,
+        avatar: request.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      };
+      
+      localStorage.setItem('gs_isAuthenticated', 'true');
+      localStorage.setItem('gs_currentUser', JSON.stringify(user));
+      set({ isAuthenticated: true, currentUser: user });
+      return true;
+    }
+    return false;
+  },
+
+  acceptGoogleLogin: (email) => {
+    const { googleLoginRequests } = get();
+    const updated = googleLoginRequests.map(r => 
+      r.email.toLowerCase() === email.toLowerCase() ? { ...r, status: 'accepted' as const } : r
+    );
+    localStorage.setItem('gs_googleLoginRequests', JSON.stringify(updated));
+    set({ googleLoginRequests: updated });
+  },
+
+  declineGoogleLogin: (email) => {
+    const { googleLoginRequests } = get();
+    const updated = googleLoginRequests.map(r => 
+      r.email.toLowerCase() === email.toLowerCase() ? { ...r, status: 'declined' as const } : r
+    );
+    localStorage.setItem('gs_googleLoginRequests', JSON.stringify(updated));
+    set({ googleLoginRequests: updated });
   },
   setActiveProjectId: (id) => {
     set({ activeProjectId: id });

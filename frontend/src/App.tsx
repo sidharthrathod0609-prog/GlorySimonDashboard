@@ -27,7 +27,8 @@ import {
   MapPin,
   X,
   FileSpreadsheet,
-  Shield
+  Shield,
+  Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -106,6 +107,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="login-requests"
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <LoginRequestsViewRoute />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
@@ -177,6 +186,18 @@ function DashboardViewRoute() {
       setActiveProjectId={store.setActiveProjectId}
       handleCreateProject={store.createProject}
       materials={store.materials}
+      currentUser={store.currentUser}
+    />
+  );
+}
+
+function LoginRequestsViewRoute() {
+  const store = useAppStore();
+  return (
+    <LoginRequestsView
+      googleLoginRequests={store.googleLoginRequests}
+      acceptGoogleLogin={store.acceptGoogleLogin}
+      declineGoogleLogin={store.declineGoogleLogin}
       currentUser={store.currentUser}
     />
   );
@@ -323,7 +344,8 @@ function Sidebar() {
     activeProjectId,
     setActiveProjectId,
     currentUser,
-    logout
+    logout,
+    googleLoginRequests
   } = useAppStore();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -339,7 +361,8 @@ function Sidebar() {
     { id: 'budget', label: 'Budget Tracking', icon: TrendingUp },
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'users', label: 'User Directory', icon: Shield }
+    { id: 'users', label: 'User Directory', icon: Shield },
+    { id: 'login-requests', label: 'Login Requests', icon: Bell }
   ];
 
   // Role-based menu item filtering
@@ -353,8 +376,6 @@ function Sidebar() {
         return allMenuItems.filter(item => ['dashboard', 'projects', 'budget', 'reports', 'settings'].includes(item.id));
       case 'Vendor Coordinator':
         return allMenuItems.filter(item => ['dashboard', 'vendors', 'settings'].includes(item.id));
-      case 'Client':
-        return allMenuItems.filter(item => ['dashboard', 'projects', 'selections', 'budget', 'settings'].includes(item.id));
       default:
         return allMenuItems.filter(item => ['dashboard', 'settings'].includes(item.id));
     }
@@ -468,18 +489,29 @@ function Sidebar() {
           {menuItems.map(item => {
             const Icon = item.icon;
             const isActive = currentPath === item.id;
+            const isLoginRequests = item.id === 'login-requests';
+            const pendingRequestsCount = isLoginRequests
+              ? googleLoginRequests.filter(r => r.status === 'pending').length
+              : 0;
             return (
               <button
                 key={item.id}
                 onClick={() => navigate('/' + item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold transition-all duration-200 ${
                   isActive
                     ? 'bg-gradient-to-r from-gold-dark/20 to-gold/10 text-gold border-l-2 border-gold shadow-[0_0_15px_rgba(197,168,128,0.08)] pl-[14px]'
                     : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                 }`}
               >
-                <Icon size={16} className={isActive ? 'text-gold' : 'text-gray-400'} />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-3">
+                  <Icon size={16} className={isActive ? 'text-gold' : 'text-gray-400'} />
+                  <span>{item.label}</span>
+                </div>
+                {isLoginRequests && pendingRequestsCount > 0 && (
+                  <span className="px-2 py-0.5 text-[9px] font-bold bg-gold text-slate-950 rounded-full shrink-0">
+                    {pendingRequestsCount}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -2890,6 +2922,88 @@ function SettingsView({ currentUser, updateUserProfile, brandTheme, setBrandThem
               Note: The name configured on your profile card is stamped onto all material history audit transitions (e.g. <em>"Approved by {currentUser.name}"</em>).
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface LoginRequestsViewProps {
+  googleLoginRequests: any[];
+  acceptGoogleLogin: (email: string) => void;
+  declineGoogleLogin: (email: string) => void;
+  currentUser: any;
+}
+
+function LoginRequestsView({ googleLoginRequests, acceptGoogleLogin, declineGoogleLogin, currentUser }: LoginRequestsViewProps) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight text-white font-display">Login Access Requests</h2>
+        <p className="text-sm text-gray-400">Review, accept, or decline Google Authentication request profiles.</p>
+      </div>
+
+      <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-4">
+        <h3 className="text-md font-semibold text-white">Pending Requests</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-white/5 text-gray-400 font-medium">
+                <th className="pb-3 pr-4">User Details</th>
+                <th className="pb-3 pr-4">Email</th>
+                <th className="pb-3 pr-4">Requested Role</th>
+                <th className="pb-3 pr-4">Status</th>
+                <th className="pb-3 pr-4">Time</th>
+                <th className="pb-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {googleLoginRequests.map((req) => (
+                <tr key={req.id} className="border-b border-white/5 hover:bg-white/5 transition duration-150">
+                  <td className="py-3 pr-4 font-bold text-gray-200">{req.name}</td>
+                  <td className="py-3 pr-4 text-gray-400">{req.email}</td>
+                  <td className="py-3 pr-4 text-gold font-semibold uppercase tracking-wider text-[10px]">{req.role}</td>
+                  <td className="py-3 pr-4">
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+                      req.status === 'accepted' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-950/10' :
+                      req.status === 'declined' ? 'border-rose-500/30 text-rose-400 bg-rose-950/10' :
+                      'border-amber-500/30 text-amber-400 bg-amber-950/10'
+                    }`}>
+                      {req.status}
+                    </span>
+                  </td>
+                  <td className="py-3 pr-4 text-gray-500 text-[10px]">{req.timestamp}</td>
+                  <td className="py-3 text-right space-x-2">
+                    {req.status === 'pending' ? (
+                      <>
+                        <button
+                          onClick={() => acceptGoogleLogin(req.email)}
+                          className="px-2.5 py-1 bg-emerald-500 text-slate-950 font-bold rounded hover:bg-emerald-400 text-[10px] transition"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => declineGoogleLogin(req.email)}
+                          className="px-2.5 py-1 bg-rose-500 text-slate-950 font-bold rounded hover:bg-rose-400 text-[10px] transition"
+                        >
+                          Decline
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-gray-500 italic text-[10px]">Reviewed</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {googleLoginRequests.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-gray-500 italic">
+                    No login access requests found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

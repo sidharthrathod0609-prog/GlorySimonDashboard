@@ -133,6 +133,15 @@ export interface SiteVisit {
 export interface User {
   name: string;
   email: string;
-  role: 'Admin' | 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator' | 'Client';
+  role: 'Admin' | 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator';
   avatar?: string;
+}
+
+export interface GoogleLoginRequest {
+  id: string;
+  name: string;
+  email: string;
+  role: 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator';
+  status: 'pending' | 'accepted' | 'declined';
+  timestamp: string;
 }

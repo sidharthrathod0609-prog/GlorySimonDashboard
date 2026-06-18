@@ -11,7 +11,7 @@ export default function Users() {
   
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
-  const [newRole, setNewRole] = useState<'Admin' | 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator' | 'Client'>('Client');
+  const [newRole, setNewRole] = useState<'Admin' | 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator'>('Interior Designer');
 
   const filteredUsers = usersList.filter(user => 
     user.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -37,7 +37,7 @@ export default function Users() {
     // Reset Form
     setNewName('');
     setNewEmail('');
-    setNewRole('Client');
+    setNewRole('Interior Designer');
     setShowAddForm(false);
   };
 
@@ -126,7 +126,6 @@ export default function Users() {
                       <option value="Interior Designer">Interior Designer</option>
                       <option value="Project Manager">Project Manager</option>
                       <option value="Vendor Coordinator">Vendor Coordinator</option>
-                      <option value="Client">Client</option>
                     </select>
                   </div>
 

@@ -200,7 +200,9 @@ async function initDb() {
     (1, 'Rathod Penthouse Villa', 'Material Selection', 45000.00, 'Flat 1402, Highrise Heights, Bandra West, Mumbai', 'Luxury residential design with high-end fixtures.'),
     (2, 'Nexus Tech Corporate HQ', 'Design Approval', 85000.00, 'Block B, Tech Park, Outer Ring Road, Mumbai', 'Commercial executive space with acoustic configurations.'),
     (3, 'Priya Cozy 2BHK Apartment', 'Site Visit', 18000.00, 'C-302, Green Avenue, Thane, Mumbai', 'Budget-friendly space improvements.'),
-    (4, 'Glory Simon Experience Studio', 'Execution', 35000.00, 'Showroom 3, Galleria Mall, Lower Parel, Mumbai', 'Brand concept showcase development.')
+    (4, 'Glory Simon Experience Studio', 'Execution', 35000.00, 'Showroom 3, Galleria Mall, Lower Parel, Mumbai', 'Brand concept showcase development.'),
+    (1, 'Golden Crest Mansion', 'Material Selection', 120000.00, 'Plot 43, Sector 8, Noida', 'Premium residency development.'),
+    (3, 'Azur Bay Villa', 'Space Planning', 75000.00, 'Coastal Road, Alibaug, Maharashtra', 'Beachfront luxury villa design with modern minimalist style.')
   `);
 
   // Seed rooms

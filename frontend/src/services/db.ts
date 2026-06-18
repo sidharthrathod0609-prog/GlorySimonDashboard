@@ -274,12 +274,12 @@ export class MockDatabaseService implements IDatabaseService {
   }
 
   private seedData() {
-    // Check if localStorage has old minimal mock data (length <= 1) and reset to full seeds if so
+    // Check if localStorage has old minimal mock data (length <= 4) and reset to full seeds if so
     try {
       const stored = localStorage.getItem('mock_projects');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length <= 1) {
+        if (Array.isArray(parsed) && parsed.length <= 4) {
           localStorage.removeItem('mock_projects');
           localStorage.removeItem('mock_rooms');
           localStorage.removeItem('mock_materials');
@@ -301,7 +301,9 @@ export class MockDatabaseService implements IDatabaseService {
       { id: 1, name: 'Rathod Penthouse Villa', client_name: 'Sidharth Rathod', client_email: 'sidharth@example.com', client_phone: '+91 99999 88888', client_type: 'Residential', status: 'Material Selection', budget: 45000, address: 'Flat 1402, Highrise Heights, Bandra West, Mumbai', notes: 'Luxury residential design with high-end fixtures.', created_at: new Date().toISOString() },
       { id: 2, name: 'Nexus Tech Corporate HQ', client_name: 'Suman Sharma', client_email: 'suman@nexustech.com', client_phone: '+91 88888 77777', client_type: 'Commercial', status: 'Design Approval', budget: 85000, address: 'Block B, Tech Park, Outer Ring Road, Mumbai', notes: 'Commercial executive space with acoustic configurations.', created_at: new Date().toISOString() },
       { id: 3, name: 'Priya Cozy 2BHK Apartment', client_name: 'Priya Patel', client_email: 'priya@example.com', client_phone: '+91 77777 66666', client_type: 'Residential', status: 'Site Visit', budget: 18000, address: 'C-302, Green Avenue, Thane, Mumbai', notes: 'Budget-friendly space improvements.', created_at: new Date().toISOString() },
-      { id: 4, name: 'Glory Simon Experience Studio', client_name: 'Glory Simon Admin', client_email: 'admin@glorysimon.com', client_phone: '+91 11111 22222', client_type: 'Commercial', status: 'Execution', budget: 35000, address: 'Showroom 3, Galleria Mall, Lower Parel, Mumbai', notes: 'Brand concept showcase development.', created_at: new Date().toISOString() }
+      { id: 4, name: 'Glory Simon Experience Studio', client_name: 'Glory Simon Admin', client_email: 'admin@glorysimon.com', client_phone: '+91 11111 22222', client_type: 'Commercial', status: 'Execution', budget: 35000, address: 'Showroom 3, Galleria Mall, Lower Parel, Mumbai', notes: 'Brand concept showcase development.', created_at: new Date().toISOString() },
+      { id: 5, name: 'Golden Crest Mansion', client_name: 'Amit Sharma', client_email: 'amit@gmail.com', client_phone: '+91 99881 12233', client_type: 'Residential', status: 'Material Selection', budget: 120000, address: 'Plot 43, Sector 8, Noida', notes: 'Premium residency development.', created_at: new Date().toISOString() },
+      { id: 6, name: 'Azur Bay Villa', client_name: 'Priya Patel', client_email: 'priya@example.com', client_phone: '+91 77777 66666', client_type: 'Residential', status: 'Space Planning', budget: 75000, address: 'Coastal Road, Alibaug, Maharashtra', notes: 'Beachfront luxury villa design with modern minimalist style.', created_at: new Date().toISOString() }
     ]);
 
     // Rooms seed matching the backend database
@@ -312,7 +314,11 @@ export class MockDatabaseService implements IDatabaseService {
       { id: 4, project_id: 2, name: 'Executive Boardroom', length: 30, width: 20, height: 11, notes: 'Needs soundproofing, massive boardroom table and track lighting' },
       { id: 5, project_id: 2, name: 'Reception Area', length: 20, width: 15, height: 11, notes: 'Double height ceiling, feature wall with green accent' },
       { id: 6, project_id: 3, name: 'Master Bedroom', length: 12, width: 11, height: 9.5, notes: 'Compact storage solutions required' },
-      { id: 7, project_id: 4, name: 'Main Display Floor', length: 40, width: 25, height: 12, notes: 'Multi-material displays for laminates, tiles, and fittings' }
+      { id: 7, project_id: 4, name: 'Main Display Floor', length: 40, width: 25, height: 12, notes: 'Multi-material displays for laminates, tiles, and fittings' },
+      { id: 8, project_id: 5, name: 'Master Suite Bedroom', length: 15, width: 12, height: 10, notes: 'Bronze accents.' },
+      { id: 9, project_id: 5, name: 'Grand Lobby Entrance', length: 20, width: 16, height: 12, notes: 'Classic luxury entrance.' },
+      { id: 10, project_id: 6, name: 'Beachfront Deck', length: 25, width: 20, height: 10, notes: 'Infinity pool adjacency.' },
+      { id: 11, project_id: 6, name: 'Main Lounge Area', length: 22, width: 18, height: 11, notes: 'Minimalist wood paneling.' }
     ]);
 
     // Materials seed matching the backend database

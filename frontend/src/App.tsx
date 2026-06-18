@@ -26,9 +26,11 @@ import {
   Mail,
   MapPin,
   X,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from 'react-router-dom';
 
 // Types
 import {
@@ -47,43 +49,90 @@ import {
 import { useAppStore } from './store/useAppStore';
 import { db } from './services/db';
 
+// Auth pages & guard
+import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
+import UsersView from './pages/Users';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Helper for permissions description inside profile card modal
+function getRolePermissionsDesc(role: string) {
+  switch (role) {
+    case 'Admin':
+      return 'Administrator: Full access to manage users, projects, budgets, materials, and settings.';
+    case 'Interior Designer':
+      return 'Designer: Edit rooms, manage selections, approve materials, and view budget guidelines.';
+    case 'Project Manager':
+      return 'PM: Create projects, manage timeline/tasks, edit budgets, and view summaries.';
+    case 'Vendor Coordinator':
+      return 'Vendor Coordinator: View and edit suppliers information and logistics settings.';
+    default:
+      return 'Client Account: Read-only access to view selections, concepts, and project updates.';
+  }
+}
+
 export default function App() {
+  const { brandTheme } = useAppStore();
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', brandTheme);
+  }, [brandTheme]);
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardViewRoute />} />
+        <Route path="projects" element={<ProjectsViewRoute />} />
+        <Route path="selections" element={<SelectionsViewRoute />} />
+        <Route path="vendors" element={<VendorsViewRoute />} />
+        <Route path="budget" element={<BudgetViewRoute />} />
+        <Route path="reports" element={<ReportsViewRoute />} />
+        <Route path="settings" element={<SettingsViewRoute />} />
+        <Route
+          path="users"
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <UsersView />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
+}
+
+function DashboardLayout() {
   const {
     currentTab,
     projects,
-    materials,
-    vendors,
-    stats,
-    brandTheme,
     activeProjectId,
-    projectDetails,
-    detailsLoading,
-    currentUser,
-    
-    setCurrentTab,
-    setBrandTheme,
-    setCurrentUser,
     setActiveProjectId,
-    
+    currentUser,
+    setCurrentTab,
     fetchStats,
     fetchProjects,
     fetchMaterials,
-    fetchVendors,
-    
-    createProject,
-    updateProject,
-    deleteProject,
-    addRoom,
-    addSelection,
-    updateSelection,
-    deleteSelection,
-    addExpense,
-    updateConceptStatus,
-    createSiteVisit,
-    createTask,
-    updateTaskStatus,
-    deleteTask
+    fetchVendors
   } = useAppStore();
+
+  const location = useLocation();
+
+  // Sync currentTab state with URL pathname for styling and backward compatibility
+  useEffect(() => {
+    const pathName = location.pathname.split('/')[1] || 'dashboard';
+    setCurrentTab(pathName);
+  }, [location.pathname]);
 
   // Load baseline statistics and list of projects
   useEffect(() => {
@@ -93,126 +142,23 @@ export default function App() {
     fetchVendors();
   }, []);
 
-  // Handle document theme modifications
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', brandTheme);
-  }, [brandTheme]);
-
   return (
     <div className="flex min-h-screen bg-slate-950 text-gray-100 font-sans selection:bg-gold/30 selection:text-white">
       {/* Navigation Sidebar */}
-      <Sidebar
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
-        projects={projects}
-        activeProjectId={activeProjectId}
-        setActiveProjectId={setActiveProjectId}
-        currentUser={currentUser}
-        setCurrentUser={setCurrentUser}
-      />
+      <Sidebar />
 
       {/* Main Container */}
       <div className="flex-1 min-h-screen ml-64 p-8 overflow-y-auto">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentTab}
+            key={location.pathname}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25 }}
             className="w-full max-w-6xl mx-auto"
           >
-            {currentTab === 'dashboard' && (
-              <DashboardView
-                stats={stats}
-                projects={projects}
-                setCurrentTab={setCurrentTab}
-                setActiveProjectId={setActiveProjectId}
-                handleCreateProject={createProject}
-                materials={materials}
-              />
-            )}
-            
-            {currentTab === 'projects' && (
-              <ProjectsView
-                projects={projects}
-                fetchProjects={fetchProjects}
-                handleCreateProject={createProject}
-                handleUpdateProject={updateProject}
-                handleDeleteProject={deleteProject}
-                activeProjectId={activeProjectId}
-                setActiveProjectId={setActiveProjectId}
-                projectDetails={projectDetails}
-                detailsLoading={detailsLoading}
-                materials={materials}
-                vendors={vendors}
-                handleAddRoom={addRoom}
-                handleAddSelection={addSelection}
-                handleUpdateSelection={updateSelection}
-                handleDeleteSelection={deleteSelection}
-                handleAddExpense={addExpense}
-                handleUpdateConceptStatus={updateConceptStatus}
-                handleCreateSiteVisit={createSiteVisit}
-                handleCreateTask={createTask}
-                handleUpdateTaskStatus={updateTaskStatus}
-                handleDeleteTask={deleteTask}
-                currentUser={currentUser}
-              />
-            )}
-            
-            {currentTab === 'selections' && (
-              <SelectionsView
-                projectDetails={projectDetails}
-                materials={materials}
-                vendors={vendors}
-                loading={detailsLoading}
-                handleAddSelection={addSelection}
-                handleUpdateSelection={updateSelection}
-                handleDeleteSelection={deleteSelection}
-                handleAddRoom={addRoom}
-                activeProjectId={activeProjectId}
-                projects={projects}
-                setActiveProjectId={setActiveProjectId}
-                currentUser={currentUser}
-              />
-            )}
-
-            {currentTab === 'vendors' && (
-              <VendorsView
-                vendors={vendors}
-                materials={materials}
-                projectDetails={projectDetails}
-              />
-            )}
-
-            {currentTab === 'budget' && (
-              <BudgetView
-                projectDetails={projectDetails}
-                projects={projects}
-                activeProjectId={activeProjectId}
-                setActiveProjectId={setActiveProjectId}
-                handleAddExpense={addExpense}
-                loading={detailsLoading}
-                currentUser={currentUser}
-              />
-            )}
-
-            {currentTab === 'reports' && (
-              <ReportsView
-                projects={projects}
-                activeProjectId={activeProjectId}
-                setActiveProjectId={setActiveProjectId}
-              />
-            )}
-
-            {currentTab === 'settings' && (
-              <SettingsView
-                currentUser={currentUser}
-                setCurrentUser={setCurrentUser}
-                brandTheme={brandTheme}
-                setBrandTheme={setBrandTheme}
-              />
-            )}
+            <Outlet />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -220,119 +166,384 @@ export default function App() {
   );
 }
 
+// Route wrappers that inject store states and handlers directly to subcomponents
+function DashboardViewRoute() {
+  const store = useAppStore();
+  return (
+    <DashboardView
+      stats={store.stats}
+      projects={store.projects}
+      setCurrentTab={store.setCurrentTab}
+      setActiveProjectId={store.setActiveProjectId}
+      handleCreateProject={store.createProject}
+      materials={store.materials}
+      currentUser={store.currentUser}
+    />
+  );
+}
+
+function ProjectsViewRoute() {
+  const store = useAppStore();
+  
+  // Guard access to project manager/admin/designer/client
+  if (['Vendor Coordinator'].includes(store.currentUser.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    <ProjectsView
+      projects={store.projects}
+      fetchProjects={store.fetchProjects}
+      handleCreateProject={store.createProject}
+      handleUpdateProject={store.updateProject}
+      handleDeleteProject={store.deleteProject}
+      activeProjectId={store.activeProjectId}
+      setActiveProjectId={store.setActiveProjectId}
+      projectDetails={store.projectDetails}
+      detailsLoading={store.detailsLoading}
+      materials={store.materials}
+      vendors={store.vendors}
+      handleAddRoom={store.addRoom}
+      handleAddSelection={store.addSelection}
+      handleUpdateSelection={store.updateSelection}
+      handleDeleteSelection={store.deleteSelection}
+      handleAddExpense={store.addExpense}
+      handleUpdateConceptStatus={store.updateConceptStatus}
+      handleCreateSiteVisit={store.createSiteVisit}
+      handleCreateTask={store.createTask}
+      handleUpdateTaskStatus={store.updateTaskStatus}
+      handleDeleteTask={store.deleteTask}
+      currentUser={store.currentUser}
+    />
+  );
+}
+
+function SelectionsViewRoute() {
+  const store = useAppStore();
+
+  // Guard access to admin/designer/client
+  if (['Vendor Coordinator', 'Project Manager'].includes(store.currentUser.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    <SelectionsView
+      projectDetails={store.projectDetails}
+      materials={store.materials}
+      vendors={store.vendors}
+      loading={store.detailsLoading}
+      handleAddSelection={store.addSelection}
+      handleUpdateSelection={store.updateSelection}
+      handleDeleteSelection={store.deleteSelection}
+      handleAddRoom={store.addRoom}
+      activeProjectId={store.activeProjectId}
+      projects={store.projects}
+      setActiveProjectId={store.setActiveProjectId}
+      currentUser={store.currentUser}
+    />
+  );
+}
+
+function VendorsViewRoute() {
+  const store = useAppStore();
+
+  // Guard access (Clients and PMs cannot view vendors according to specifications)
+  if (['Client', 'Project Manager'].includes(store.currentUser.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    <VendorsView
+      vendors={store.vendors}
+      materials={store.materials}
+      projectDetails={store.projectDetails}
+      currentUser={store.currentUser}
+    />
+  );
+}
+
+function BudgetViewRoute() {
+  const store = useAppStore();
+
+  // Guard access (Vendor coordinator cannot view budgets)
+  if (['Vendor Coordinator'].includes(store.currentUser.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    <BudgetView
+      projectDetails={store.projectDetails}
+      projects={store.projects}
+      activeProjectId={store.activeProjectId}
+      setActiveProjectId={store.setActiveProjectId}
+      handleAddExpense={store.addExpense}
+      loading={store.detailsLoading}
+      currentUser={store.currentUser}
+    />
+  );
+}
+
+function ReportsViewRoute() {
+  const store = useAppStore();
+
+  // Guard access (Only Admins and Project Managers can view reports)
+  if (!['Admin', 'Project Manager'].includes(store.currentUser.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    <ReportsView
+      projects={store.projects}
+      activeProjectId={store.activeProjectId}
+      setActiveProjectId={store.setActiveProjectId}
+    />
+  );
+}
+
+function SettingsViewRoute() {
+  const store = useAppStore();
+  return (
+    <SettingsView
+      currentUser={store.currentUser}
+      updateUserProfile={store.updateUserProfile}
+      brandTheme={store.brandTheme}
+      setBrandTheme={store.setBrandTheme}
+    />
+  );
+}
+
 // ==========================================
 // 1. SIDEBAR COMPONENT
 // ==========================================
-interface SidebarProps {
-  currentTab: string;
-  setCurrentTab: (tab: string) => void;
-  projects: Project[];
-  activeProjectId: number | null;
-  setActiveProjectId: (id: number) => void;
-  currentUser: User;
-  setCurrentUser: (user: User) => void;
-}
+function Sidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const {
+    projects,
+    activeProjectId,
+    setActiveProjectId,
+    currentUser,
+    logout
+  } = useAppStore();
 
-function Sidebar({ currentTab, setCurrentTab, projects, activeProjectId, setActiveProjectId, currentUser, setCurrentUser }: SidebarProps) {
-  const menuItems = [
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  const currentPath = location.pathname.split('/')[1] || 'dashboard';
+
+  const allMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: FolderOpen },
     { id: 'selections', label: 'Material Selection', icon: Palette },
     { id: 'vendors', label: 'Vendors', icon: Users },
     { id: 'budget', label: 'Budget Tracking', icon: TrendingUp },
     { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'users', label: 'User Directory', icon: Shield }
   ];
 
-  return (
-    <aside className="w-64 bg-slate-900/80 backdrop-blur-xl border-r border-white/5 h-screen fixed top-0 left-0 flex flex-col p-6 z-50 overflow-y-auto">
-      <div className="flex items-center gap-3 mb-6 px-2">
-        <div className="w-9 h-9 bg-gradient-to-br from-gold-dark to-gold rounded-lg flex items-center justify-center font-bold text-slate-950 text-lg">
-          GS
-        </div>
-        <div>
-          <h1 className="text-md font-bold tracking-wide text-white font-display">Glory Simon</h1>
-          <p className="text-xs text-gold font-semibold tracking-wider uppercase">Interiors</p>
-        </div>
-      </div>
+  // Role-based menu item filtering
+  const getFilteredMenuItems = () => {
+    switch (currentUser.role) {
+      case 'Admin':
+        return allMenuItems;
+      case 'Interior Designer':
+        return allMenuItems.filter(item => ['dashboard', 'projects', 'selections', 'vendors', 'budget', 'settings'].includes(item.id));
+      case 'Project Manager':
+        return allMenuItems.filter(item => ['dashboard', 'projects', 'budget', 'reports', 'settings'].includes(item.id));
+      case 'Vendor Coordinator':
+        return allMenuItems.filter(item => ['dashboard', 'vendors', 'settings'].includes(item.id));
+      case 'Client':
+        return allMenuItems.filter(item => ['dashboard', 'projects', 'selections', 'budget', 'settings'].includes(item.id));
+      default:
+        return allMenuItems.filter(item => ['dashboard', 'settings'].includes(item.id));
+    }
+  };
 
-      {/* Active User Switcher Card */}
-      <div className="mb-6 px-1">
-        <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-2 px-1">
-          Active Session Mode
-        </label>
-        <div className="bg-slate-950/80 border border-white/5 p-3 rounded-xl space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gold/10 border border-gold/30 text-gold flex items-center justify-center font-bold text-[10px]">
-              {currentUser.name.charAt(0)}
+  const menuItems = getFilteredMenuItems();
+
+  return (
+    <aside className="w-64 bg-slate-900/80 backdrop-blur-xl border-r border-white/5 h-screen fixed top-0 left-0 flex flex-col p-6 z-50 overflow-y-auto justify-between">
+      <div className="space-y-6">
+        {/* Brand Logo */}
+        <div className="flex items-center gap-3 mb-6 px-2">
+          <div className="w-9 h-9 bg-gradient-to-br from-gold-dark to-gold rounded-lg flex items-center justify-center font-bold text-slate-950 text-lg">
+            GS
+          </div>
+          <div>
+            <h1 className="text-md font-bold tracking-wide text-white font-display">Glory Simon</h1>
+            <p className="text-xs text-gold font-semibold tracking-wider uppercase">Interiors</p>
+          </div>
+        </div>
+
+        {/* Compact User Profile Menu Card */}
+        <div className="mb-6 px-1 relative">
+          <div
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="flex items-center gap-3 bg-slate-950/80 border border-white/5 p-3 rounded-xl hover:bg-slate-900/80 cursor-pointer transition-all"
+            title="Account Menu"
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-dark to-gold text-slate-950 flex items-center justify-center font-bold text-xs shadow-lg shadow-gold/15">
+              {currentUser.avatar || currentUser.name.slice(0, 2).toUpperCase()}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <p className="text-[11px] font-bold text-gray-200 truncate leading-tight">{currentUser.name}</p>
-              <p className="text-[9px] text-gray-500 uppercase font-semibold leading-tight">{currentUser.role}</p>
+              <p className="text-[9px] text-gold font-semibold uppercase tracking-wider leading-tight mt-0.5">{currentUser.role}</p>
             </div>
           </div>
-          <select
-            value={`${currentUser.name}|${currentUser.role}`}
-            onChange={(e) => {
-              const [name, role] = e.target.value.split('|');
-              setCurrentUser({ name, role: role as any });
-            }}
-            className="w-full bg-slate-900 border border-white/5 p-1.5 rounded text-[10px] text-gray-300 outline-none cursor-pointer focus:border-gold"
-          >
-            <option value="Nisha Sen|Designer">Staff: Nisha Sen (Designer)</option>
-            <option value="Rahul Dev|Project Manager">Staff: Rahul Dev (PM)</option>
-            <option value="Sidharth Rathod|Client">Client: Sidharth Rathod</option>
-            <option value="Suman Sharma|Client">Client: Suman Sharma</option>
-          </select>
+
+          {/* Profile Dropdown Menu */}
+          <AnimatePresence>
+            {showProfileMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute left-0 right-0 bottom-full mb-2 bg-slate-900 border border-white/10 p-2 rounded-xl shadow-2xl z-50 backdrop-blur-xl text-left"
+                >
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      setShowProfileModal(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-gray-300 hover:bg-white/5 hover:text-white text-left font-semibold"
+                  >
+                    <Users size={12} className="text-gold" />
+                    View Profile Info
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      navigate('/settings');
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-gray-300 hover:bg-white/5 hover:text-white text-left font-semibold"
+                  >
+                    <Settings size={12} className="text-gold" />
+                    Profile Settings
+                  </button>
+                  <div className="border-t border-white/5 my-1.5" />
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      logout();
+                      navigate('/login');
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-red-400 hover:bg-red-500/10 text-left font-semibold"
+                  >
+                    Logout Session
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Quick Project Switcher (Hidden for Vendor Coordinator) */}
+        {currentUser.role !== 'Vendor Coordinator' && (
+          <div className="mb-6 px-1">
+            <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-2 px-1">
+              Active Workspace
+            </label>
+            <div className="flex items-center gap-2 bg-slate-950/80 border border-white/5 px-3 py-2 rounded-xl">
+              <FolderOpen size={14} className="text-gold" />
+              <select
+                value={activeProjectId || ''}
+                onChange={(e) => setActiveProjectId(Number(e.target.value))}
+                className="flex-1 bg-transparent text-xs text-gray-200 focus:outline-none cursor-pointer"
+              >
+                {projects.map(p => (
+                  <option key={p.id} value={p.id} className="bg-slate-900 text-gray-200">
+                    {p.name.length > 20 ? p.name.substring(0, 18) + '...' : p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Menu */}
+        <nav className="space-y-1">
+          {menuItems.map(item => {
+            const Icon = item.icon;
+            const isActive = currentPath === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigate('/' + item.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-gold-dark/20 to-gold/10 text-gold border-l-2 border-gold shadow-[0_0_15px_rgba(197,168,128,0.08)] pl-[14px]'
+                    : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                }`}
+              >
+                <Icon size={16} className={isActive ? 'text-gold' : 'text-gray-400'} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      <div className="mt-auto space-y-3">
+        <div className="pt-4 border-t border-white/5 flex items-center gap-3 px-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
+          <span className="text-[10px] font-medium text-gray-400 tracking-wider">WORKSPACE ACTIVE</span>
         </div>
       </div>
 
-      {/* Quick Project Switcher */}
-      <div className="mb-6 px-1">
-        <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-2 px-1">
-          Active Workspace
-        </label>
-        <div className="flex items-center gap-2 bg-slate-950/80 border border-white/5 px-3 py-2 rounded-xl">
-          <FolderOpen size={14} className="text-gold" />
-          <select
-            value={activeProjectId || ''}
-            onChange={(e) => setActiveProjectId(Number(e.target.value))}
-            className="flex-1 bg-transparent text-xs text-gray-200 focus:outline-none cursor-pointer"
-          >
-            {projects.map(p => (
-              <option key={p.id} value={p.id} className="bg-slate-900 text-gray-200">
-                {p.name.length > 20 ? p.name.substring(0, 18) + '...' : p.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <nav className="flex-1 flex flex-col gap-1">
-        {menuItems.map(item => {
-          const Icon = item.icon;
-          const isActive = currentTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setCurrentTab(item.id)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? 'bg-gradient-to-r from-gold-dark/20 to-gold/10 text-gold border-l-2 border-gold shadow-[0_0_15px_rgba(197,168,128,0.08)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-              }`}
+      {/* Profile Detail Modal Overlay */}
+      <AnimatePresence>
+        {showProfileModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm glass-panel border border-white/10 p-6 bg-slate-900 shadow-2xl relative text-left"
             >
-              <Icon size={16} className={isActive ? 'text-gold' : 'text-gray-400'} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition"
+              >
+                <X size={18} />
+              </button>
+              
+              <div className="flex flex-col items-center text-center space-y-3 mt-2">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gold-dark to-gold text-slate-950 flex items-center justify-center font-bold text-lg shadow-xl shadow-gold/20">
+                  {currentUser.avatar || currentUser.name.slice(0,2).toUpperCase()}
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white font-display">{currentUser.name}</h2>
+                  <p className="text-xs text-gold font-semibold uppercase tracking-wider mt-0.5">{currentUser.role}</p>
+                </div>
+              </div>
 
-      <div className="mt-4 pt-4 border-t border-white/5 flex items-center gap-3 px-2">
-        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
-        <span className="text-[11px] font-medium text-gray-400 tracking-wider">WORKSPACE ACTIVE</span>
-      </div>
+              <div className="border-t border-white/5 my-4 pt-4 space-y-3 text-xs">
+                <div>
+                  <span className="block text-gray-500 uppercase tracking-widest font-bold text-[9px] mb-1">Email Address</span>
+                  <span className="text-gray-200 font-semibold">{currentUser.email || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 uppercase tracking-widest font-bold text-[9px] mb-1">Permissions Profile</span>
+                  <span className="text-gray-300">{getRolePermissionsDesc(currentUser.role)}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowProfileModal(false);
+                  navigate('/settings');
+                }}
+                className="w-full py-2.5 bg-gradient-to-br from-gold-dark to-gold text-slate-950 text-xs font-bold rounded-xl hover:brightness-110 active:scale-[0.98] transition-all text-center block"
+              >
+                Edit Profile Settings
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </aside>
   );
 }
@@ -347,9 +558,10 @@ interface DashboardViewProps {
   setActiveProjectId: (id: number) => void;
   handleCreateProject: (data: any) => Promise<void>;
   materials: Material[];
+  currentUser: User;
 }
 
-function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, handleCreateProject, materials }: DashboardViewProps) {
+function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, handleCreateProject, materials, currentUser }: DashboardViewProps) {
   const [showAddProject, setShowAddProject] = useState(false);
   const [formData, setFormData] = useState({
     name: '', clientName: '', phone: '', email: '', location: '', type: 'Residential', budget: '', notes: ''
@@ -374,13 +586,15 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
           <h2 className="text-2xl font-bold tracking-tight text-white font-display">Workspace Overview</h2>
           <p className="text-sm text-gray-400">Glory Simon Interiors Material Selection Registry</p>
         </div>
-        <button
-          onClick={() => setShowAddProject(true)}
-          className="px-4 py-2 bg-gradient-to-r from-gold-dark to-gold text-slate-950 rounded-xl font-semibold text-sm hover:brightness-110 shadow-lg hover:shadow-gold/10 transition-all flex items-center gap-2"
-        >
-          <Plus size={16} />
-          <span>New Project</span>
-        </button>
+        {(currentUser.role === 'Admin' || currentUser.role === 'Project Manager') && (
+          <button
+            onClick={() => setShowAddProject(true)}
+            className="px-4 py-2 bg-gradient-to-r from-gold-dark to-gold text-slate-950 rounded-xl font-semibold text-sm hover:brightness-110 shadow-lg hover:shadow-gold/10 transition-all flex items-center gap-2"
+          >
+            <Plus size={16} />
+            <span>New Project</span>
+          </button>
+        )}
       </div>
 
       {/* Metrics Cards */}
@@ -862,7 +1076,7 @@ function ProjectsView({
           <h2 className="text-2xl font-bold tracking-tight text-white font-display">Client Projects Directory</h2>
           <p className="text-sm text-gray-400">Add, track stages, and audit material files.</p>
         </div>
-        {currentUser.role !== 'Client' && (
+        {(currentUser.role === 'Admin' || currentUser.role === 'Project Manager') && (
           <button
             onClick={() => { resetForm(); setShowAdd(true); }}
             className="px-4 py-2 bg-gradient-to-r from-gold-dark to-gold text-slate-950 rounded-xl font-semibold text-sm hover:brightness-110 shadow-lg transition-all flex items-center gap-2"
@@ -964,7 +1178,7 @@ function ProjectsView({
                         {p.status}
                       </span>
                     </td>
-                    {currentUser.role !== 'Client' ? (
+                    {(currentUser.role === 'Admin' || currentUser.role === 'Project Manager') ? (
                       <td className="py-3 text-right space-x-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => loadEditData(p)}
@@ -1112,7 +1326,7 @@ function ProjectsView({
                   <div className="space-y-4">
                     <div className="flex justify-between items-center mb-1">
                       <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Site Visits Log</h4>
-                      {currentUser.role !== 'Client' && (
+                      {['Admin', 'Interior Designer', 'Project Manager'].includes(currentUser.role) && (
                         <button
                           onClick={() => setShowAddVisit(!showAddVisit)}
                           className="text-[10px] font-bold text-gold hover:underline"
@@ -1186,7 +1400,7 @@ function ProjectsView({
                   <div className="space-y-4">
                     <div className="flex justify-between items-center mb-1">
                       <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Snag Lists & Tasks</h4>
-                      {currentUser.role !== 'Client' && (
+                      {['Admin', 'Interior Designer', 'Project Manager'].includes(currentUser.role) && (
                         <button
                           onClick={() => setShowAddTask(!showAddTask)}
                           className="text-[10px] font-bold text-gold hover:underline"
@@ -1582,7 +1796,7 @@ function SelectionsView({
           <h2 className="text-2xl font-bold tracking-tight text-white font-display">Material Selection Matrix</h2>
           <p className="text-sm text-gray-400">Assign, compare supplier costs, and approve client finishes.</p>
         </div>
-        {currentUser.role !== 'Client' && (
+        {(currentUser.role === 'Admin' || currentUser.role === 'Interior Designer') && (
           <button
             onClick={() => setShowAddRoom(true)}
             className="px-4 py-2 bg-gradient-to-r from-gold-dark to-gold text-slate-950 rounded-xl font-semibold text-sm hover:brightness-110 shadow-lg transition-all flex items-center gap-2"
@@ -2572,63 +2786,109 @@ function ReportsView({ projects, activeProjectId, setActiveProjectId }: ReportsV
 // ==========================================
 interface SettingsViewProps {
   currentUser: User;
-  setCurrentUser: (user: User) => void;
+  updateUserProfile: (name: string, email: string) => void;
   brandTheme: string;
   setBrandTheme: (theme: string) => void;
 }
 
-function SettingsView({ currentUser, setCurrentUser, brandTheme, setBrandTheme }: SettingsViewProps) {
+function SettingsView({ currentUser, updateUserProfile, brandTheme, setBrandTheme }: SettingsViewProps) {
+  const [name, setName] = useState(currentUser.name);
+  const [email, setEmail] = useState(currentUser.email || '');
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateUserProfile(name, email);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-white font-display">System Settings & Profile</h2>
-        <p className="text-sm text-gray-400">Configure your session variables for material selection and audit logs.</p>
+        <p className="text-sm text-gray-400">Configure your workspace variables, audit profiles, and brand themes.</p>
       </div>
 
-      <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl max-w-md space-y-6">
-        <h3 className="text-md font-semibold text-white">Active Session Details</h3>
-        
-        <div className="space-y-4 text-xs">
-          <div>
-            <label className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Staff User Name</label>
-            <input
-              type="text"
-              value={currentUser.name}
-              onChange={(e) => setCurrentUser({ ...currentUser, name: e.target.value })}
-              className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold"
-            />
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        {/* Profile Card Form */}
+        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-6">
+          <h3 className="text-md font-semibold text-white font-display">User Profile Details</h3>
+          
+          <form onSubmit={handleSave} className="space-y-4 text-xs">
+            <div>
+              <label className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Full Name</label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold"
+              />
+            </div>
 
-          <div>
-            <label className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Staff journey Role</label>
-            <select
-              value={currentUser.role}
-              onChange={(e) => setCurrentUser({ ...currentUser, role: e.target.value as any })}
-              className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold cursor-pointer"
-            >
-              <option value="Designer">Interior Designer</option>
-              <option value="Project Manager">Project Manager</option>
-              <option value="Site Engineer">Site Engineer</option>
-              <option value="Vendor Coordinator">Vendor Coordinator</option>
-              <option value="Admin">Administrator</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Email Address</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold"
+              />
+            </div>
 
-          <div>
-            <label className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Active Brand Theme Preset</label>
-            <select
-              value={brandTheme}
-              onChange={(e) => setBrandTheme(e.target.value)}
-              className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold cursor-pointer"
-            >
-              <option value="gold">Obsidian & Gold (Default)</option>
-              <option value="bronze">Warm Sand & Bronze Preset</option>
-              <option value="blue">Classic Slate & Royal Blue Preset</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">System Access Role (Read-Only)</label>
+              <div className="w-full bg-slate-950/50 border border-white/5 p-3 rounded-xl text-gold font-bold">
+                {currentUser.role}
+              </div>
+            </div>
 
-          <div className="pt-4 border-t border-white/5 text-[10px] text-gray-500 leading-relaxed">
-            Note: The Staff User Name configured above is stamped onto all material history audit transitions (e.g. <em>"Approved by {currentUser.name}"</em>).
+            <div className="pt-2 flex items-center justify-between gap-4">
+              <button
+                type="submit"
+                className="px-6 py-2.5 bg-gradient-to-br from-gold-dark to-gold text-slate-950 font-bold rounded-xl hover:brightness-110 active:scale-[0.98] transition-all"
+              >
+                Save Changes
+              </button>
+              <AnimatePresence>
+                {saved && (
+                  <motion.span
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-emerald-400 font-semibold"
+                  >
+                    Profile saved!
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
+          </form>
+        </div>
+
+        {/* Theme Settings */}
+        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-6">
+          <h3 className="text-md font-semibold text-white font-display">Workspace Configuration</h3>
+          
+          <div className="space-y-4 text-xs">
+            <div>
+              <label className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Active Brand Theme Preset</label>
+              <select
+                value={brandTheme}
+                onChange={(e) => setBrandTheme(e.target.value)}
+                className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold cursor-pointer"
+              >
+                <option value="gold">Obsidian & Gold (Default)</option>
+                <option value="bronze">Warm Sand & Bronze Preset</option>
+                <option value="blue">Classic Slate & Royal Blue Preset</option>
+              </select>
+            </div>
+
+            <div className="pt-4 border-t border-white/5 text-[10px] text-gray-500 leading-relaxed">
+              Note: The name configured on your profile card is stamped onto all material history audit transitions (e.g. <em>"Approved by {currentUser.name}"</em>).
+            </div>
           </div>
         </div>
       </div>

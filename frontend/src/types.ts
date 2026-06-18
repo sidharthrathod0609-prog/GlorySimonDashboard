@@ -132,5 +132,7 @@ export interface SiteVisit {
 
 export interface User {
   name: string;
-  role: 'Designer' | 'Project Manager' | 'Site Engineer' | 'Vendor Coordinator' | 'Admin' | 'Client';
+  email: string;
+  role: 'Admin' | 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator' | 'Client';
+  avatar?: string;
 }

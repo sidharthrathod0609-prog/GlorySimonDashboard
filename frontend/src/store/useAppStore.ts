@@ -23,13 +23,23 @@ interface AppState {
   activeProjectId: number | null;
   projectDetails: any;
   detailsLoading: boolean;
+  
+  // Auth States
+  isAuthenticated: boolean;
   currentUser: User;
+  usersList: User[];
 
   // Actions
   setCurrentTab: (tab: string) => void;
   setBrandTheme: (theme: string) => void;
   setCurrentUser: (user: User) => void;
   setActiveProjectId: (id: number | null) => void;
+  
+  // Auth Actions
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  sendPasswordReset: (email: string) => Promise<boolean>;
+  updateUserProfile: (name: string, email: string) => void;
 
   // Sourcing Actions
   fetchStats: () => Promise<void>;
@@ -75,15 +85,89 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeProjectId: null,
   projectDetails: null,
   detailsLoading: false,
-  currentUser: {
+
+  // Auth defaults with localStorage persistence
+  isAuthenticated: localStorage.getItem('gs_isAuthenticated') === 'true',
+  currentUser: JSON.parse(localStorage.getItem('gs_currentUser') || 'null') || {
     name: 'Nisha Sen',
-    role: 'Designer'
+    email: 'designer@glorysimon.com',
+    role: 'Interior Designer',
+    avatar: 'NS'
   },
+  usersList: [
+    { name: 'Glory Simon Admin', email: 'admin@glorysimon.com', role: 'Admin', avatar: 'GA' },
+    { name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', avatar: 'NS' },
+    { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD' },
+    { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN' },
+    { name: 'Sidharth Rathod', email: 'client@glorysimon.com', role: 'Client', avatar: 'SR' }
+  ],
 
   // State Switchers
   setCurrentTab: (tab) => set({ currentTab: tab }),
   setBrandTheme: (theme) => set({ brandTheme: theme }),
-  setCurrentUser: (user) => set({ currentUser: user }),
+  setCurrentUser: (user) => {
+    localStorage.setItem('gs_currentUser', JSON.stringify(user));
+    set({ currentUser: user });
+  },
+
+  // Auth Actions
+  login: async (email, password) => {
+    // Simulate minor network validation delay
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const mockCredentials: Record<string, string> = {
+      'admin@glorysimon.com': 'Admin123',
+      'designer@glorysimon.com': 'Design123',
+      'pm@glorysimon.com': 'PM123',
+      'vendor@glorysimon.com': 'Vendor123',
+      'client@glorysimon.com': 'Client123'
+    };
+
+    const userMap: Record<string, User> = {
+      'admin@glorysimon.com': { name: 'Glory Simon Admin', email: 'admin@glorysimon.com', role: 'Admin', avatar: 'GA' },
+      'designer@glorysimon.com': { name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', avatar: 'NS' },
+      'pm@glorysimon.com': { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD' },
+      'vendor@glorysimon.com': { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN' },
+      'client@glorysimon.com': { name: 'Sidharth Rathod', email: 'client@glorysimon.com', role: 'Client', avatar: 'SR' }
+    };
+
+    const trimmedEmail = email.trim().toLowerCase();
+    if (mockCredentials[trimmedEmail] && mockCredentials[trimmedEmail] === password) {
+      const user = userMap[trimmedEmail];
+      localStorage.setItem('gs_isAuthenticated', 'true');
+      localStorage.setItem('gs_currentUser', JSON.stringify(user));
+      set({ isAuthenticated: true, currentUser: user });
+      return true;
+    }
+    return false;
+  },
+
+  logout: () => {
+    localStorage.removeItem('gs_isAuthenticated');
+    localStorage.removeItem('gs_currentUser');
+    set({ isAuthenticated: false, currentUser: { name: '', email: '', role: 'Client', avatar: '' } });
+  },
+
+  sendPasswordReset: async (email) => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const trimmedEmail = email.trim().toLowerCase();
+    const validEmails = [
+      'admin@glorysimon.com',
+      'designer@glorysimon.com',
+      'pm@glorysimon.com',
+      'vendor@glorysimon.com',
+      'client@glorysimon.com'
+    ];
+    return validEmails.includes(trimmedEmail);
+  },
+
+  updateUserProfile: (name, email) => {
+    const { currentUser } = get();
+    if (!currentUser) return;
+    const initials = name.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const updated: User = { ...currentUser, name, email, avatar: initials || 'GS' };
+    localStorage.setItem('gs_currentUser', JSON.stringify(updated));
+    set({ currentUser: updated });
+  },
   setActiveProjectId: (id) => {
     set({ activeProjectId: id });
     if (id === null) {

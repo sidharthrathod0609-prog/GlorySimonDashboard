@@ -274,33 +274,135 @@ export class MockDatabaseService implements IDatabaseService {
   }
 
   private seedData() {
-    // Basic local seed fallback
+    // Check if localStorage has old minimal mock data (length <= 1) and reset to full seeds if so
+    try {
+      const stored = localStorage.getItem('mock_projects');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length <= 1) {
+          localStorage.removeItem('mock_projects');
+          localStorage.removeItem('mock_rooms');
+          localStorage.removeItem('mock_materials');
+          localStorage.removeItem('mock_vendors');
+          localStorage.removeItem('mock_selections');
+          localStorage.removeItem('mock_expenses');
+          localStorage.removeItem('mock_concepts');
+          localStorage.removeItem('mock_site_visits');
+          localStorage.removeItem('mock_tasks');
+          localStorage.removeItem('mock_history');
+        }
+      }
+    } catch (e) {
+      // Ignore storage exception
+    }
+
+    // Projects seed matching the backend database
     this.getLocalStorage('mock_projects', [
-      { id: 1, name: 'Golden Crest Mansion', client_name: 'Amit Sharma', client_email: 'amit@gmail.com', status: 'Material Selection', budget: 1500000, address: 'Delhi', notes: 'Premium residency development.', created_at: new Date().toISOString() }
+      { id: 1, name: 'Rathod Penthouse Villa', client_name: 'Sidharth Rathod', client_email: 'sidharth@example.com', client_phone: '+91 99999 88888', client_type: 'Residential', status: 'Material Selection', budget: 45000, address: 'Flat 1402, Highrise Heights, Bandra West, Mumbai', notes: 'Luxury residential design with high-end fixtures.', created_at: new Date().toISOString() },
+      { id: 2, name: 'Nexus Tech Corporate HQ', client_name: 'Suman Sharma', client_email: 'suman@nexustech.com', client_phone: '+91 88888 77777', client_type: 'Commercial', status: 'Design Approval', budget: 85000, address: 'Block B, Tech Park, Outer Ring Road, Mumbai', notes: 'Commercial executive space with acoustic configurations.', created_at: new Date().toISOString() },
+      { id: 3, name: 'Priya Cozy 2BHK Apartment', client_name: 'Priya Patel', client_email: 'priya@example.com', client_phone: '+91 77777 66666', client_type: 'Residential', status: 'Site Visit', budget: 18000, address: 'C-302, Green Avenue, Thane, Mumbai', notes: 'Budget-friendly space improvements.', created_at: new Date().toISOString() },
+      { id: 4, name: 'Glory Simon Experience Studio', client_name: 'Glory Simon Admin', client_email: 'admin@glorysimon.com', client_phone: '+91 11111 22222', client_type: 'Commercial', status: 'Execution', budget: 35000, address: 'Showroom 3, Galleria Mall, Lower Parel, Mumbai', notes: 'Brand concept showcase development.', created_at: new Date().toISOString() }
     ]);
+
+    // Rooms seed matching the backend database
     this.getLocalStorage('mock_rooms', [
-      { id: 1, project_id: 1, name: 'Master Bedroom', length: 15, width: 12, height: 10, notes: 'Bronze accents.' }
+      { id: 1, project_id: 1, name: 'Grand Living Room', length: 24, width: 18, height: 10.5, notes: 'Needs marble flooring, glass panel walls, and warm lighting' },
+      { id: 2, project_id: 1, name: 'Master Suite', length: 18, width: 14, height: 10, notes: 'Needs dark wooden flooring and custom paneling' },
+      { id: 3, project_id: 1, name: 'Modular Kitchen', length: 14, width: 10, height: 10, notes: 'Requires scratch-resistant acrylic laminates and gold hardware' },
+      { id: 4, project_id: 2, name: 'Executive Boardroom', length: 30, width: 20, height: 11, notes: 'Needs soundproofing, massive boardroom table and track lighting' },
+      { id: 5, project_id: 2, name: 'Reception Area', length: 20, width: 15, height: 11, notes: 'Double height ceiling, feature wall with green accent' },
+      { id: 6, project_id: 3, name: 'Master Bedroom', length: 12, width: 11, height: 9.5, notes: 'Compact storage solutions required' },
+      { id: 7, project_id: 4, name: 'Main Display Floor', length: 40, width: 25, height: 12, notes: 'Multi-material displays for laminates, tiles, and fittings' }
     ]);
+
+    // Materials seed matching the backend database
     this.getLocalStorage('mock_materials', [
-      { id: 1, category: 'Tiles', name: 'Statutuario Marble Tile', brand: 'Kajaria', sku: 'KAJ-MAR-01', unit_price: 150, image_url: '', vendor_id: 1, vendor_name: 'Marble Craft Sourcing' },
-      { id: 2, category: 'Laminates', name: 'Matte Oak Finish 1.2mm', brand: 'CenturyPly', sku: 'CP-OAK-88', unit_price: 1200, image_url: '', vendor_id: 2, vendor_name: 'Premium Woods Sourcing' }
+      { id: 1, category: 'Tiles', name: 'Italian Carrara Vitrified Tile', brand: 'Kajaria', sku: 'KAJ-CAR-01', unit_price: 120, image_url: '/assets/materials/carrara_tile.svg', vendor_id: 1, vendor_name: 'Apex Marble & Tiles' },
+      { id: 2, category: 'Tiles', name: 'Chevron Dark Slate Tile', brand: 'Somany', sku: 'SOM-CHV-02', unit_price: 95, image_url: '/assets/materials/chevron_tile.svg', vendor_id: 1, vendor_name: 'Apex Marble & Tiles' },
+      { id: 3, category: 'Laminates', name: 'Teak Wood Matte Laminate', brand: 'Greenlam', sku: 'GRN-TEAK-05', unit_price: 45, image_url: '/assets/materials/teak_laminate.svg', vendor_id: 2, vendor_name: 'DecoWood Laminates' },
+      { id: 4, category: 'Laminates', name: 'Glossy Charcoal Laminate', brand: 'CenturyPly', sku: 'CEN-CHAR-12', unit_price: 55, image_url: '/assets/materials/charcoal_laminate.svg', vendor_id: 2, vendor_name: 'DecoWood Laminates' },
+      { id: 5, category: 'Paints', name: 'Royale Silk Warm Alabaster', brand: 'Asian Paints', sku: 'AP-ROY-ALB', unit_price: 15, image_url: '/assets/materials/warm_alabaster.svg', vendor_id: 3, vendor_name: 'Asian Paints Exclusive' },
+      { id: 6, category: 'Paints', name: 'Deep Teal Matte Accent', brand: 'Asian Paints', sku: 'AP-ROY-TEA', unit_price: 18, image_url: '/assets/materials/deep_teal.svg', vendor_id: 3, vendor_name: 'Asian Paints Exclusive' },
+      { id: 7, category: 'Lighting', name: 'Magnetic Track Profile Light', brand: 'Philips', sku: 'PH-MAG-TRK', unit_price: 250, image_url: '/assets/materials/track_light.svg', vendor_id: 4, vendor_name: 'Lumina Lighting Solutions' },
+      { id: 8, category: 'Lighting', name: 'Warm Recessed COB Light 6W', brand: 'Havells', sku: 'HV-COB-06', unit_price: 15, image_url: '/assets/materials/cob_light.svg', vendor_id: 4, vendor_name: 'Lumina Lighting Solutions' },
+      { id: 9, category: 'Furniture', name: 'Chesterfield Emerald Velvet Sofa', brand: 'Royal Oak', sku: 'RO-CHS-VEL', unit_price: 1200, image_url: '/assets/materials/velvet_sofa.svg', vendor_id: 5, vendor_name: 'Royal Oak Furniture' },
+      { id: 10, category: 'Furniture', name: 'Ergonomic Mesh Task Chair', brand: 'Featherlite', sku: 'FL-ERG-MSH', unit_price: 180, image_url: '/assets/materials/office_chair.svg', vendor_id: 5, vendor_name: 'Royal Oak Furniture' },
+      { id: 11, category: 'Hardware', name: 'Brushed Brass Knurled Handles', brand: 'Hettich', sku: 'HET-BB-KN', unit_price: 12, image_url: '/assets/materials/brass_handle.svg', vendor_id: 6, vendor_name: 'Hettich Hardware' },
+      { id: 12, category: 'Hardware', name: 'Soft-Close Drawer Runners', brand: 'Ebco', sku: 'EB-SCDR-45', unit_price: 25, image_url: '/assets/materials/drawer_slides.svg', vendor_id: 6, vendor_name: 'Hettich Hardware' },
+      { id: 13, category: 'Fabric', name: 'Linen Beige Blackout Curtain', brand: 'Ddecor', sku: 'DD-LIN-BGE', unit_price: 35, image_url: '/assets/materials/beige_curtain.svg', vendor_id: 7, vendor_name: 'Ddecor Fabrics' },
+      { id: 14, category: 'Fabric', name: 'Textured Rust Boucle Cushion', brand: 'Ddecor', sku: 'DD-TEX-RST', unit_price: 15, image_url: '/assets/materials/rust_boucle.svg', vendor_id: 7, vendor_name: 'Ddecor Fabrics' }
     ]);
+
+    // Vendors seed matching the backend database
     this.getLocalStorage('mock_vendors', [
-      { id: 1, name: 'Marble Craft Sourcing', contact_name: 'Rohan Lal', phone: '9988112233', email: 'rohan@marblecraft.in', category: 'Tiles', address: 'Plot 43, Sector 8, Noida', rating: 4.8 },
-      { id: 2, name: 'Premium Woods Sourcing', contact_name: 'Ajay Dev', phone: '8877665544', email: 'ajay@premiumwoods.in', category: 'Laminates', address: 'Ind. Area Phase 2, Delhi', rating: 4.5 }
+      { id: 1, name: 'Apex Marble & Tiles', contact_name: 'Ramesh Kumar', phone: '+91 98765 43210', email: 'info@apexmarble.com', category: 'Tiles', address: 'Sector 15, Industrial Area, Mumbai', rating: 4.8 },
+      { id: 2, name: 'DecoWood Laminates', contact_name: 'Sarah Dsouza', phone: '+91 87654 32109', email: 'sales@decowood.com', category: 'Laminates', address: 'Ghatkopar West, Mumbai', rating: 4.5 },
+      { id: 3, name: 'Asian Paints Exclusive', contact_name: 'Amit Patel', phone: '+91 76543 21098', email: 'dealer@asianpaints.com', category: 'Paints', address: 'Andheri East, Mumbai', rating: 4.7 },
+      { id: 4, name: 'Lumina Lighting Solutions', contact_name: 'Vikram Singh', phone: '+91 65432 10987', email: 'contact@luminalights.com', category: 'Lighting', address: 'Lower Parel, Mumbai', rating: 4.2 },
+      { id: 5, name: 'Royal Oak Furniture', contact_name: 'Neha Sharma', phone: '+91 54321 09876', email: 'b2b@royaloak.com', category: 'Furniture', address: 'Thane West, Mumbai', rating: 4.6 },
+      { id: 6, name: 'Hettich Hardware', contact_name: 'Rajesh Mehta', phone: '+91 43210 98765', email: 'support@hettich.in', category: 'Hardware', address: 'Kalyan, Mumbai', rating: 4.9 },
+      { id: 7, name: 'Ddecor Fabrics', contact_name: 'Simran Kaur', phone: '+91 32109 87654', email: 'orders@ddecor.com', category: 'Fabric', address: 'Bandra West, Mumbai', rating: 4.4 }
     ]);
+
+    // Selections seed matching the backend database
     this.getLocalStorage('mock_selections', [
-      { id: 1, project_id: 1, room_id: 1, material_id: 1, vendor_id: 1, quantity: 120, status: 'Selected', notes: 'Initial placement.', updated_at: new Date().toISOString(), material_name: 'Statutuario Marble Tile', brand: 'Kajaria', sku: 'KAJ-MAR-01', unit_price: 150, category: 'Tiles', vendor_name: 'Marble Craft Sourcing' }
+      { id: 1, project_id: 1, room_id: 1, material_id: 1, vendor_id: 1, quantity: 432, status: 'Approved', notes: 'Selected Kajaria Carrara tiles for the full living room floor area', updated_at: new Date().toISOString(), material_name: 'Italian Carrara Vitrified Tile', brand: 'Kajaria', sku: 'KAJ-CAR-01', unit_price: 120.00, category: 'Tiles', vendor_name: 'Apex Marble & Tiles' },
+      { id: 2, project_id: 1, room_id: 1, material_id: 9, vendor_id: 5, quantity: 1, status: 'Approved', notes: 'Royal Oak Chesterfield Emerald Sofa as the centerpiece', updated_at: new Date().toISOString(), material_name: 'Chesterfield Emerald Velvet Sofa', brand: 'Royal Oak', sku: 'RO-CHS-VEL', unit_price: 1200.00, category: 'Furniture', vendor_name: 'Royal Oak Furniture' },
+      { id: 3, project_id: 1, room_id: 1, material_id: 5, vendor_id: 3, quantity: 4, status: 'Approved', notes: 'Warm Alabaster walls paint (4 tins)', updated_at: new Date().toISOString(), material_name: 'Royale Silk Warm Alabaster', brand: 'Asian Paints', sku: 'AP-ROY-ALB', unit_price: 15.00, category: 'Paints', vendor_name: 'Asian Paints Exclusive' },
+      { id: 4, project_id: 1, room_id: 1, material_id: 6, vendor_id: 3, quantity: 1, status: 'Pending', notes: 'Deep Teal Accent on the TV backdrop wall (1 tin)', updated_at: new Date().toISOString(), material_name: 'Deep Teal Matte Accent', brand: 'Asian Paints', sku: 'AP-ROY-TEA', unit_price: 18.00, category: 'Paints', vendor_name: 'Asian Paints Exclusive' },
+      { id: 5, project_id: 1, room_id: 1, material_id: 7, vendor_id: 4, quantity: 6, status: 'Selected', notes: 'Magnetic track profile lights around the false ceiling border', updated_at: new Date().toISOString(), material_name: 'Magnetic Track Profile Light', brand: 'Philips', sku: 'PH-MAG-TRK', unit_price: 250.00, category: 'Lighting', vendor_name: 'Lumina Lighting Solutions' },
+      { id: 6, project_id: 1, room_id: 2, material_id: 3, vendor_id: 2, quantity: 252, status: 'Approved', notes: 'Greenlam Teak laminate for the wall headboard paneling', updated_at: new Date().toISOString(), material_name: 'Teak Wood Matte Laminate', brand: 'Greenlam', sku: 'GRN-TEAK-05', unit_price: 45.00, category: 'Laminates', vendor_name: 'DecoWood Laminates' },
+      { id: 7, project_id: 1, room_id: 2, material_id: 13, vendor_id: 7, quantity: 6, status: 'Replaced', notes: 'Replaced with neutral grey fabric later due to light reflections', updated_at: new Date().toISOString(), material_name: 'Linen Beige Blackout Curtain', brand: 'Ddecor', sku: 'DD-LIN-BGE', unit_price: 35.00, category: 'Fabric', vendor_name: 'Ddecor Fabrics' },
+      { id: 8, project_id: 1, room_id: 3, material_id: 4, vendor_id: 2, quantity: 120, status: 'Selected', notes: 'CenturyPly Glossy Charcoal for base cabinets', updated_at: new Date().toISOString(), material_name: 'Glossy Charcoal Laminate', brand: 'CenturyPly', sku: 'CEN-CHAR-12', unit_price: 55.00, category: 'Laminates', vendor_name: 'DecoWood Laminates' },
+      { id: 9, project_id: 1, room_id: 3, material_id: 11, vendor_id: 6, quantity: 18, status: 'Approved', notes: 'Hettich Knurled handles for all cupboards', updated_at: new Date().toISOString(), material_name: 'Brushed Brass Knurled Handles', brand: 'Hettich', sku: 'HET-BB-KN', unit_price: 12.00, category: 'Hardware', vendor_name: 'Hettich Hardware' },
+      { id: 10, project_id: 2, room_id: 4, material_id: 2, vendor_id: 1, quantity: 600, status: 'Approved', notes: 'Chevron Dark Slate Tile for the high traffic boardroom floor', updated_at: new Date().toISOString(), material_name: 'Chevron Dark Slate Tile', brand: 'Somany', sku: 'SOM-CHV-02', unit_price: 95.00, category: 'Tiles', vendor_name: 'Apex Marble & Tiles' },
+      { id: 11, project_id: 2, room_id: 4, material_id: 10, vendor_id: 5, quantity: 12, status: 'Approved', notes: 'Featherlite Ergonomic mesh chairs for board members', updated_at: new Date().toISOString(), material_name: 'Ergonomic Mesh Task Chair', brand: 'Featherlite', sku: 'FL-ERG-MSH', unit_price: 180.00, category: 'Furniture', vendor_name: 'Royal Oak Furniture' },
+      { id: 12, project_id: 2, room_id: 4, material_id: 7, vendor_id: 4, quantity: 12, status: 'Approved', notes: 'Philips Track Lights for presentation boards', updated_at: new Date().toISOString(), material_name: 'Magnetic Track Profile Light', brand: 'Philips', sku: 'PH-MAG-TRK', unit_price: 250.00, category: 'Lighting', vendor_name: 'Lumina Lighting Solutions' },
+      { id: 13, project_id: 3, room_id: 6, material_id: 3, vendor_id: 2, quantity: 132, status: 'Selected', notes: 'Greenlam Teak laminate for wardrobe shutters', updated_at: new Date().toISOString(), material_name: 'Teak Wood Matte Laminate', brand: 'Greenlam', sku: 'GRN-TEAK-05', unit_price: 45.00, category: 'Laminates', vendor_name: 'DecoWood Laminates' },
+      { id: 14, project_id: 4, room_id: 7, material_id: 1, vendor_id: 1, quantity: 1000, status: 'Approved', notes: 'Showroom flooring samples setup', updated_at: new Date().toISOString(), material_name: 'Italian Carrara Vitrified Tile', brand: 'Kajaria', sku: 'KAJ-CAR-01', unit_price: 120.00, category: 'Tiles', vendor_name: 'Apex Marble & Tiles' }
     ]);
-    this.getLocalStorage('mock_expenses', []);
+
+    // Expenses seed matching the backend database
+    this.getLocalStorage('mock_expenses', [
+      { id: 1, project_id: 1, category: 'Site Civil Masonry Labour', amount: 1200.00, notes: 'Plaster leveling for living room wall', date: '2026-06-12' },
+      { id: 2, project_id: 1, category: 'Local Transport of samples', amount: 80.00, notes: 'Carried wood and slate samples to client penthouse', date: '2026-06-14' },
+      { id: 3, project_id: 2, category: 'CAD Drafting Freelancer fee', amount: 500.00, notes: 'Paid for detailed acoustic grid detailing', date: '2026-06-13' }
+    ]);
+
+    // Design concepts seed matching the backend database
     this.getLocalStorage('mock_concepts', [
-      { id: 1, room_id: 1, title: 'Concept Moodboard A', description: 'Obsidian & Gold themes', image_url: '', status: 'Pending', created_at: new Date().toISOString() }
+      { id: 1, room_id: 1, title: 'Classic Luxury Concept', description: 'High-gloss Carrara floors, emerald green velvet accents, and brushed brass details.', image_url: '/assets/concepts/luxury_living.svg', status: 'Approved' },
+      { id: 2, room_id: 1, title: 'Warm Modernist Concept', description: 'Matte slate tiles, warm teak laminate wall claddings, and indirect linear lighting.', image_url: '/assets/concepts/modern_living.svg', status: 'Pending' },
+      { id: 3, room_id: 3, title: 'Minimalist Culinary Space', description: 'White glossy panels, integrated appliances, and clean seamless handles.', image_url: '/assets/concepts/kitchen_minimalist.svg', status: 'Approved' },
+      { id: 4, room_id: 4, title: 'Boardroom Executive Style', description: 'Acoustic oak felt panels, dark grey carpeting, and black metal profile lights.', image_url: '/assets/concepts/boardroom.svg', status: 'Approved' }
     ]);
-    this.getLocalStorage('mock_site_visits', []);
+
+    // Site visits seed matching the backend database
+    this.getLocalStorage('mock_site_visits', [
+      { id: 1, project_id: 1, visit_date: '2026-06-10', visitor_name: 'Rahul Dev (Site Engineer)', notes: 'Verified core dimensions. Ceiling slab heights are exactly 10.5 ft. Dampness checked, walls are dry.', photos: '/assets/photos/visit_rathod_1.svg' },
+      { id: 2, project_id: 2, visit_date: '2026-06-11', visitor_name: 'Rahul Dev (Site Engineer)', notes: 'Acoustic insulation properties in Boardroom checked. Floor leveling required before tiling.', photos: '/assets/photos/visit_nexus_1.svg' },
+      { id: 3, project_id: 3, visit_date: '2026-06-14', visitor_name: 'Nisha Sen (Designer)', notes: 'Took space snapshots for aesthetic concept discussions with Priya. Client prefers beige-brown warmth.', photos: '/assets/photos/visit_priya_1.svg' }
+    ]);
+
+    // Tasks seed matching the backend database
     this.getLocalStorage('mock_tasks', [
-      { id: 1, project_id: 1, title: 'Check marble layout alignment', assigned_to: 'Site Engineer', status: 'To Do', due_date: new Date().toISOString() }
+      { id: 1, project_id: 1, title: 'Confirm tile delivery date with Apex Marble', assigned_to: 'Vendor Coordinator', status: 'In Progress', due_date: '2026-06-20' },
+      { id: 2, project_id: 1, title: 'Get final signature on TV wall accent paint approval', assigned_to: 'Designer', status: 'To Do', due_date: '2026-06-19' },
+      { id: 3, project_id: 1, title: 'Create space layouts for electrical points', assigned_to: 'Designer', status: 'Completed', due_date: '2026-06-15' },
+      { id: 4, project_id: 2, title: 'Submit board table quotation adjustments', assigned_to: 'Project Manager', status: 'In Progress', due_date: '2026-06-22' },
+      { id: 5, project_id: 2, title: 'Book site engineer layout validation visit', assigned_to: 'Project Manager', status: 'Completed', due_date: '2026-06-12' },
+      { id: 6, project_id: 3, title: 'First measurements validation visit', assigned_to: 'Site Engineer', status: 'To Do', due_date: '2026-06-24' },
+      { id: 7, project_id: 4, title: 'Supervise drywall installation for display panels', assigned_to: 'Site Engineer', status: 'In Progress', due_date: '2026-06-21' },
+      { id: 8, project_id: 4, title: 'Process advance billing for vendor contract', assigned_to: 'Admin', status: 'To Do', due_date: '2026-06-25' }
     ]);
-    this.getLocalStorage('mock_history', []);
+
+    // History logs seed matching the backend database
+    this.getLocalStorage('mock_history', [
+      { id: 1, project_id: 1, room_id: 1, material_selection_id: 1, user_name: 'Nisha Sen (Designer)', previous_status: 'Pending', new_status: 'Selected', notes: 'Assigned initial Kajaria vitrified Carrara tile layout', created_at: new Date().toISOString(), material_name: 'Italian Carrara Vitrified Tile' },
+      { id: 2, project_id: 1, room_id: 1, material_selection_id: 1, user_name: 'Sidharth Rathod (Client)', previous_status: 'Selected', new_status: 'Approved', notes: 'Customer approved Carrara tile pattern during layout design review', created_at: new Date().toISOString(), material_name: 'Italian Carrara Vitrified Tile' },
+      { id: 3, project_id: 1, room_id: 1, material_selection_id: 2, user_name: 'Nisha Sen (Designer)', previous_status: 'Pending', new_status: 'Selected', notes: 'Sourced Royal Oak Sofa option', created_at: new Date().toISOString(), material_name: 'Chesterfield Emerald Velvet Sofa' },
+      { id: 4, project_id: 1, room_id: 1, material_selection_id: 2, user_name: 'Sidharth Rathod (Client)', previous_status: 'Selected', new_status: 'Approved', notes: 'Approved accent seating selection', created_at: new Date().toISOString(), material_name: 'Chesterfield Emerald Velvet Sofa' }
+    ]);
   }
 
   constructor() {

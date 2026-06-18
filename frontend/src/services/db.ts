@@ -747,5 +747,9 @@ export class SupabaseDatabaseService implements IDatabaseService {
 // ----------------------------------------------------
 // DEFAULT CLIENT INSTANCE DISPATCHER
 // ----------------------------------------------------
-// Simply swap this instance switcher target to toggle between SupabaseDatabaseService / MockDatabaseService
-export const db: IDatabaseService = new APIDatabaseService();
+// Auto-detect environment: if running on local dev server, connect to Express + SQLite backend.
+// Otherwise, fall back to the offline MockDatabaseService for seamless cloud hosting (Vercel).
+export const db: IDatabaseService =
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? new APIDatabaseService()
+    : new MockDatabaseService();

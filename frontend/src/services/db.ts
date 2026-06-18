@@ -247,17 +247,30 @@ export class MockDatabaseService implements IDatabaseService {
     return new Promise(resolve => setTimeout(resolve, 200));
   }
 
+  private memoryCache: Record<string, string> = {};
+
   private getLocalStorage<T>(key: string, defaultValue: T): T {
-    const stored = localStorage.getItem(key);
-    if (!stored) {
-      localStorage.setItem(key, JSON.stringify(defaultValue));
-      return defaultValue;
+    try {
+      const stored = localStorage.getItem(key);
+      if (!stored) {
+        localStorage.setItem(key, JSON.stringify(defaultValue));
+        return defaultValue;
+      }
+      return JSON.parse(stored);
+    } catch (e) {
+      if (!this.memoryCache[key]) {
+        this.memoryCache[key] = JSON.stringify(defaultValue);
+      }
+      return JSON.parse(this.memoryCache[key]);
     }
-    return JSON.parse(stored);
   }
 
   private setLocalStorage<T>(key: string, value: T): void {
-    localStorage.setItem(key, JSON.stringify(value));
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      this.memoryCache[key] = JSON.stringify(value);
+    }
   }
 
   private seedData() {
@@ -300,18 +313,25 @@ export class MockDatabaseService implements IDatabaseService {
     const selections = this.getLocalStorage<MaterialSelection[]>('mock_selections', []);
     const vendors = this.getLocalStorage<Vendor[]>('mock_vendors', []);
     const expenses = this.getLocalStorage<Expense[]>('mock_expenses', []);
+    const history = this.getLocalStorage<MaterialHistory[]>('mock_history', []);
 
     const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
     const approvedSourced = selections.filter(s => s.status === 'Approved').reduce((sum, s) => sum + (s.quantity * (s.unit_price || 0)), 0);
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalSpent = approvedSourced + totalExpenses;
 
     return {
-      total_projects: projects.length,
-      active_projects: projects.filter(p => p.status !== 'Completed').length,
-      approved_selections: selections.filter(s => s.status === 'Approved').length,
-      pending_selections: selections.filter(s => s.status === 'Pending' || s.status === 'Selected').length,
-      active_vendors: vendors.length,
-      budget_utilization: totalBudget > 0 ? Math.round(((approvedSourced + totalExpenses) / totalBudget) * 100) : 0
+      totalProjects: projects.length,
+      activeProjects: projects.filter(p => p.status !== 'Completed').length,
+      approvedMaterials: selections.filter(s => s.status === 'Approved').length,
+      pendingMaterials: selections.filter(s => s.status === 'Pending' || s.status === 'Selected').length,
+      activeVendors: vendors.length,
+      budgetUsage: {
+        totalBudget: totalBudget,
+        totalSpent: totalSpent,
+        utilizationPct: totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0
+      },
+      recentActivity: history.slice(0, 8)
     };
   }
 

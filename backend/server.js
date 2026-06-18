@@ -29,6 +29,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
     const approvedMaterials = await db.get("SELECT COUNT(*) as count FROM material_selections WHERE status = 'Approved'");
     const pendingMaterials = await db.get("SELECT COUNT(*) as count FROM material_selections WHERE status = 'Pending'");
     const activeVendors = await db.get('SELECT COUNT(*) as count FROM vendors');
+    const siteVisits = await db.get('SELECT COUNT(*) as count FROM site_visits');
 
     // Budget usage calculation: approved materials sum + expenses vs total budget of all projects
     const totalBudget = await db.get('SELECT SUM(budget) as total FROM projects');
@@ -56,6 +57,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
       approvedMaterials: approvedMaterials.count,
       pendingMaterials: pendingMaterials.count,
       activeVendors: activeVendors.count,
+      siteVisitsScheduled: siteVisits.count,
       budgetUsage: {
         totalBudget: budgetCap,
         totalSpent,
@@ -131,7 +133,7 @@ app.get('/api/projects', async (req, res) => {
 
 // Create Project
 app.post('/api/projects', async (req, res) => {
-  const { name, clientName, phone, email, location, type, budget, notes } = req.body;
+  const { name, clientName, phone, email, location, type, budget, notes, startDate, assignedDesigner } = req.body;
   if (!name || !clientName) {
     return res.status(400).json({ error: 'Project Name and Client Name are required.' });
   }
@@ -149,8 +151,8 @@ app.post('/api/projects', async (req, res) => {
 
     // Create project
     const projectRes = await db.run(
-      `INSERT INTO projects (client_id, name, status, budget, address, notes) VALUES (?, ?, 'Enquiry', ?, ?, ?)`,
-      [clientId, name, budget || 0, location || '', notes || '']
+      `INSERT INTO projects (client_id, name, status, budget, address, notes, start_date, assigned_designer) VALUES (?, ?, 'Enquiry', ?, ?, ?, ?, ?)`,
+      [clientId, name, budget || 0, location || '', notes || '', startDate || null, assignedDesigner || null]
     );
     const projectId = projectRes.lastID;
 
@@ -181,7 +183,7 @@ app.post('/api/projects', async (req, res) => {
 // Update Project
 app.put('/api/projects/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, budget, address, notes, status, clientName, clientEmail, clientPhone, clientType } = req.body;
+  const { name, budget, address, notes, status, clientName, clientEmail, clientPhone, clientType, startDate, assignedDesigner } = req.body;
   
   try {
     const db = await getDb();
@@ -195,6 +197,8 @@ app.put('/api/projects/:id', async (req, res) => {
     if (address !== undefined) { projectUpdates.push('address = ?'); projectParams.push(address); }
     if (notes !== undefined) { projectUpdates.push('notes = ?'); projectParams.push(notes); }
     if (status !== undefined) { projectUpdates.push('status = ?'); projectParams.push(status); }
+    if (startDate !== undefined) { projectUpdates.push('start_date = ?'); projectParams.push(startDate); }
+    if (assignedDesigner !== undefined) { projectUpdates.push('assigned_designer = ?'); projectParams.push(assignedDesigner); }
     
     if (projectUpdates.length > 0) {
       projectParams.push(id);
@@ -701,6 +705,100 @@ app.get('/api/reports/budget', async (req, res) => {
     });
 
     res.json(reports);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Clients CRUD APIs
+app.get('/api/clients', async (req, res) => {
+  try {
+    const db = await getDb();
+    const clients = await db.all('SELECT * FROM clients ORDER BY created_at DESC');
+    res.json(clients);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/clients', async (req, res) => {
+  const { name, email, phone, company, type, status } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  try {
+    const db = await getDb();
+    const result = await db.run(
+      'INSERT INTO clients (name, email, phone, company, type, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email || '', phone || '', company || '', type || 'Residential', status || 'Active']
+    );
+    res.status(201).json({ id: result.lastID, name, email, phone, company, type, status: status || 'Active' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/clients/:id', async (req, res) => {
+  const { name, email, phone, company, type, status } = req.body;
+  const { id } = req.params;
+  try {
+    const db = await getDb();
+    await db.run(
+      'UPDATE clients SET name = ?, email = ?, phone = ?, company = ?, type = ?, status = ? WHERE id = ?',
+      [name, email, phone, company, type, status, id]
+    );
+    res.json({ id: Number(id), name, email, phone, company, type, status });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/clients/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = await getDb();
+    await db.run('DELETE FROM clients WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Vendors CRUD APIs
+app.post('/api/vendors', async (req, res) => {
+  const { name, contact_name, phone, email, category, address, rating } = req.body;
+  if (!name || !category) return res.status(400).json({ error: 'Name and category are required' });
+  try {
+    const db = await getDb();
+    const result = await db.run(
+      'INSERT INTO vendors (name, contact_name, phone, email, category, address, rating) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, contact_name || '', phone || '', email || '', category, address || '', rating || 5.0]
+    );
+    res.status(201).json({ id: result.lastID, name, contact_name, phone, email, category, address, rating: rating || 5.0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/vendors/:id', async (req, res) => {
+  const { name, contact_name, phone, email, category, address, rating } = req.body;
+  const { id } = req.params;
+  try {
+    const db = await getDb();
+    await db.run(
+      'UPDATE vendors SET name = ?, contact_name = ?, phone = ?, email = ?, category = ?, address = ?, rating = ? WHERE id = ?',
+      [name, contact_name, phone, email, category, address, rating, id]
+    );
+    res.json({ id: Number(id), name, contact_name, phone, email, category, address, rating });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/vendors/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = await getDb();
+    await db.run('DELETE FROM vendors WHERE id = ?', [id]);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

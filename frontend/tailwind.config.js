@@ -8,13 +8,42 @@ export default {
     extend: {
       colors: {
         gold: {
-          light: '#e5c060',
-          DEFAULT: '#c5a880',
-          dark: '#aa841c',
-          accent: '#d4af37'
+          light: 'rgb(var(--gold-light-rgb) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--gold-rgb) / <alpha-value>)',
+          dark: 'rgb(var(--gold-dark-rgb) / <alpha-value>)',
+          accent: 'rgb(var(--gold-accent-rgb) / <alpha-value>)'
         },
         slate: {
-          950: '#07090e'
+          900: 'rgb(var(--slate-900-rgb) / <alpha-value>)',
+          950: 'rgb(var(--slate-950-rgb) / <alpha-value>)'
+        },
+        gray: {
+          100: 'rgb(var(--gray-100-rgb) / <alpha-value>)',
+          200: 'rgb(var(--gray-200-rgb) / <alpha-value>)',
+          300: 'rgb(var(--gray-300-rgb) / <alpha-value>)',
+          400: 'rgb(var(--gray-400-rgb) / <alpha-value>)',
+          500: 'rgb(var(--gray-500-rgb) / <alpha-value>)'
+        },
+        white: 'rgb(var(--white-rgb) / <alpha-value>)',
+        emerald: {
+          400: 'rgb(var(--emerald-400-rgb) / <alpha-value>)',
+          500: 'rgb(var(--emerald-500-rgb) / <alpha-value>)',
+          950: 'rgb(var(--emerald-950-rgb) / <alpha-value>)'
+        },
+        rose: {
+          400: 'rgb(var(--rose-400-rgb) / <alpha-value>)',
+          500: 'rgb(var(--rose-500-rgb) / <alpha-value>)',
+          950: 'rgb(var(--rose-950-rgb) / <alpha-value>)'
+        },
+        amber: {
+          400: 'rgb(var(--amber-400-rgb) / <alpha-value>)',
+          500: 'rgb(var(--amber-500-rgb) / <alpha-value>)',
+          950: 'rgb(var(--amber-950-rgb) / <alpha-value>)'
+        },
+        sky: {
+          400: 'rgb(var(--sky-400-rgb) / <alpha-value>)',
+          500: 'rgb(var(--sky-500-rgb) / <alpha-value>)',
+          950: 'rgb(var(--sky-950-rgb) / <alpha-value>)'
         }
       },
       fontFamily: {

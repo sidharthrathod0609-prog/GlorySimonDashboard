@@ -38,10 +38,12 @@ async function initDb() {
       budget REAL DEFAULT 0,
       address TEXT,
       notes TEXT,
+      start_date TEXT DEFAULT NULL,
+      assigned_designer TEXT DEFAULT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
     );
-
+  
     CREATE TABLE IF NOT EXISTS rooms (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       project_id INTEGER,
@@ -94,7 +96,7 @@ async function initDb() {
       material_id INTEGER,
       vendor_id INTEGER,
       quantity REAL DEFAULT 1,
-      status TEXT CHECK(status IN ('Pending', 'Selected', 'Approved', 'Replaced')) DEFAULT 'Pending',
+      status TEXT CHECK(status IN ('Pending', 'Selected', 'Approved', 'Rejected', 'Replaced')) DEFAULT 'Pending',
       notes TEXT,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
@@ -148,6 +150,18 @@ async function initDb() {
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     );
   `);
+
+  // Run dynamic migrations for pre-existing databases
+  try {
+    await db.run('ALTER TABLE projects ADD COLUMN start_date TEXT DEFAULT NULL');
+  } catch (e) {
+    // Already exists
+  }
+  try {
+    await db.run('ALTER TABLE projects ADD COLUMN assigned_designer TEXT DEFAULT NULL');
+  } catch (e) {
+    // Already exists
+  }
 
   // Check if we already have clients. If so, database is seeded, skip.
   const clientsCount = await db.get('SELECT COUNT(*) as count FROM clients');

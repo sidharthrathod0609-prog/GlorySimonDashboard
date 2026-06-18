@@ -9,7 +9,8 @@ import {
   Expense,
   Task,
   SiteVisit,
-  User
+  User,
+  Client
 } from '../types';
 
 interface AppState {
@@ -20,6 +21,8 @@ interface AppState {
   vendors: Vendor[];
   stats: any;
   brandTheme: string;
+  themeMode: 'light' | 'dark' | 'system';
+  backgroundStyle: 'villa' | 'living-room' | 'office' | 'architectural';
   activeProjectId: number | null;
   projectDetails: any;
   detailsLoading: boolean;
@@ -28,10 +31,19 @@ interface AppState {
   isAuthenticated: boolean;
   currentUser: User;
   usersList: User[];
+  clients: Client[];
+  
+  // Tracking & Workflow States
+  procurements: any[];
+  installations: any[];
+  quotations: any[];
+  notifications: any[];
 
   // Actions
   setCurrentTab: (tab: string) => void;
   setBrandTheme: (theme: string) => void;
+  setThemeMode: (mode: 'light' | 'dark' | 'system') => void;
+  setBackgroundStyle: (style: 'villa' | 'living-room' | 'office' | 'architectural') => void;
   setCurrentUser: (user: User) => void;
   setActiveProjectId: (id: number | null) => void;
   
@@ -41,6 +53,12 @@ interface AppState {
   sendPasswordReset: (email: string) => Promise<boolean>;
   updateUserProfile: (name: string, email: string) => void;
   addUser: (user: User) => void;
+  
+  // Client Actions
+  fetchClients: () => Promise<void>;
+  createClient: (clientData: Partial<Client>) => Promise<void>;
+  updateClient: (id: number, clientData: Partial<Client>) => Promise<void>;
+  deleteClient: (id: number) => Promise<void>;
 
   // Sourcing Actions
   fetchStats: () => Promise<void>;
@@ -73,6 +91,17 @@ interface AppState {
   createTask: (taskData: Partial<Task>) => Promise<void>;
   updateTaskStatus: (taskId: number, status: 'To Do' | 'In Progress' | 'Completed') => Promise<void>;
   deleteTask: (taskId: number) => Promise<void>;
+
+  // Vendor & Tracker Actions
+  createVendor: (vendorData: Partial<Vendor>) => Promise<void>;
+  updateVendor: (id: number, vendorData: Partial<Vendor>) => Promise<void>;
+  deleteVendor: (id: number) => Promise<void>;
+  createProcurement: (data: any) => Promise<void>;
+  updateProcurementStatus: (id: number, status: string) => Promise<void>;
+  updateInstallationStatus: (taskId: number, status: string) => Promise<void>;
+  createQuotation: (data: any) => Promise<void>;
+  deleteQuotation: (id: number) => Promise<void>;
+  fetchNotifications: () => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -83,6 +112,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   vendors: [],
   stats: null,
   brandTheme: 'gold',
+  themeMode: (localStorage.getItem('gs_theme_mode') as any) || 'dark',
+  backgroundStyle: (localStorage.getItem('gs_background_style') as any) || 'villa',
   activeProjectId: null,
   projectDetails: null,
   detailsLoading: false,
@@ -101,10 +132,41 @@ export const useAppStore = create<AppState>((set, get) => ({
     { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD', password: 'PM123' },
     { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN', password: 'Vendor123' }
   ],
+  clients: [],
+  procurements: JSON.parse(localStorage.getItem('gs_procurements') || 'null') || [
+    { id: 1, material: 'Italian Carrara Vitrified Tile', vendor: 'Apex Marble & Tiles', quantity: 432, orderedDate: '2026-06-10', deliveryDate: '2026-06-20', status: 'Shipped' },
+    { id: 2, material: 'Teak Wood Matte Laminate', vendor: 'DecoWood Laminates', quantity: 252, orderedDate: '2026-06-12', deliveryDate: '2026-06-18', status: 'Delivered' },
+    { id: 3, material: 'Chesterfield Emerald Velvet Sofa', vendor: 'Royal Oak Furniture', quantity: 1, orderedDate: '2026-06-14', deliveryDate: '2026-06-25', status: 'Ordered' }
+  ],
+  installations: JSON.parse(localStorage.getItem('gs_installations') || 'null') || [
+    { id: 'Flooring', task: 'Flooring', status: 'In Progress', progress: 60, notes: 'Living room marble installation in progress' },
+    { id: 'Painting', task: 'Painting', status: 'Not Started', progress: 0, notes: 'Sanding completed. Wall priming pending' },
+    { id: 'Lighting', task: 'Lighting', status: 'Not Started', progress: 0, notes: 'False ceiling wiring check completed' },
+    { id: 'Furniture', task: 'Furniture', status: 'Not Started', progress: 0, notes: 'Sofa sourcing completed. Site delivery pending' }
+  ],
+  quotations: JSON.parse(localStorage.getItem('gs_quotations') || 'null') || [
+    { id: 1, date: '2026-06-18', clientName: 'Sidharth Rathod', projectName: 'Rathod Penthouse Villa', items: [
+      { material: 'Italian Carrara Vitrified Tile', quantity: 400, unitCost: 120, gst: 18, total: 56640 }
+    ], total: 56640 }
+  ],
+  notifications: [
+    { id: 1, type: 'approval', title: 'Material Approval Pending', message: 'Chevron Dark Slate Tile for Executive Boardroom requires client approval', date: '10 mins ago', read: false },
+    { id: 2, type: 'visit', title: 'Site Visit Reminder', message: 'Drywall check booked for Priya Cozy 2BHK Apartment at 10:00 AM tomorrow', date: '2 hours ago', read: false },
+    { id: 3, type: 'vendor', title: 'Vendor Follow-up', message: 'Linen Beige Blackout Curtain PO requires coordinator dispatch signature', date: '5 hours ago', read: true },
+    { id: 4, type: 'budget', title: 'Budget Exceeded Alert', message: 'Rathod Penthouse Villa has exceeded its allocated budget cap limit!', date: '1 day ago', read: false }
+  ],
 
   // State Switchers
   setCurrentTab: (tab) => set({ currentTab: tab }),
   setBrandTheme: (theme) => set({ brandTheme: theme }),
+  setThemeMode: (mode) => {
+    localStorage.setItem('gs_theme_mode', mode);
+    set({ themeMode: mode });
+  },
+  setBackgroundStyle: (style) => {
+    localStorage.setItem('gs_background_style', style);
+    set({ backgroundStyle: style });
+  },
   setCurrentUser: (user) => {
     localStorage.setItem('gs_currentUser', JSON.stringify(user));
     set({ currentUser: user });
@@ -154,6 +216,40 @@ export const useAppStore = create<AppState>((set, get) => ({
     const updated = [...usersList, user];
     localStorage.setItem('gs_usersList', JSON.stringify(updated));
     set({ usersList: updated });
+  },
+  fetchClients: async () => {
+    try {
+      const clients = await db.getClients();
+      set({ clients });
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+    }
+  },
+  createClient: async (clientData) => {
+    try {
+      await db.createClient(clientData);
+      await get().fetchClients();
+    } catch (err) {
+      console.error('Error creating client:', err);
+    }
+  },
+  updateClient: async (id, clientData) => {
+    try {
+      await db.updateClient(id, clientData);
+      await get().fetchClients();
+      await get().fetchProjects();
+    } catch (err) {
+      console.error('Error updating client:', err);
+    }
+  },
+  deleteClient: async (id) => {
+    try {
+      await db.deleteClient(id);
+      await get().fetchClients();
+      await get().fetchProjects();
+    } catch (err) {
+      console.error('Error deleting client:', err);
+    }
   },
   setActiveProjectId: (id) => {
     set({ activeProjectId: id });
@@ -289,12 +385,40 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   updateSelection: async (selectionId, updateData) => {
-    const { activeProjectId, currentUser } = get();
+    const { activeProjectId, currentUser, procurements, projectDetails } = get();
     try {
       await db.updateSelection(selectionId, {
         ...updateData,
         userName: currentUser.name
       });
+      
+      // Seed procurement tracking entry automatically if approved
+      if (updateData.status === 'Approved') {
+        const selectionItem = projectDetails?.selections?.find((s: any) => s.id === selectionId);
+        if (selectionItem) {
+          const alreadyExists = procurements.some((p: any) => p.selectionId === selectionId);
+          if (!alreadyExists) {
+            const delivery = new Date();
+            delivery.setDate(delivery.getDate() + 10);
+            
+            const newProc = {
+              id: Date.now(),
+              selectionId,
+              material: selectionItem.material_name || 'Italian Tile finish',
+              vendor: selectionItem.vendor_name || 'Apex Marble & Tiles',
+              quantity: selectionItem.quantity || 1,
+              orderedDate: new Date().toISOString().split('T')[0],
+              deliveryDate: delivery.toISOString().split('T')[0],
+              status: 'Ordered'
+            };
+            
+            const updatedProcurements = [...procurements, newProc];
+            localStorage.setItem('gs_procurements', JSON.stringify(updatedProcurements));
+            set({ procurements: updatedProcurements });
+          }
+        }
+      }
+
       if (activeProjectId) {
         await get().fetchProjectDetails(activeProjectId);
       }
@@ -388,5 +512,148 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (err) {
       console.error('Error deleting task:', err);
     }
+  },
+
+  // Vendor CRUD implementations
+  createVendor: async (vendorData) => {
+    try {
+      await db.createVendor(vendorData);
+      await get().fetchVendors();
+    } catch (err) {
+      console.error('Error creating vendor:', err);
+    }
+  },
+
+  updateVendor: async (id, vendorData) => {
+    try {
+      await db.updateVendor(id, vendorData);
+      await get().fetchVendors();
+    } catch (err) {
+      console.error('Error updating vendor:', err);
+    }
+  },
+
+  deleteVendor: async (id) => {
+    if (!confirm('Are you sure you want to delete this supplier?')) return;
+    try {
+      await db.deleteVendor(id);
+      await get().fetchVendors();
+    } catch (err) {
+      console.error('Error deleting vendor:', err);
+    }
+  },
+
+  // Procurement Trackers
+  createProcurement: async (data) => {
+    const { procurements } = get();
+    const newItem = { id: Date.now(), ...data };
+    const updated = [...procurements, newItem];
+    localStorage.setItem('gs_procurements', JSON.stringify(updated));
+    set({ procurements: updated });
+  },
+
+  updateProcurementStatus: async (id, status) => {
+    const { procurements } = get();
+    const updated = procurements.map(item => item.id === id ? { ...item, status } : item);
+    localStorage.setItem('gs_procurements', JSON.stringify(updated));
+    set({ procurements: updated });
+  },
+
+  // Installation Tracker Progress
+  updateInstallationStatus: async (id, status) => {
+    const { installations } = get();
+    const updated = installations.map(item => {
+      if (item.id === id) {
+        let progress = 0;
+        if (status === 'Completed') progress = 100;
+        else if (status === 'In Progress') progress = 50;
+        return { ...item, status, progress };
+      }
+      return item;
+    });
+    localStorage.setItem('gs_installations', JSON.stringify(updated));
+    set({ installations: updated });
+  },
+
+  // Quotation Builder Actions
+  createQuotation: async (data) => {
+    const { quotations } = get();
+    const newItem = { id: Date.now(), ...data };
+    const updated = [...quotations, newItem];
+    localStorage.setItem('gs_quotations', JSON.stringify(updated));
+    set({ quotations: updated });
+  },
+
+  deleteQuotation: async (id) => {
+    if (!confirm('Are you sure you want to delete this quote record?')) return;
+    const { quotations } = get();
+    const updated = quotations.filter(q => q.id !== id);
+    localStorage.setItem('gs_quotations', JSON.stringify(updated));
+    set({ quotations: updated });
+  },
+
+  // Live Alerts & Notifications Feed
+  fetchNotifications: () => {
+    const { projects, stats } = get();
+    const list: any[] = [];
+    
+    // 1. Budget Alerts
+    if (stats?.budgetUsage && stats.budgetUsage.utilizationPct > 100) {
+      list.push({
+        id: Date.now() + 1,
+        type: 'budget',
+        title: 'Budget Exceeded Alert',
+        message: `Sourced costs exceed budget cap by INR ${(stats.budgetUsage.totalSpent - stats.budgetUsage.totalBudget).toLocaleString()}!`,
+        date: 'Just now',
+        read: false
+      });
+    } else if (stats?.budgetUsage && stats.budgetUsage.utilizationPct >= 75) {
+      list.push({
+        id: Date.now() + 1,
+        type: 'budget',
+        title: 'Budget Utilization Warning',
+        message: `Sourced costs have reached ${stats.budgetUsage.utilizationPct}% of the allocated budget.`,
+        date: '10 mins ago',
+        read: false
+      });
+    }
+
+    // 2. Material Approvals Pending
+    const pendingCount = stats?.pendingMaterials || 0;
+    if (pendingCount > 0) {
+      list.push({
+        id: Date.now() + 2,
+        type: 'approval',
+        title: 'Material Approval Pending',
+        message: `You have ${pendingCount} material selections awaiting client sign-off validation.`,
+        date: '15 mins ago',
+        read: false
+      });
+    }
+
+    // 3. Site Visits
+    const visitsCount = stats?.siteVisitsScheduled || 0;
+    if (visitsCount > 0) {
+      list.push({
+        id: Date.now() + 3,
+        type: 'visit',
+        title: 'Site Visit Scheduled',
+        message: `Site visit scheduled for measurements check of active project.`,
+        date: '2 hours ago',
+        read: true
+      });
+    }
+
+    // 4. Default coordinator checks
+    list.push({
+      id: Date.now() + 4,
+      type: 'vendor',
+      title: 'Vendor Follow-up',
+      message: 'Apex Marble PO invoice verification is pending vendor dispatcher.',
+      date: '4 hours ago',
+      read: false
+    });
+
+    set({ notifications: list });
   }
 }));

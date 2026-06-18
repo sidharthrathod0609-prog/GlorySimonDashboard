@@ -32,6 +32,9 @@ export interface IDatabaseService {
 
   // Vendors
   getVendors(): Promise<Vendor[]>;
+  createVendor(vendorData: Partial<Vendor>): Promise<Vendor>;
+  updateVendor(id: number, vendorData: Partial<Vendor>): Promise<Vendor>;
+  deleteVendor(id: number): Promise<void>;
 
   // Selections
   createSelection(selectionData: Partial<MaterialSelection> & { userName: string }): Promise<MaterialSelection>;
@@ -52,6 +55,12 @@ export interface IDatabaseService {
   createTask(projectId: number, taskData: Partial<Task>): Promise<Task>;
   updateTaskStatus(taskId: number, status: 'To Do' | 'In Progress' | 'Completed'): Promise<Task>;
   deleteTask(taskId: number): Promise<void>;
+
+  // Clients
+  getClients(): Promise<Client[]>;
+  createClient(clientData: Partial<Client>): Promise<Client>;
+  updateClient(id: number, clientData: Partial<Client>): Promise<Client>;
+  deleteClient(id: number): Promise<void>;
 
   // Reports
   getMaterialReport(query?: string): Promise<any[]>;
@@ -128,6 +137,33 @@ export class APIDatabaseService implements IDatabaseService {
     const res = await fetch(`${API_BASE}/vendors`);
     if (!res.ok) throw new Error('Failed to fetch vendors list');
     return res.json();
+  }
+
+  async createVendor(vendorData: Partial<Vendor>) {
+    const res = await fetch(`${API_BASE}/vendors`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(vendorData)
+    });
+    if (!res.ok) throw new Error('Failed to create vendor');
+    return res.json();
+  }
+
+  async updateVendor(id: number, vendorData: Partial<Vendor>) {
+    const res = await fetch(`${API_BASE}/vendors/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(vendorData)
+    });
+    if (!res.ok) throw new Error('Failed to update vendor');
+    return res.json();
+  }
+
+  async deleteVendor(id: number) {
+    const res = await fetch(`${API_BASE}/vendors/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete vendor');
   }
 
   async createSelection(selectionData: Partial<MaterialSelection> & { userName: string }) {
@@ -237,6 +273,39 @@ export class APIDatabaseService implements IDatabaseService {
     if (!res.ok) throw new Error('Failed to load budget report');
     return res.json();
   }
+
+  async getClients() {
+    const res = await fetch(`${API_BASE}/clients`);
+    if (!res.ok) throw new Error('Failed to fetch clients');
+    return res.json();
+  }
+
+  async createClient(clientData: Partial<Client>) {
+    const res = await fetch(`${API_BASE}/clients`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(clientData)
+    });
+    if (!res.ok) throw new Error('Failed to create client');
+    return res.json();
+  }
+
+  async updateClient(id: number, clientData: Partial<Client>) {
+    const res = await fetch(`${API_BASE}/clients/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(clientData)
+    });
+    if (!res.ok) throw new Error('Failed to update client');
+    return res.json();
+  }
+
+  async deleteClient(id: number) {
+    const res = await fetch(`${API_BASE}/clients/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete client');
+  }
 }
 
 // ----------------------------------------------------
@@ -296,14 +365,22 @@ export class MockDatabaseService implements IDatabaseService {
       // Ignore storage exception
     }
 
+    // Clients seed matching the backend database
+    this.getLocalStorage('mock_clients', [
+      { id: 1, name: 'Sidharth Rathod', email: 'sidharth@example.com', phone: '+91 99999 88888', company: 'Self-Employed', type: 'Residential', status: 'Active', created_at: new Date().toISOString() },
+      { id: 2, name: 'Suman Sharma', email: 'suman@nexustech.com', phone: '+91 88888 77777', company: 'Nexus Tech Solutions', type: 'Commercial', status: 'Active', created_at: new Date().toISOString() },
+      { id: 3, name: 'Priya Patel', email: 'priya@example.com', phone: '+91 77777 66666', company: 'N/A', type: 'Residential', status: 'Active', created_at: new Date().toISOString() },
+      { id: 4, name: 'Glory Simon Admin', email: 'admin@glorysimon.com', phone: '+91 11111 22222', company: 'Glory Simon Interiors', type: 'Commercial', status: 'Active', created_at: new Date().toISOString() }
+    ]);
+
     // Projects seed matching the backend database
     this.getLocalStorage('mock_projects', [
-      { id: 1, name: 'Rathod Penthouse Villa', client_name: 'Sidharth Rathod', client_email: 'sidharth@example.com', client_phone: '+91 99999 88888', client_type: 'Residential', status: 'Material Selection', budget: 45000, address: 'Flat 1402, Highrise Heights, Bandra West, Mumbai', notes: 'Luxury residential design with high-end fixtures.', created_at: new Date().toISOString() },
-      { id: 2, name: 'Nexus Tech Corporate HQ', client_name: 'Suman Sharma', client_email: 'suman@nexustech.com', client_phone: '+91 88888 77777', client_type: 'Commercial', status: 'Design Approval', budget: 85000, address: 'Block B, Tech Park, Outer Ring Road, Mumbai', notes: 'Commercial executive space with acoustic configurations.', created_at: new Date().toISOString() },
-      { id: 3, name: 'Priya Cozy 2BHK Apartment', client_name: 'Priya Patel', client_email: 'priya@example.com', client_phone: '+91 77777 66666', client_type: 'Residential', status: 'Site Visit', budget: 18000, address: 'C-302, Green Avenue, Thane, Mumbai', notes: 'Budget-friendly space improvements.', created_at: new Date().toISOString() },
-      { id: 4, name: 'Glory Simon Experience Studio', client_name: 'Glory Simon Admin', client_email: 'admin@glorysimon.com', client_phone: '+91 11111 22222', client_type: 'Commercial', status: 'Execution', budget: 35000, address: 'Showroom 3, Galleria Mall, Lower Parel, Mumbai', notes: 'Brand concept showcase development.', created_at: new Date().toISOString() },
-      { id: 5, name: 'Golden Crest Mansion', client_name: 'Amit Sharma', client_email: 'amit@gmail.com', client_phone: '+91 99881 12233', client_type: 'Residential', status: 'Material Selection', budget: 120000, address: 'Plot 43, Sector 8, Noida', notes: 'Premium residency development.', created_at: new Date().toISOString() },
-      { id: 6, name: 'Azur Bay Villa', client_name: 'Priya Patel', client_email: 'priya@example.com', client_phone: '+91 77777 66666', client_type: 'Residential', status: 'Space Planning', budget: 75000, address: 'Coastal Road, Alibaug, Maharashtra', notes: 'Beachfront luxury villa design with modern minimalist style.', created_at: new Date().toISOString() }
+      { id: 1, name: 'Rathod Penthouse Villa', client_name: 'Sidharth Rathod', client_email: 'sidharth@example.com', client_phone: '+91 99999 88888', client_type: 'Residential', status: 'Material Selection', budget: 45000, address: 'Flat 1402, Highrise Heights, Bandra West, Mumbai', notes: 'Luxury residential design with high-end fixtures.', start_date: '2026-06-01', assigned_designer: 'Nisha Sen', created_at: new Date().toISOString() },
+      { id: 2, name: 'Nexus Tech Corporate HQ', client_name: 'Suman Sharma', client_email: 'suman@nexustech.com', client_phone: '+91 88888 77777', client_type: 'Commercial', status: 'Design Approval', budget: 85000, address: 'Block B, Tech Park, Outer Ring Road, Mumbai', notes: 'Commercial executive space with acoustic configurations.', start_date: '2026-06-05', assigned_designer: 'Rahul Dev', created_at: new Date().toISOString() },
+      { id: 3, name: 'Priya Cozy 2BHK Apartment', client_name: 'Priya Patel', client_email: 'priya@example.com', client_phone: '+91 77777 66666', client_type: 'Residential', status: 'Site Visit', budget: 18000, address: 'C-302, Green Avenue, Thane, Mumbai', notes: 'Budget-friendly space improvements.', start_date: '2026-06-10', assigned_designer: 'Nisha Sen', created_at: new Date().toISOString() },
+      { id: 4, name: 'Glory Simon Experience Studio', client_name: 'Glory Simon Admin', client_email: 'admin@glorysimon.com', client_phone: '+91 11111 22222', client_type: 'Commercial', status: 'Execution', budget: 35000, address: 'Showroom 3, Galleria Mall, Lower Parel, Mumbai', notes: 'Brand concept showcase development.', start_date: '2026-06-12', assigned_designer: 'Rahul Dev', created_at: new Date().toISOString() },
+      { id: 5, name: 'Golden Crest Mansion', client_name: 'Amit Sharma', client_email: 'amit@gmail.com', client_phone: '+91 99881 12233', client_type: 'Residential', status: 'Material Selection', budget: 120000, address: 'Plot 43, Sector 8, Noida', notes: 'Premium residency development.', start_date: '2026-06-14', assigned_designer: 'Nisha Sen', created_at: new Date().toISOString() },
+      { id: 6, name: 'Azur Bay Villa', client_name: 'Priya Patel', client_email: 'priya@example.com', client_phone: '+91 77777 66666', client_type: 'Residential', status: 'Space Planning', budget: 75000, address: 'Coastal Road, Alibaug, Maharashtra', notes: 'Beachfront luxury villa design with modern minimalist style.', start_date: '2026-06-15', assigned_designer: 'Nisha Sen', created_at: new Date().toISOString() }
     ]);
 
     // Rooms seed matching the backend database
@@ -422,6 +499,7 @@ export class MockDatabaseService implements IDatabaseService {
     const vendors = this.getLocalStorage<Vendor[]>('mock_vendors', []);
     const expenses = this.getLocalStorage<Expense[]>('mock_expenses', []);
     const history = this.getLocalStorage<MaterialHistory[]>('mock_history', []);
+    const visits = this.getLocalStorage<SiteVisit[]>('mock_site_visits', []);
 
     const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
     const approvedSourced = selections.filter(s => s.status === 'Approved').reduce((sum, s) => sum + (s.quantity * (s.unit_price || 0)), 0);
@@ -434,6 +512,7 @@ export class MockDatabaseService implements IDatabaseService {
       approvedMaterials: selections.filter(s => s.status === 'Approved').length,
       pendingMaterials: selections.filter(s => s.status === 'Pending' || s.status === 'Selected').length,
       activeVendors: vendors.length,
+      siteVisitsScheduled: visits.length,
       budgetUsage: {
         totalBudget: totalBudget,
         totalSpent: totalSpent,
@@ -496,6 +575,8 @@ export class MockDatabaseService implements IDatabaseService {
       budget: projectData.budget || 0,
       address: projectData.address || '',
       notes: projectData.notes || '',
+      start_date: projectData.start_date || new Date().toISOString().split('T')[0],
+      assigned_designer: projectData.assigned_designer || 'Nisha Sen',
       created_at: new Date().toISOString(),
       client_name: projectData.client_name || 'Mock Client',
       client_email: projectData.client_email || '',
@@ -551,6 +632,41 @@ export class MockDatabaseService implements IDatabaseService {
   async getVendors() {
     await this.simulateDelay();
     return this.getLocalStorage<Vendor[]>('mock_vendors', []);
+  }
+
+  async createVendor(vendorData: Partial<Vendor>) {
+    await this.simulateDelay();
+    const vendors = this.getLocalStorage<Vendor[]>('mock_vendors', []);
+    const newVendor: Vendor = {
+      id: Date.now(),
+      name: vendorData.name || 'New Sourced Supplier',
+      contact_name: vendorData.contact_name || '',
+      phone: vendorData.phone || '',
+      email: vendorData.email || '',
+      category: vendorData.category || 'Tiles',
+      address: vendorData.address || '',
+      rating: vendorData.rating || 5.0
+    };
+    vendors.push(newVendor);
+    this.setLocalStorage('mock_vendors', vendors);
+    return newVendor;
+  }
+
+  async updateVendor(id: number, vendorData: Partial<Vendor>) {
+    await this.simulateDelay();
+    const vendors = this.getLocalStorage<Vendor[]>('mock_vendors', []);
+    const idx = vendors.findIndex(v => v.id === id);
+    if (idx === -1) throw new Error('Vendor not found');
+    vendors[idx] = { ...vendors[idx], ...vendorData };
+    this.setLocalStorage('mock_vendors', vendors);
+    return vendors[idx];
+  }
+
+  async deleteVendor(id: number) {
+    await this.simulateDelay();
+    let vendors = this.getLocalStorage<Vendor[]>('mock_vendors', []);
+    vendors = vendors.filter(v => v.id !== id);
+    this.setLocalStorage('mock_vendors', vendors);
   }
 
   async createSelection(selectionData: Partial<MaterialSelection> & { userName: string }) {
@@ -771,6 +887,46 @@ export class MockDatabaseService implements IDatabaseService {
       };
     });
   }
+
+  async getClients() {
+    await this.simulateDelay();
+    return this.getLocalStorage<Client[]>('mock_clients', []);
+  }
+
+  async createClient(clientData: Partial<Client>) {
+    await this.simulateDelay();
+    const clients = this.getLocalStorage<Client[]>('mock_clients', []);
+    const newClient: Client = {
+      id: Date.now(),
+      name: clientData.name || 'New Client',
+      email: clientData.email || '',
+      phone: clientData.phone || '',
+      company: clientData.company || '',
+      type: clientData.type || 'Residential',
+      status: clientData.status || 'Active',
+      created_at: new Date().toISOString()
+    };
+    clients.push(newClient);
+    this.setLocalStorage('mock_clients', clients);
+    return newClient;
+  }
+
+  async updateClient(id: number, clientData: Partial<Client>) {
+    await this.simulateDelay();
+    const clients = this.getLocalStorage<Client[]>('mock_clients', []);
+    const idx = clients.findIndex(c => c.id === id);
+    if (idx === -1) throw new Error('Client not found');
+    clients[idx] = { ...clients[idx], ...clientData };
+    this.setLocalStorage('mock_clients', clients);
+    return clients[idx];
+  }
+
+  async deleteClient(id: number) {
+    await this.simulateDelay();
+    let clients = this.getLocalStorage<Client[]>('mock_clients', []);
+    clients = clients.filter(c => c.id !== id);
+    this.setLocalStorage('mock_clients', clients);
+  }
 }
 
 // ----------------------------------------------------
@@ -856,6 +1012,22 @@ export class SupabaseDatabaseService implements IDatabaseService {
   }
 
   async deleteTask(taskId: number): Promise<void> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async getClients(): Promise<Client[]> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async createClient(clientData: Partial<Client>): Promise<Client> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async updateClient(id: number, clientData: Partial<Client>): Promise<Client> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async deleteClient(id: number): Promise<void> {
     throw new Error('Supabase integration draft only.');
   }
 

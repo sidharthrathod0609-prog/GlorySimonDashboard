@@ -17,6 +17,8 @@ export interface Project {
   budget: number;
   address: string;
   notes: string;
+  start_date?: string;
+  assigned_designer?: string;
   created_at: string;
   client_name?: string;
   client_email?: string;
@@ -77,7 +79,7 @@ export interface MaterialSelection {
   material_id: number;
   vendor_id?: number;
   quantity: number;
-  status: 'Pending' | 'Selected' | 'Approved' | 'Replaced';
+  status: 'Pending' | 'Selected' | 'Approved' | 'Rejected' | 'Replaced';
   notes: string;
   updated_at: string;
   material_name?: string;

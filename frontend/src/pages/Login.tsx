@@ -157,7 +157,7 @@ export default function Login() {
 
               {/* Email Input */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block px-1">
+                <label htmlFor="login-email" className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block px-1">
                   Email Address
                 </label>
                 <div className="relative">
@@ -165,12 +165,13 @@ export default function Login() {
                     <Mail size={16} />
                   </span>
                   <input
+                    id="login-email"
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@glorysimon.com"
-                    className="w-full bg-slate-950/80 border border-white/10 text-white rounded-xl focus:border-gold outline-none py-3 pl-10 pr-4 text-sm transition-all focus:ring-1 focus:ring-gold/20"
+                    className="w-full bg-slate-950/80 border border-white/10 text-white rounded-xl focus:border-gold outline-none py-3 pl-10 pr-4 text-sm transition-all focus:ring-1 focus:ring-gold/20 min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold"
                   />
                 </div>
               </div>
@@ -178,7 +179,7 @@ export default function Login() {
               {/* Password Input */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between px-1">
-                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+                  <label htmlFor="login-password" className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
                     Password
                   </label>
                   <Link
@@ -193,17 +194,19 @@ export default function Login() {
                     <Lock size={16} />
                   </span>
                   <input
+                    id="login-password"
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-slate-950/80 border border-white/10 text-white rounded-xl focus:border-gold outline-none py-3 pl-10 pr-10 text-sm transition-all focus:ring-1 focus:ring-gold/20"
+                    className="w-full bg-slate-950/80 border border-white/10 text-white rounded-xl focus:border-gold outline-none py-3 pl-10 pr-10 text-sm transition-all focus:ring-1 focus:ring-gold/20 min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition duration-150"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -228,7 +231,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-gradient-to-br from-gold-dark to-gold text-slate-950 font-bold rounded-xl shadow-lg shadow-gold/10 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 bg-gradient-to-br from-gold-dark to-gold text-slate-950 font-bold rounded-xl shadow-lg shadow-gold/10 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 min-h-[48px]"
               >
                 {loading ? (
                   <span className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />

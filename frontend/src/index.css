@@ -4,37 +4,74 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+body, .glass-panel, .glass-panel-interactive, button, input, select, textarea {
+  transition: background 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
 :root {
   --font-primary: 'Outfit', sans-serif;
   --font-secondary: 'Plus Jakarta Sans', sans-serif;
 
-  /* Color Palette */
-  --bg-main: #07090e;
-  --bg-gradient: radial-gradient(circle at 50% 0%, #161c2d 0%, #07090e 100%);
+  /* Theme variables (Default: Dark Mode) */
+  --slate-950-rgb: 5, 8, 22;
+  --slate-900-rgb: 15, 23, 42;
+  --gray-100-rgb: 248, 250, 252;
+  --gray-200-rgb: 226, 232, 240;
+  --gray-300-rgb: 203, 213, 225;
+  --gray-400-rgb: 148, 163, 184;
+  --gray-500-rgb: 100, 116, 139;
+  --white-rgb: 255, 255, 255;
+
+  --gold-rgb: 198, 156, 109;
+  --gold-accent-rgb: 212, 175, 55;
+  --gold-dark-rgb: 170, 132, 28;
+  --gold-light-rgb: 229, 192, 96;
+
+  /* Status Colors */
+  --emerald-400-rgb: 52, 211, 153;
+  --emerald-500-rgb: 16, 185, 129;
+  --emerald-950-rgb: 2, 44, 34;
+
+  --rose-400-rgb: 248, 113, 113;
+  --rose-500-rgb: 239, 68, 68;
+  --rose-950-rgb: 69, 10, 10;
+
+  --amber-400-rgb: 251, 191, 36;
+  --amber-500-rgb: 245, 158, 11;
+  --amber-950-rgb: 69, 26, 3;
+
+  --sky-400-rgb: 56, 189, 248;
+  --sky-500-rgb: 14, 165, 233;
+  --sky-950-rgb: 8, 47, 73;
+
+  /* Color Palette aliases */
+  --bg-main: #050816;
+  --bg-gradient: radial-gradient(circle at 50% 0%, #0c152a 0%, #050816 100%);
   --bg-sidebar: rgba(13, 17, 28, 0.95);
   
-  --glass-bg: rgba(22, 28, 45, 0.45);
-  --glass-bg-hover: rgba(30, 41, 69, 0.6);
+  --glass-bg: rgba(15, 23, 42, 0.45);
+  --glass-bg-hover: rgba(30, 41, 59, 0.6);
   --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-border-glow: rgba(197, 168, 128, 0.25);
+  --glass-border-glow: rgba(198, 156, 109, 0.25);
   
-  --color-primary: #c5a880; /* Elegant Warm Gold */
+  --color-primary: #C69C6D;
   --color-primary-light: #e5c060;
   --color-primary-dark: #aa841c;
-  --color-primary-rgb: 197, 168, 128;
+  --color-primary-rgb: 198, 156, 109;
   
-  --color-accent: #d4af37; /* Bright Gold Accent */
-  --color-text-main: #f3f4f6;
-  --color-text-muted: #9ca3af;
-  --color-text-dark: #6b7280;
+  --color-accent: #C69C6D;
+  --color-text-main: #F8FAFC;
+  --color-text-muted: #94A3B8;
+  --color-text-dark: #64748B;
   
-  /* Status Colors */
-  --status-selected: #3b82f6; /* Blue */
-  --status-pending: #f59e0b; /* Amber */
-  --status-replaced: #ef4444; /* Red / Coral */
-  --status-approved: #10b981; /* Emerald */
+  --status-selected: #3b82f6;
+  --status-pending: #f59e0b;
+  --status-replaced: #ef4444;
+  --status-approved: #10b981;
   
-  /* Sidebar Width */
   --sidebar-width: 260px;
   --border-radius-lg: 16px;
   --border-radius-md: 10px;
@@ -42,7 +79,131 @@
   
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-  --glow-shadow: 0 0 20px rgba(197, 168, 128, 0.15);
+  --glow-shadow: 0 0 20px rgba(198, 156, 109, 0.15);
+  
+  --color-bg-overlay: rgba(5, 8, 22, 0.85);
+}
+
+html.light {
+  --slate-950-rgb: 248, 246, 243;
+  --slate-900-rgb: 255, 255, 255;
+  --gray-100-rgb: 31, 41, 55;
+  --gray-200-rgb: 75, 85, 99;
+  --gray-300-rgb: 107, 114, 128;
+  --gray-400-rgb: 156, 163, 175;
+  --gray-500-rgb: 209, 213, 219;
+  --white-rgb: 31, 41, 55;
+
+  --gold-rgb: 139, 94, 60;
+  --gold-accent-rgb: 139, 94, 60;
+  --gold-dark-rgb: 110, 69, 37;
+  --gold-light-rgb: 166, 124, 88;
+
+  --emerald-400-rgb: 22, 163, 74;
+  --emerald-500-rgb: 22, 163, 74;
+  --emerald-950-rgb: 220, 252, 231;
+
+  --rose-400-rgb: 220, 38, 38;
+  --rose-500-rgb: 220, 38, 38;
+  --rose-950-rgb: 254, 226, 226;
+
+  --amber-400-rgb: 217, 119, 6;
+  --amber-500-rgb: 217, 119, 6;
+  --amber-950-rgb: 254, 243, 199;
+
+  --sky-400-rgb: 37, 99, 235;
+  --sky-500-rgb: 37, 99, 235;
+  --sky-950-rgb: 219, 234, 254;
+
+  --bg-main: #F8F6F3;
+  --bg-gradient: linear-gradient(180deg, #F8F6F3 0%, #F0EDE9 100%);
+  --bg-sidebar: rgba(240, 237, 233, 0.95);
+  
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg-hover: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(31, 41, 55, 0.08);
+  --glass-border-glow: rgba(139, 94, 60, 0.25);
+  
+  --color-primary: #8B5E3C;
+  --color-primary-light: #a67c58;
+  --color-primary-dark: #6e4525;
+  --color-primary-rgb: 139, 94, 60;
+  
+  --color-accent: #8B5E3C;
+  --color-text-main: #1F2937;
+  --color-text-muted: #6B7280;
+  --color-text-dark: #9CA3AF;
+  
+  --status-selected: #2563eb;
+  --status-pending: #d97706;
+  --status-replaced: #dc2626;
+  --status-approved: #16a34a;
+  
+  --box-shadow: 0 8px 32px 0 rgba(31, 41, 55, 0.08);
+  --glow-shadow: 0 0 20px rgba(139, 94, 60, 0.1);
+  
+  --color-bg-overlay: rgba(248, 246, 243, 0.82);
+}
+
+html.dark {
+  --slate-950-rgb: 5, 8, 22;
+  --slate-900-rgb: 15, 23, 42;
+  --gray-100-rgb: 248, 250, 252;
+  --gray-200-rgb: 226, 232, 240;
+  --gray-300-rgb: 203, 213, 225;
+  --gray-400-rgb: 148, 163, 184;
+  --gray-500-rgb: 100, 116, 139;
+  --white-rgb: 255, 255, 255;
+
+  --gold-rgb: 198, 156, 109;
+  --gold-accent-rgb: 212, 175, 55;
+  --gold-dark-rgb: 170, 132, 28;
+  --gold-light-rgb: 229, 192, 96;
+
+  --emerald-400-rgb: 52, 211, 153;
+  --emerald-500-rgb: 16, 185, 129;
+  --emerald-950-rgb: 2, 44, 34;
+
+  --rose-400-rgb: 248, 113, 113;
+  --rose-500-rgb: 239, 68, 68;
+  --rose-950-rgb: 69, 10, 10;
+
+  --amber-400-rgb: 251, 191, 36;
+  --amber-500-rgb: 245, 158, 11;
+  --amber-950-rgb: 69, 26, 3;
+
+  --sky-400-rgb: 56, 189, 248;
+  --sky-500-rgb: 14, 165, 233;
+  --sky-950-rgb: 8, 47, 73;
+
+  --bg-main: #050816;
+  --bg-gradient: radial-gradient(circle at 50% 0%, #0c152a 0%, #050816 100%);
+  --bg-sidebar: rgba(13, 17, 28, 0.95);
+  
+  --glass-bg: rgba(15, 23, 42, 0.45);
+  --glass-bg-hover: rgba(30, 41, 59, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-border-glow: rgba(198, 156, 109, 0.25);
+  
+  --color-primary: #C69C6D;
+  --color-primary-light: #e5c060;
+  --color-primary-dark: #aa841c;
+  --color-primary-rgb: 198, 156, 109;
+  
+  --color-accent: #C69C6D;
+  --color-text-main: #F8FAFC;
+  --color-text-muted: #94A3B8;
+  --color-text-dark: #64748B;
+  
+  --status-selected: #3b82f6;
+  --status-pending: #f59e0b;
+  --status-replaced: #ef4444;
+  --status-approved: #10b981;
+  
+  --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --glow-shadow: 0 0 20px rgba(198, 156, 109, 0.15);
+  
+  --color-bg-overlay: rgba(5, 8, 22, 0.85);
 }
 
 * {

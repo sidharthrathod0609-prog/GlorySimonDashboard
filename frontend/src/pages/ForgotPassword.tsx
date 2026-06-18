@@ -76,7 +76,7 @@ export default function ForgotPassword() {
                   )}
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block px-1">
+                    <label htmlFor="reset-email" className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block px-1">
                       Email Address
                     </label>
                     <div className="relative">
@@ -84,12 +84,13 @@ export default function ForgotPassword() {
                         <Mail size={16} />
                       </span>
                       <input
+                        id="reset-email"
                         type="email"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="name@glorysimon.com"
-                        className="w-full bg-slate-950/80 border border-white/10 text-white rounded-xl focus:border-gold outline-none py-3.5 pl-10 pr-4 text-sm transition-all focus:ring-1 focus:ring-gold/20"
+                        className="w-full bg-slate-950/80 border border-white/10 text-white rounded-xl focus:border-gold outline-none py-3.5 pl-10 pr-4 text-sm transition-all focus:ring-1 focus:ring-gold/20 focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold"
                       />
                     </div>
                   </div>

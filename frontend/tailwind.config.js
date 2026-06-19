@@ -13,18 +13,7 @@ export default {
           dark: 'rgb(var(--gold-dark-rgb) / <alpha-value>)',
           accent: 'rgb(var(--gold-accent-rgb) / <alpha-value>)'
         },
-        slate: {
-          900: 'rgb(var(--slate-900-rgb) / <alpha-value>)',
-          950: 'rgb(var(--slate-950-rgb) / <alpha-value>)'
-        },
-        gray: {
-          100: 'rgb(var(--gray-100-rgb) / <alpha-value>)',
-          200: 'rgb(var(--gray-200-rgb) / <alpha-value>)',
-          300: 'rgb(var(--gray-300-rgb) / <alpha-value>)',
-          400: 'rgb(var(--gray-400-rgb) / <alpha-value>)',
-          500: 'rgb(var(--gray-500-rgb) / <alpha-value>)'
-        },
-        white: 'rgb(var(--white-rgb) / <alpha-value>)',
+
         emerald: {
           400: 'rgb(var(--emerald-400-rgb) / <alpha-value>)',
           500: 'rgb(var(--emerald-500-rgb) / <alpha-value>)',

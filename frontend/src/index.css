@@ -16,36 +16,36 @@ body, .glass-panel, .glass-panel-interactive, button, input, select, textarea {
   --font-secondary: 'Plus Jakarta Sans', sans-serif;
 
   /* Theme variables (Default: Dark Mode) */
-  --slate-950-rgb: 5, 8, 22;
-  --slate-900-rgb: 15, 23, 42;
-  --gray-100-rgb: 248, 250, 252;
-  --gray-200-rgb: 226, 232, 240;
-  --gray-300-rgb: 203, 213, 225;
-  --gray-400-rgb: 148, 163, 184;
-  --gray-500-rgb: 100, 116, 139;
-  --white-rgb: 255, 255, 255;
+  --slate-950-rgb: 5 8 22;
+  --slate-900-rgb: 15 23 42;
+  --gray-100-rgb: 248 250 252;
+  --gray-200-rgb: 226 232 240;
+  --gray-300-rgb: 203 213 225;
+  --gray-400-rgb: 148 163 184;
+  --gray-500-rgb: 100 116 139;
+  --white-rgb: 255 255 255;
 
-  --gold-rgb: 198, 156, 109;
-  --gold-accent-rgb: 212, 175, 55;
-  --gold-dark-rgb: 170, 132, 28;
-  --gold-light-rgb: 229, 192, 96;
+  --gold-rgb: 198 156 109;
+  --gold-accent-rgb: 212 175 55;
+  --gold-dark-rgb: 170 132 28;
+  --gold-light-rgb: 229 192 96;
 
   /* Status Colors */
-  --emerald-400-rgb: 52, 211, 153;
-  --emerald-500-rgb: 16, 185, 129;
-  --emerald-950-rgb: 2, 44, 34;
+  --emerald-400-rgb: 52 211 153;
+  --emerald-500-rgb: 16 185 129;
+  --emerald-950-rgb: 2 44 34;
 
-  --rose-400-rgb: 248, 113, 113;
-  --rose-500-rgb: 239, 68, 68;
-  --rose-950-rgb: 69, 10, 10;
+  --rose-400-rgb: 248 113 113;
+  --rose-500-rgb: 239 68, 68;
+  --rose-950-rgb: 69 10 10;
 
-  --amber-400-rgb: 251, 191, 36;
-  --amber-500-rgb: 245, 158, 11;
-  --amber-950-rgb: 69, 26, 3;
+  --amber-400-rgb: 251 191 36;
+  --amber-500-rgb: 245 158 11;
+  --amber-950-rgb: 69 26 3;
 
-  --sky-400-rgb: 56, 189, 248;
-  --sky-500-rgb: 14, 165, 233;
-  --sky-950-rgb: 8, 47, 73;
+  --sky-400-rgb: 56 189 248;
+  --sky-500-rgb: 14 165 233;
+  --sky-950-rgb: 8 47 73;
 
   /* Color Palette aliases */
   --bg-main: #050816;
@@ -60,7 +60,7 @@ body, .glass-panel, .glass-panel-interactive, button, input, select, textarea {
   --color-primary: #C69C6D;
   --color-primary-light: #e5c060;
   --color-primary-dark: #aa841c;
-  --color-primary-rgb: 198, 156, 109;
+  --color-primary-rgb: 198 156 109;
   
   --color-accent: #C69C6D;
   --color-text-main: #F8FAFC;
@@ -85,35 +85,35 @@ body, .glass-panel, .glass-panel-interactive, button, input, select, textarea {
 }
 
 html.light {
-  --slate-950-rgb: 248, 246, 243;
-  --slate-900-rgb: 255, 255, 255;
-  --gray-100-rgb: 31, 41, 55;
-  --gray-200-rgb: 75, 85, 99;
-  --gray-300-rgb: 107, 114, 128;
-  --gray-400-rgb: 156, 163, 175;
-  --gray-500-rgb: 209, 213, 219;
-  --white-rgb: 31, 41, 55;
+  --slate-950-rgb: 248 246 243;
+  --slate-900-rgb: 255 255 255;
+  --gray-100-rgb: 31 41 55;
+  --gray-200-rgb: 75 85 99;
+  --gray-300-rgb: 107 114 128;
+  --gray-400-rgb: 156 163 175;
+  --gray-500-rgb: 209 213 219;
+  --white-rgb: 31 41 55;
 
-  --gold-rgb: 139, 94, 60;
-  --gold-accent-rgb: 139, 94, 60;
-  --gold-dark-rgb: 110, 69, 37;
-  --gold-light-rgb: 166, 124, 88;
+  --gold-rgb: 139 94 60;
+  --gold-accent-rgb: 139 94 60;
+  --gold-dark-rgb: 110 69 37;
+  --gold-light-rgb: 166 124 88;
 
-  --emerald-400-rgb: 22, 163, 74;
-  --emerald-500-rgb: 22, 163, 74;
-  --emerald-950-rgb: 220, 252, 231;
+  --emerald-400-rgb: 22 163 74;
+  --emerald-500-rgb: 22 163 74;
+  --emerald-950-rgb: 220 252 231;
 
-  --rose-400-rgb: 220, 38, 38;
-  --rose-500-rgb: 220, 38, 38;
-  --rose-950-rgb: 254, 226, 226;
+  --rose-400-rgb: 220 38 38;
+  --rose-500-rgb: 220 38 38;
+  --rose-950-rgb: 254 226 226;
 
-  --amber-400-rgb: 217, 119, 6;
-  --amber-500-rgb: 217, 119, 6;
-  --amber-950-rgb: 254, 243, 199;
+  --amber-400-rgb: 217 119 6;
+  --amber-500-rgb: 217 119 6;
+  --amber-950-rgb: 254 243 199;
 
-  --sky-400-rgb: 37, 99, 235;
-  --sky-500-rgb: 37, 99, 235;
-  --sky-950-rgb: 219, 234, 254;
+  --sky-400-rgb: 37 99 235;
+  --sky-500-rgb: 37 99 235;
+  --sky-950-rgb: 219 234 254;
 
   --bg-main: #F8F6F3;
   --bg-gradient: linear-gradient(180deg, #F8F6F3 0%, #F0EDE9 100%);
@@ -127,7 +127,7 @@ html.light {
   --color-primary: #8B5E3C;
   --color-primary-light: #a67c58;
   --color-primary-dark: #6e4525;
-  --color-primary-rgb: 139, 94, 60;
+  --color-primary-rgb: 139 94 60;
   
   --color-accent: #8B5E3C;
   --color-text-main: #1F2937;
@@ -146,34 +146,34 @@ html.light {
 }
 
 html.dark {
-  --slate-950-rgb: 5, 8, 22;
-  --slate-900-rgb: 15, 23, 42;
-  --gray-100-rgb: 248, 250, 252;
-  --gray-200-rgb: 226, 232, 240;
-  --gray-300-rgb: 203, 213, 225;
-  --gray-400-rgb: 148, 163, 184;
-  --gray-500-rgb: 100, 116, 139;
-  --white-rgb: 255, 255, 255;
+  --slate-950-rgb: 5 8 22;
+  --slate-900-rgb: 15 23 42;
+  --gray-100-rgb: 248 250 252;
+  --gray-200-rgb: 226 232 240;
+  --gray-300-rgb: 203 213 225;
+  --gray-400-rgb: 148 163 184;
+  --gray-500-rgb: 100 116 139;
+  --white-rgb: 255 255 255;
 
-  --gold-rgb: 198, 156, 109;
-  --gold-accent-rgb: 212, 175, 55;
-  --gold-dark-rgb: 170, 132, 28;
-  --gold-light-rgb: 229, 192, 96;
+  --gold-rgb: 198 156 109;
+  --gold-accent-rgb: 212 175 55;
+  --gold-dark-rgb: 170 132 28;
+  --gold-light-rgb: 229 192 96;
 
-  --emerald-400-rgb: 52, 211, 153;
-  --emerald-500-rgb: 16, 185, 129;
-  --emerald-950-rgb: 2, 44, 34;
+  --emerald-400-rgb: 52 211 153;
+  --emerald-500-rgb: 16 185 129;
+  --emerald-950-rgb: 2 44 34;
 
-  --rose-400-rgb: 248, 113, 113;
+  --rose-400-rgb: 248 113 113;
   --rose-500-rgb: 239, 68, 68;
-  --rose-950-rgb: 69, 10, 10;
+  --rose-950-rgb: 69 10 10;
 
-  --amber-400-rgb: 251, 191, 36;
+  --amber-400-rgb: 251 191 36;
   --amber-500-rgb: 245, 158, 11;
   --amber-950-rgb: 69, 26, 3;
 
-  --sky-400-rgb: 56, 189, 248;
-  --sky-500-rgb: 14, 165, 233;
+  --sky-400-rgb: 56 189 248;
+  --sky-500-rgb: 14 165 233;
   --sky-950-rgb: 8, 47, 73;
 
   --bg-main: #050816;
@@ -188,7 +188,7 @@ html.dark {
   --color-primary: #C69C6D;
   --color-primary-light: #e5c060;
   --color-primary-dark: #aa841c;
-  --color-primary-rgb: 198, 156, 109;
+  --color-primary-rgb: 198 156 109;
   
   --color-accent: #C69C6D;
   --color-text-main: #F8FAFC;

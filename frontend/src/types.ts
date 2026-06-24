@@ -11,7 +11,7 @@ export interface Client {
 
 export interface Project {
   id: number;
-  client_id: number;
+  client_id?: number;
   name: string;
   status: 'Enquiry' | 'Site Visit' | 'Space Planning' | 'Quotation' | 'Design Approval' | 'Material Selection' | 'Execution' | 'Quality Inspection' | 'Completed';
   budget: number;
@@ -26,6 +26,7 @@ export interface Project {
   client_type?: 'Residential' | 'Commercial';
   total_selections?: number;
   approved_selections?: number;
+  image_url?: string;
 }
 
 export interface Room {
@@ -130,6 +131,8 @@ export interface SiteVisit {
   visitor_name: string;
   notes: string;
   photos: string;
+  visitDate?: string;
+  visitorName?: string;
 }
 
 export interface User {
@@ -138,4 +141,5 @@ export interface User {
   role: 'Admin' | 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator';
   avatar?: string;
   password?: string;
+  status?: 'Pending' | 'Approved' | 'Declined';
 }

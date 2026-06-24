@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { db } from '../services/db';
-import { Printer, FileSpreadsheet, Download, RefreshCw } from 'lucide-react';
+import { Printer, FileSpreadsheet, Download, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Reports() {
   const {
@@ -15,6 +16,7 @@ export default function Reports() {
   const [vendorReportData, setVendorReportData] = useState<any[]>([]);
   const [budgetReportData, setBudgetReportData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     loadReports();
@@ -43,11 +45,11 @@ export default function Reports() {
 
   const getBadgeClass = (status: string) => {
     switch (status) {
-      case 'Approved': return 'bg-emerald-950/20 text-emerald-400 border-emerald-500/20';
-      case 'Pending': return 'bg-amber-950/20 text-amber-400 border-amber-500/20';
-      case 'Rejected': return 'bg-rose-950/20 text-rose-400 border-rose-500/20';
-      case 'Replaced': return 'bg-indigo-950/20 text-indigo-400 border-indigo-500/20';
-      default: return 'bg-slate-900 text-gray-400 border-white/5';
+      case 'Approved': return 'bg-[#8AA17A]/10 text-[#8AA17A] border-[#8AA17A]/20';
+      case 'Pending': return 'bg-[#D7B57D]/10 text-[#D7B57D] border-[#D7B57D]/20';
+      case 'Rejected': return 'bg-[#C89A9A]/10 text-[#C89A9A] border-[#C89A9A]/20';
+      case 'Replaced': return 'bg-[#C89A9A]/10 text-[#C89A9A] border-[#C89A9A]/20';
+      default: return 'bg-[#F8F6F3] text-[#7D7D7D] border-slate-100';
     }
   };
 
@@ -116,7 +118,6 @@ export default function Reports() {
   };
 
   const triggerExportExcel = () => {
-    // Generate TSV content which Excel opens by default
     const { headers, rows } = getReportHeadersAndRows();
     const tsvContent = [
       headers.join('\t'),
@@ -138,13 +139,13 @@ export default function Reports() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white font-display">Sourcing Reports Generator</h2>
-          <p className="text-sm text-gray-400">Generate, print, and export CSV/Excel reports.</p>
+          <h2 className="text-2xl font-light tracking-tight text-[#4B4B4B] font-display">Sourcing Reports Generator</h2>
+          <p className="text-xs text-[#7D7D7D] font-light mt-1">Generate, print, and export CSV/Excel reports.</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={triggerPrint}
-            className="flex-1 sm:flex-initial p-2.5 bg-slate-900 border border-white/5 rounded-xl text-gray-400 hover:text-white transition flex items-center justify-center gap-2 text-xs font-semibold min-h-[48px] sm:min-h-0 focus-visible:ring-2 focus-visible:ring-gold/50 outline-none"
+            className="flex-1 sm:flex-initial p-2 bg-white border border-[#A8B89A]/15 rounded-xl text-[#7D7D7D] hover:text-[#4B4B4B] transition flex items-center justify-center gap-2 text-xs font-semibold min-h-[38px] outline-none shadow-sm"
             title="Print Report"
           >
             <Printer size={14} />
@@ -152,7 +153,7 @@ export default function Reports() {
           </button>
           <button
             onClick={triggerExportCSV}
-            className="flex-1 sm:flex-initial p-2.5 bg-slate-900 border border-white/5 rounded-xl text-gray-400 hover:text-white transition flex items-center justify-center gap-2 text-xs font-semibold min-h-[48px] sm:min-h-0 focus-visible:ring-2 focus-visible:ring-gold/50 outline-none"
+            className="flex-1 sm:flex-initial p-2 bg-white border border-[#A8B89A]/15 rounded-xl text-[#7D7D7D] hover:text-[#4B4B4B] transition flex items-center justify-center gap-2 text-xs font-semibold min-h-[38px] outline-none shadow-sm"
             title="Export CSV"
           >
             <FileSpreadsheet size={14} />
@@ -160,7 +161,7 @@ export default function Reports() {
           </button>
           <button
             onClick={triggerExportExcel}
-            className="flex-1 sm:flex-initial p-2.5 bg-slate-900 border border-white/5 rounded-xl text-gold hover:text-white transition flex items-center justify-center gap-2 text-xs font-semibold min-h-[48px] sm:min-h-0 focus-visible:ring-2 focus-visible:ring-gold/50 outline-none"
+            className="flex-1 sm:flex-initial p-2 bg-white border border-[#A8B89A]/15 rounded-xl text-[#8AA17A] hover:text-[#788E69] transition flex items-center justify-center gap-2 text-xs font-semibold min-h-[38px] outline-none shadow-sm"
             title="Export Excel (TSV)"
           >
             <Download size={14} />
@@ -170,14 +171,14 @@ export default function Reports() {
       </div>
 
       {/* Reports Internal Tabs */}
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-white/5 pb-2 print:hidden">
-        <div className="flex flex-wrap gap-3 uppercase text-[10px] font-bold text-gray-400" role="tablist" aria-label="Report Category Tabs">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b border-slate-100 pb-2 print:hidden">
+        <div className="flex flex-wrap gap-4 uppercase text-[9px] font-bold text-[#7D7D7D]" role="tablist" aria-label="Report Category Tabs">
           <button
             onClick={() => setReportTab('material')}
             role="tab"
             aria-selected={reportTab === 'material'}
-            className={`pb-2 px-1 border-b-2 transition focus-visible:ring-2 focus-visible:ring-gold/50 outline-none ${
-              reportTab === 'material' ? 'border-gold text-gold font-bold' : 'border-transparent hover:text-white'
+            className={`pb-2 px-1 border-b-2 transition outline-none ${
+              reportTab === 'material' ? 'border-[#A8B89A] text-[#A8B89A] font-bold' : 'border-transparent hover:text-[#4B4B4B]'
             }`}
           >
             Material selection Report
@@ -186,8 +187,8 @@ export default function Reports() {
             onClick={() => setReportTab('vendor')}
             role="tab"
             aria-selected={reportTab === 'vendor'}
-            className={`pb-2 px-1 border-b-2 transition focus-visible:ring-2 focus-visible:ring-gold/50 outline-none ${
-              reportTab === 'vendor' ? 'border-gold text-gold font-bold' : 'border-transparent hover:text-white'
+            className={`pb-2 px-1 border-b-2 transition outline-none ${
+              reportTab === 'vendor' ? 'border-[#A8B89A] text-[#A8B89A] font-bold' : 'border-transparent hover:text-[#4B4B4B]'
             }`}
           >
             Vendor Sourcing Report
@@ -196,8 +197,8 @@ export default function Reports() {
             onClick={() => setReportTab('budget')}
             role="tab"
             aria-selected={reportTab === 'budget'}
-            className={`pb-2 px-1 border-b-2 transition focus-visible:ring-2 focus-visible:ring-gold/50 outline-none ${
-              reportTab === 'budget' ? 'border-gold text-gold font-bold' : 'border-transparent hover:text-white'
+            className={`pb-2 px-1 border-b-2 transition outline-none ${
+              reportTab === 'budget' ? 'border-[#A8B89A] text-[#A8B89A] font-bold' : 'border-transparent hover:text-[#4B4B4B]'
             }`}
           >
             Project budget Report
@@ -206,8 +207,8 @@ export default function Reports() {
             onClick={() => setReportTab('progress')}
             role="tab"
             aria-selected={reportTab === 'progress'}
-            className={`pb-2 px-1 border-b-2 transition focus-visible:ring-2 focus-visible:ring-gold/50 outline-none ${
-              reportTab === 'progress' ? 'border-gold text-gold font-bold' : 'border-transparent hover:text-white'
+            className={`pb-2 px-1 border-b-2 transition outline-none ${
+              reportTab === 'progress' ? 'border-[#A8B89A] text-[#A8B89A] font-bold' : 'border-transparent hover:text-[#4B4B4B]'
             }`}
           >
             Project Progress Report
@@ -215,33 +216,81 @@ export default function Reports() {
         </div>
 
         {reportTab === 'material' && (
-          <div className="flex items-center gap-2 text-xs bg-slate-950 border border-white/5 px-3 py-2 rounded-xl self-start lg:self-auto min-h-[44px]">
-            <label htmlFor="report-project-filter" className="text-gray-500 cursor-pointer">Filter Project:</label>
-            <select
-              id="report-project-filter"
-              value={activeProjectId || ''}
-              onChange={(e) => setActiveProjectId(Number(e.target.value))}
-              className="bg-transparent text-gray-300 outline-none focus-visible:ring-2 focus-visible:ring-gold/50 cursor-pointer"
+          <div className="relative text-xs self-start lg:self-auto z-20">
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-[#A8B89A]/15 dark:border-slate-800/80 px-3 py-2 rounded-xl shadow-sm font-semibold text-[#4B4B4B] dark:text-gray-200 transition-all hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[38px] cursor-pointer"
             >
-              <option value="" className="bg-slate-900 text-gray-300">All Project Selections</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id} className="bg-slate-900 text-gray-300">{p.name}</option>
-              ))}
-            </select>
+              <span className="text-[#7D7D7D] font-light">Filter Project:</span>
+              <span className="font-display font-medium text-[#4B4B4B] dark:text-white">
+                {projects.find(p => p.id === activeProjectId)?.name || 'All Project Selections'}
+              </span>
+              <ChevronDown size={14} className="text-[#A8B89A] shrink-0" />
+            </button>
+            <AnimatePresence>
+              {isDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute left-0 mt-2 min-w-[220px] bg-white dark:bg-slate-900 border border-[#A8B89A]/20 dark:border-slate-800/80 p-1.5 rounded-[18px] shadow-xl z-20 text-left"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveProjectId(null as any);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-all font-display font-medium cursor-pointer ${
+                        !activeProjectId
+                          ? 'bg-[#A8B89A]/10 text-[#8AA17A] font-bold'
+                          : 'text-[#4B4B4B] dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      }`}
+                    >
+                      All Project Selections
+                    </button>
+                    {projects.map(p => {
+                      const isSelected = p.id === activeProjectId;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveProjectId(p.id);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-all font-display font-medium cursor-pointer truncate ${
+                            isSelected
+                              ? 'bg-[#A8B89A]/10 text-[#8AA17A] font-bold'
+                              : 'text-[#4B4B4B] dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                          }`}
+                        >
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </div>
 
-      <div className="bg-slate-900/40 border border-white/5 p-4 sm:p-6 rounded-2xl print:bg-white print:text-slate-950 print:border-none">
+      <div className="bg-white border border-[#A8B89A]/10 p-4 sm:p-6 rounded-[24px] shadow-sm print:bg-white print:text-slate-955 print:border-none">
         {/* Printable header info */}
         <div className="hidden print:block mb-8 space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-950 font-display">Glory Simon Interiors</h1>
-          <p className="text-sm text-slate-700">Project Material Sourcing Report • Generated on {new Date().toLocaleDateString()}</p>
-          <hr className="border-slate-300" />
+          <h1 className="text-2xl font-light tracking-tight text-[#4B4B4B] font-display">Glory Simon Interiors</h1>
+          <p className="text-xs text-[#7D7D7D] font-light">Project Material Sourcing Report • Generated on {new Date().toLocaleDateString()}</p>
+          <hr className="border-slate-100" />
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-gray-400 text-xs">Compiling records report...</div>
+          <div className="text-center py-20 text-[#7D7D7D] text-xs">Compiling records report...</div>
         ) : (
           <div>
             {/* 1. MATERIAL REPORT */}
@@ -251,7 +300,7 @@ export default function Reports() {
                 <div className="overflow-x-auto hidden sm:block">
                   <table className="w-full text-left text-xs print:text-slate-950">
                     <thead>
-                      <tr className="border-b border-white/5 print:border-slate-200 text-gray-400 print:text-slate-700 font-medium">
+                      <tr className="border-b border-slate-100 print:border-slate-200 text-[#7D7D7D] print:text-slate-700 font-medium">
                         <th className="pb-3 pr-4">Project / Room</th>
                         <th className="pb-3 pr-4">Material Name</th>
                         <th className="pb-3 pr-4">Sourcing Category</th>
@@ -264,29 +313,29 @@ export default function Reports() {
                     </thead>
                     <tbody>
                       {materialReportData.map(r => (
-                        <tr key={r.id} className="border-b border-white/5 print:border-slate-100 hover:bg-white/5 transition duration-150">
-                          <td className="py-3 pr-4">
-                            <p className="font-bold text-gray-200 print:text-slate-950">{r.project_name}</p>
-                            <p className="text-[10px] text-gray-500 print:text-slate-600">{r.room_name || 'N/A'}</p>
+                        <tr key={r.id} className="border-b border-slate-50 dark:border-slate-800/40 print:border-slate-100 group transition duration-150">
+                          <td className="py-3 pr-4 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40 rounded-l-2xl">
+                            <p className="font-bold text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-950">{r.project_name}</p>
+                            <p className="text-[10px] text-[#7D7D7D] dark:text-[#94A3B8] print:text-slate-600">{r.room_name || 'N/A'}</p>
                           </td>
-                          <td className="py-3 pr-4 text-gray-300 print:text-slate-950 font-medium">{r.material_name}</td>
-                          <td className="py-3 pr-4 text-gray-400 print:text-slate-600">{r.category}</td>
-                          <td className="py-3 pr-4 text-gray-300 print:text-slate-950">{r.vendor_name || 'Direct'}</td>
-                          <td className="py-3 pr-4 text-gray-400 print:text-slate-600">{r.quantity} units</td>
-                          <td className="py-3 pr-4 text-gray-400 print:text-slate-600">INR {r.unit_price}</td>
-                          <td className="py-3 pr-4">
+                          <td className="py-3 pr-4 text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-955 font-medium transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{r.material_name}</td>
+                          <td className="py-3 pr-4 text-[#7D7D7D] dark:text-slate-400 print:text-slate-600 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{r.category}</td>
+                          <td className="py-3 pr-4 text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-955 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{r.vendor_name || 'Direct'}</td>
+                          <td className="py-3 pr-4 text-[#7D7D7D] dark:text-slate-400 print:text-slate-600 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{r.quantity} units</td>
+                          <td className="py-3 pr-4 text-[#7D7D7D] dark:text-slate-400 print:text-slate-600 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">INR {r.unit_price}</td>
+                          <td className="py-3 pr-4 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeClass(r.status)}`}>
                               {r.status}
                             </span>
                           </td>
-                          <td className="py-3 text-right font-bold text-gray-200 print:text-slate-950">
+                          <td className="py-3 text-right font-bold text-[#4B4B4B] dark:text-white print:text-slate-950 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40 rounded-r-2xl">
                             INR {r.total_cost.toLocaleString()}
                           </td>
                         </tr>
                       ))}
                       {materialReportData.length === 0 && (
                         <tr>
-                          <td colSpan={8} className="text-center py-20 text-gray-500 italic">No selections logged.</td>
+                          <td colSpan={8} className="text-center py-20 text-[#7D7D7D] italic font-light">No selections logged.</td>
                         </tr>
                       )}
                     </tbody>
@@ -296,38 +345,38 @@ export default function Reports() {
                 {/* Mobile Card Stack View */}
                 <div className="space-y-3 sm:hidden">
                   {materialReportData.map(r => (
-                    <div key={r.id} className="p-4 bg-slate-950/40 border border-white/5 rounded-xl space-y-3">
+                    <div key={r.id} className="p-4 bg-[#F8F6F3] border border-[#A8B89A]/10 rounded-2xl space-y-3 shadow-sm">
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <p className="font-bold text-gray-200 text-xs">{r.material_name}</p>
-                          <p className="text-[10px] text-gray-500 mt-0.5">{r.project_name} • {r.room_name || 'N/A'}</p>
+                          <p className="font-bold text-[#4B4B4B] text-xs">{r.material_name}</p>
+                          <p className="text-[10px] text-[#7D7D7D] mt-0.5">{r.project_name} • {r.room_name || 'N/A'}</p>
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeClass(r.status)}`}>
                           {r.status}
                         </span>
                       </div>
-                      <div className="text-[10px] text-gray-400 space-y-1.5 pt-1 border-t border-white/5">
+                      <div className="text-[10px] text-[#7D7D7D] space-y-1.5 pt-1 border-t border-slate-100">
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Category:</span>
-                          <span className="text-white font-medium">{r.category}</span>
+                          <span className="text-[#7D7D7D]">Category:</span>
+                          <span className="text-[#4B4B4B] font-medium">{r.category}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Supplier Sourced:</span>
-                          <span className="text-white font-medium">{r.vendor_name || 'Direct'}</span>
+                          <span className="text-[#7D7D7D]">Supplier Sourced:</span>
+                          <span className="text-[#4B4B4B] font-medium">{r.vendor_name || 'Direct'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Quantity / Price:</span>
-                          <span className="text-white">{r.quantity} units @ INR {r.unit_price}</span>
+                          <span className="text-[#7D7D7D]">Quantity / Price:</span>
+                          <span className="text-[#4B4B4B]">{r.quantity} units @ INR {r.unit_price}</span>
                         </div>
-                        <div className="flex justify-between border-t border-white/5 pt-1.5">
-                          <span className="text-gray-500 font-semibold">Total Cost:</span>
-                          <span className="text-gold font-bold">INR {r.total_cost.toLocaleString()}</span>
+                        <div className="flex justify-between border-t border-slate-100 pt-1.5">
+                          <span className="text-[#7D7D7D] font-semibold">Total Cost:</span>
+                          <span className="text-[#8AA17A] font-bold">INR {r.total_cost.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
                   ))}
                   {materialReportData.length === 0 && (
-                    <p className="text-xs text-gray-500 italic py-12 text-center">No selections logged.</p>
+                    <p className="text-xs text-[#7D7D7D] italic py-12 text-center">No selections logged.</p>
                   )}
                 </div>
               </>
@@ -340,7 +389,7 @@ export default function Reports() {
                 <div className="overflow-x-auto hidden sm:block">
                   <table className="w-full text-left text-xs print:text-slate-950">
                     <thead>
-                      <tr className="border-b border-white/5 print:border-slate-200 text-gray-400 print:text-slate-700 font-medium">
+                      <tr className="border-b border-slate-100 print:border-slate-200 text-[#7D7D7D] print:text-slate-700 font-medium">
                         <th className="pb-3 pr-4">Sourcing Vendor Name</th>
                         <th className="pb-3 pr-4">Category Sourced</th>
                         <th className="pb-3 pr-4">Sourcing Rating</th>
@@ -351,13 +400,13 @@ export default function Reports() {
                     </thead>
                     <tbody>
                       {vendorReportData.map(v => (
-                        <tr key={v.vendor_name} className="border-b border-white/5 print:border-slate-100 hover:bg-white/5 transition duration-150">
-                          <td className="py-3 pr-4 font-bold text-gray-200 print:text-slate-950">{v.vendor_name}</td>
-                          <td className="py-3 pr-4 text-gray-400 print:text-slate-600">{v.category}</td>
-                          <td className="py-3 pr-4 font-medium text-gold print:text-slate-700">{v.rating} / 5.0</td>
-                          <td className="py-3 pr-4 text-gray-300 print:text-slate-950">{v.projects_sourced} Projects</td>
-                          <td className="py-3 pr-4 text-gray-300 print:text-slate-950">{v.materials_sourced} items</td>
-                          <td className="py-3 text-right font-bold text-gold print:text-slate-950">
+                        <tr key={v.vendor_name} className="border-b border-slate-50 dark:border-slate-800/40 print:border-slate-100 group transition duration-150">
+                          <td className="py-3 pr-4 font-bold text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-950 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40 rounded-l-2xl">{v.vendor_name}</td>
+                          <td className="py-3 pr-4 text-[#7D7D7D] dark:text-slate-400 print:text-slate-600 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{v.category}</td>
+                          <td className="py-3 pr-4 font-medium text-[#8AA17A] print:text-slate-700 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{v.rating} / 5.0</td>
+                          <td className="py-3 pr-4 text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-955 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{v.projects_sourced} Projects</td>
+                          <td className="py-3 pr-4 text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-955 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{v.materials_sourced} items</td>
+                          <td className="py-3 text-right font-bold text-[#8AA17A] print:text-slate-955 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40 rounded-r-2xl">
                             INR {(v.total_sourced_cost || 0).toLocaleString()}
                           </td>
                         </tr>
@@ -369,27 +418,27 @@ export default function Reports() {
                 {/* Mobile Card Stack View */}
                 <div className="space-y-3 sm:hidden">
                   {vendorReportData.map(v => (
-                    <div key={v.vendor_name} className="p-4 bg-slate-950/40 border border-white/5 rounded-xl space-y-3">
+                    <div key={v.vendor_name} className="p-4 bg-[#F8F6F3] border border-[#A8B89A]/10 rounded-2xl space-y-3 shadow-sm">
                       <div className="flex justify-between items-start gap-2">
-                        <span className="font-bold text-gray-200 text-xs">{v.vendor_name}</span>
-                        <span className="text-[10px] text-gold font-semibold">{v.rating} / 5.0 ★</span>
+                        <span className="font-bold text-[#4B4B4B] text-xs">{v.vendor_name}</span>
+                        <span className="text-[10px] text-[#8AA17A] font-semibold">{v.rating} / 5.0 ★</span>
                       </div>
-                      <div className="text-[10px] text-gray-400 space-y-1.5 pt-1 border-t border-white/5">
+                      <div className="text-[10px] text-[#7D7D7D] space-y-1.5 pt-1 border-t border-slate-100">
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Category:</span>
-                          <span className="text-white font-medium">{v.category}</span>
+                          <span className="text-[#7D7D7D]">Category:</span>
+                          <span className="text-[#4B4B4B] font-medium">{v.category}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Projects Supplied:</span>
-                          <span className="text-white font-medium">{v.projects_sourced} Projects</span>
+                          <span className="text-[#7D7D7D]">Projects Supplied:</span>
+                          <span className="text-[#4B4B4B] font-medium">{v.projects_sourced} Projects</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Materials Supplied:</span>
-                          <span className="text-white font-medium">{v.materials_sourced} items</span>
+                          <span className="text-[#7D7D7D]">Materials Supplied:</span>
+                          <span className="text-[#4B4B4B] font-medium">{v.materials_sourced} items</span>
                         </div>
-                        <div className="flex justify-between border-t border-white/5 pt-1.5">
-                          <span className="text-gray-500 font-semibold">Gross Costs Sourced:</span>
-                          <span className="text-gold font-bold">INR {(v.total_sourced_cost || 0).toLocaleString()}</span>
+                        <div className="flex justify-between border-t border-slate-100 pt-1.5">
+                          <span className="text-[#7D7D7D] font-semibold">Gross Costs Sourced:</span>
+                          <span className="text-[#8AA17A] font-bold">INR {(v.total_sourced_cost || 0).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -405,7 +454,7 @@ export default function Reports() {
                 <div className="overflow-x-auto hidden sm:block">
                   <table className="w-full text-left text-xs print:text-slate-950">
                     <thead>
-                      <tr className="border-b border-white/5 print:border-slate-200 text-gray-400 print:text-slate-700 font-medium">
+                      <tr className="border-b border-slate-100 print:border-slate-200 text-[#7D7D7D] print:text-slate-700 font-medium">
                         <th className="pb-3 pr-4">Project Name</th>
                         <th className="pb-3 pr-4">Total Budget Cap</th>
                         <th className="pb-3 pr-4">Approved Finishes</th>
@@ -416,15 +465,15 @@ export default function Reports() {
                     </thead>
                     <tbody>
                       {budgetReportData.map(b => (
-                        <tr key={b.project_name} className="border-b border-white/5 print:border-slate-100 hover:bg-white/5 transition duration-150">
-                          <td className="py-3 pr-4 font-bold text-gray-200 print:text-slate-950">{b.project_name}</td>
-                          <td className="py-3 pr-4 text-gray-400 print:text-slate-600">INR {b.total_budget.toLocaleString()}</td>
-                          <td className="py-3 pr-4 text-gray-300 print:text-slate-950">INR {b.approved_materials_cost.toLocaleString()}</td>
-                          <td className="py-3 pr-4 text-gray-300 print:text-slate-950">INR {b.total_expenses_cost.toLocaleString()}</td>
-                          <td className={`py-3 pr-4 font-bold ${b.remaining_budget < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        <tr key={b.project_name} className="border-b border-slate-50 dark:border-slate-800/40 print:border-slate-100 group transition duration-150">
+                          <td className="py-3 pr-4 font-bold text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-955 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40 rounded-l-2xl">{b.project_name}</td>
+                          <td className="py-3 pr-4 text-[#7D7D7D] dark:text-slate-400 print:text-slate-600 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">INR {b.total_budget.toLocaleString()}</td>
+                          <td className="py-3 pr-4 text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-955 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">INR {b.approved_materials_cost.toLocaleString()}</td>
+                          <td className="py-3 pr-4 text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-955 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">INR {b.total_expenses_cost.toLocaleString()}</td>
+                          <td className={`py-3 pr-4 font-bold ${b.remaining_budget < 0 ? 'text-[#C89A9A]' : 'text-[#8AA17A]'} transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40`}>
                             INR {b.remaining_budget.toLocaleString()}
                           </td>
-                          <td className="py-3 text-right font-bold text-gray-200 print:text-slate-950">
+                          <td className="py-3 text-right font-bold text-[#4B4B4B] dark:text-white print:text-slate-950 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40 rounded-r-2xl">
                             {b.utilization_pct}%
                           </td>
                         </tr>
@@ -436,27 +485,27 @@ export default function Reports() {
                 {/* Mobile Card Stack View */}
                 <div className="space-y-3 sm:hidden">
                   {budgetReportData.map(b => (
-                    <div key={b.project_name} className="p-4 bg-slate-950/40 border border-white/5 rounded-xl space-y-3">
+                    <div key={b.project_name} className="p-4 bg-[#F8F6F3] border border-[#A8B89A]/10 rounded-2xl space-y-3 shadow-sm">
                       <div className="flex justify-between items-start gap-2">
-                        <span className="font-bold text-gray-200 text-xs">{b.project_name}</span>
-                        <span className="text-[10px] text-white font-bold">{b.utilization_pct}% Used</span>
+                        <span className="font-bold text-[#4B4B4B] text-xs">{b.project_name}</span>
+                        <span className="text-[10px] text-[#7D7D7D] font-bold">{b.utilization_pct}% Used</span>
                       </div>
-                      <div className="text-[10px] text-gray-400 space-y-1.5 pt-1 border-t border-white/5">
+                      <div className="text-[10px] text-[#7D7D7D] space-y-1.5 pt-1 border-t border-slate-100">
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Total Budget Cap:</span>
-                          <span className="text-white font-medium">INR {b.total_budget.toLocaleString()}</span>
+                          <span className="text-[#7D7D7D]">Total Budget Cap:</span>
+                          <span className="text-[#4B4B4B] font-medium">INR {b.total_budget.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Approved Finishes:</span>
-                          <span className="text-white font-medium">INR {b.approved_materials_cost.toLocaleString()}</span>
+                          <span className="text-[#7D7D7D]">Approved Finishes:</span>
+                          <span className="text-[#4B4B4B] font-medium">INR {b.approved_materials_cost.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Site Direct Expenses:</span>
-                          <span className="text-white font-medium">INR {b.total_expenses_cost.toLocaleString()}</span>
+                          <span className="text-[#7D7D7D]">Site Direct Expenses:</span>
+                          <span className="text-[#4B4B4B] font-medium">INR {b.total_expenses_cost.toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between border-t border-white/5 pt-1.5">
-                          <span className="text-gray-500 font-semibold">Remaining Balance:</span>
-                          <span className={`font-bold ${b.remaining_budget < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        <div className="flex justify-between border-t border-slate-100 pt-1.5">
+                          <span className="text-[#7D7D7D] font-semibold">Remaining Balance:</span>
+                          <span className={`font-bold ${b.remaining_budget < 0 ? 'text-[#C89A9A]' : 'text-[#8AA17A]'}`}>
                             INR {b.remaining_budget.toLocaleString()}
                           </span>
                         </div>
@@ -474,7 +523,7 @@ export default function Reports() {
                 <div className="overflow-x-auto hidden sm:block">
                   <table className="w-full text-left text-xs print:text-slate-950">
                     <thead>
-                      <tr className="border-b border-white/5 print:border-slate-200 text-gray-400 print:text-slate-700 font-medium">
+                      <tr className="border-b border-slate-100 print:border-slate-200 text-[#7D7D7D] print:text-slate-700 font-medium">
                         <th className="pb-3 pr-4">Project Name</th>
                         <th className="pb-3 pr-4">Current Status Stage</th>
                         <th className="pb-3 pr-4">Assigned Designer</th>
@@ -495,16 +544,16 @@ export default function Reports() {
                                    : p.status === 'Site Visit' ? 20 
                                    : 10;
                         return (
-                          <tr key={p.id} className="border-b border-white/5 print:border-slate-100 hover:bg-white/5 transition duration-150">
-                            <td className="py-3 pr-4 font-bold text-gray-200 print:text-slate-950">{p.name}</td>
-                            <td className="py-3 pr-4 text-gray-300 print:text-slate-950">{p.status}</td>
-                            <td className="py-3 pr-4 text-gray-400 print:text-slate-600">{p.assigned_designer || 'Nisha Sen'}</td>
-                            <td className="py-3 pr-4 text-gray-400 print:text-slate-600">INR {p.budget.toLocaleString()}</td>
-                            <td className="py-3 pr-4 text-gray-400 print:text-slate-600">{p.start_date || 'N/A'}</td>
-                            <td className="py-3 pr-4 text-gray-300 print:text-slate-950">
+                          <tr key={p.id} className="border-b border-slate-50 dark:border-slate-800/40 print:border-slate-100 group transition duration-150">
+                            <td className="py-3 pr-4 font-bold text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-950 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40 rounded-l-2xl">{p.name}</td>
+                            <td className="py-3 pr-4 text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-955 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{p.status}</td>
+                            <td className="py-3 pr-4 text-[#7D7D7D] dark:text-slate-400 print:text-slate-600 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{p.assigned_designer || 'Nisha Sen'}</td>
+                            <td className="py-3 pr-4 text-[#7D7D7D] dark:text-slate-400 print:text-slate-600 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">INR {p.budget.toLocaleString()}</td>
+                            <td className="py-3 pr-4 text-[#7D7D7D] dark:text-slate-400 print:text-slate-600 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">{p.start_date || 'N/A'}</td>
+                            <td className="py-3 pr-4 text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-950 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40">
                               {p.approved_selections || 0} / {p.total_selections || 0} approved
                             </td>
-                            <td className="py-3 text-right font-bold text-gold print:text-slate-950">
+                            <td className="py-3 text-right font-bold text-[#8AA17A] print:text-slate-955 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40 rounded-r-2xl">
                               {pct}%
                             </td>
                           </tr>
@@ -526,27 +575,27 @@ export default function Reports() {
                                : p.status === 'Site Visit' ? 20 
                                : 10;
                     return (
-                      <div key={p.id} className="p-4 bg-slate-950/40 border border-white/5 rounded-xl space-y-3">
+                      <div key={p.id} className="p-4 bg-[#F8F6F3] border border-[#A8B89A]/10 rounded-2xl space-y-3 shadow-sm">
                         <div className="flex justify-between items-start gap-2">
-                          <span className="font-bold text-gray-200 text-xs">{p.name}</span>
-                          <span className="text-[10px] text-gold font-bold">{pct}% Completed</span>
+                          <span className="font-bold text-[#4B4B4B] text-xs">{p.name}</span>
+                          <span className="text-[10px] text-[#8AA17A] font-bold">{pct}% Completed</span>
                         </div>
-                        <div className="text-[10px] text-gray-400 space-y-1.5 pt-1 border-t border-white/5">
+                        <div className="text-[10px] text-[#7D7D7D] space-y-1.5 pt-1 border-t border-slate-100">
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Journey Stage:</span>
-                            <span className="text-white font-medium">{p.status}</span>
+                            <span className="text-[#7D7D7D]">Journey Stage:</span>
+                            <span className="text-[#4B4B4B] font-medium">{p.status}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Designer Assigned:</span>
-                            <span className="text-white font-medium">{p.assigned_designer || 'Nisha Sen'}</span>
+                            <span className="text-[#7D7D7D]">Designer Assigned:</span>
+                            <span className="text-[#4B4B4B] font-medium">{p.assigned_designer || 'Nisha Sen'}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Budget Cap:</span>
-                            <span className="text-white font-semibold">INR {p.budget.toLocaleString()}</span>
+                            <span className="text-[#7D7D7D]">Budget Cap:</span>
+                            <span className="text-[#4B4B4B] font-semibold">INR {p.budget.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between border-t border-white/5 pt-1.5">
-                            <span className="text-gray-500">Approvals:</span>
-                            <span className="text-white font-medium">{p.approved_selections || 0} / {p.total_selections || 0} selections approved</span>
+                          <div className="flex justify-between border-t border-slate-100 pt-1.5">
+                            <span className="text-[#7D7D7D]">Approvals:</span>
+                            <span className="text-[#4B4B4B] font-medium">{p.approved_selections || 0} / {p.total_selections || 0} selections approved</span>
                           </div>
                         </div>
                       </div>

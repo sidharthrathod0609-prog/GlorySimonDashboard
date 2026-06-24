@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   FolderOpen,
@@ -18,6 +18,7 @@ import {
   Edit,
   Eye,
   ChevronRight,
+  ChevronDown,
   Clock,
   Printer,
   Download,
@@ -29,7 +30,10 @@ import {
   X,
   FileSpreadsheet,
   Shield,
-  Bell
+  Bell,
+  Sun,
+  Moon,
+  User as UserIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -95,9 +99,14 @@ export default function App() {
   }, [backgroundStyle]);
 
   useEffect(() => {
-    document.documentElement.classList.add('dark');
-    document.documentElement.classList.remove('light');
-  }, []);
+    if (themeMode === 'light') {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    }
+  }, [themeMode]);
 
   return (
     <Routes>
@@ -148,6 +157,7 @@ export default function App() {
 }
 
 function DashboardLayout() {
+  const navigate = useNavigate();
   const {
     currentTab,
     projects,
@@ -160,11 +170,31 @@ function DashboardLayout() {
     fetchMaterials,
     fetchVendors,
     fetchClients,
-    backgroundStyle
+    backgroundStyle,
+    themeMode,
+    setThemeMode,
+    logout
   } = useAppStore();
 
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    }
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileMenu]);
 
   // Sync currentTab state with URL pathname for styling and backward compatibility
   useEffect(() => {
@@ -202,45 +232,19 @@ function DashboardLayout() {
   ];
   const activePath = location.pathname.split('/')[1] || 'dashboard';
   const matchedItem = allMenuItemsList.find(item => item.id === activePath);
-  const pageTitle = matchedItem ? matchedItem.label : 'Glory Simon';
-
-  const bgImages = {
-    'villa': '/assets/backgrounds/luxury_villa.png',
-    'living-room': '/assets/backgrounds/modern_living_room.png',
-    'office': '/assets/backgrounds/premium_office.png',
-    'architectural': '/assets/backgrounds/minimal_architectural.png'
-  };
-
-  const currentBgImage = bgImages[backgroundStyle] || bgImages['villa'];
+  const pageTitle = matchedItem ? matchedItem.label : 'Glory Simon Interiors';
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-gray-100 font-sans selection:bg-gold/30 selection:text-white relative">
-      {/* Premium Background Layer */}
-      <div 
-        className="fixed inset-0 z-0 bg-cover bg-center pointer-events-none transition-all duration-700 ease-in-out lg:bg-fixed opacity-[0.15]"
-        style={{ 
-          backgroundImage: `url(${currentBgImage})`,
-        }}
-      />
-      {/* Blur and Theme Opacity Overlay */}
-      <div 
-        className="fixed inset-0 z-0 pointer-events-none transition-all duration-700 ease-in-out"
-        style={{
-          backgroundColor: 'rgb(var(--slate-950-rgb) / 0.90)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)'
-        }}
-      />
-
+    <div className="flex min-h-screen bg-transparent text-[#4B4B4B] dark:text-[#F8FAFC] font-sans selection:bg-[#A8B89A]/20 selection:text-current relative">
       {/* Navigation Sidebar (Desktop + Mobile slide-out drawer) */}
       <Sidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
       {/* Sticky Header Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 lg:left-64 h-16 bg-slate-900/40 border-b border-white/5 flex items-center justify-between px-4 md:px-6 lg:px-8 z-40 backdrop-blur-md transition-all duration-300">
+      <header className="fixed top-0 left-0 right-0 lg:left-64 h-16 bg-white/40 dark:bg-[#0B0F19]/40 border-b border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between px-4 md:px-6 lg:px-8 z-40 backdrop-blur-md transition-all duration-300 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="lg:hidden p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition duration-150 focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold outline-none"
+            className="lg:hidden p-2 text-[#7D7D7D] dark:text-[#94A3B8] hover:text-[#4B4B4B] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/30 rounded-xl transition duration-150 focus-visible:ring-2 focus-visible:ring-[#A8B89A]/50 outline-none"
             title="Open Menu"
             aria-label="Open navigation menu"
             aria-expanded={mobileMenuOpen}
@@ -250,14 +254,80 @@ function DashboardLayout() {
             </svg>
           </button>
           
-          <h2 className="text-sm md:text-base font-bold text-white font-display tracking-wide truncate max-w-[240px] md:max-w-md">
+          <h2 className="text-sm md:text-base font-semibold text-[#4B4B4B] dark:text-[#F8FAFC] font-display tracking-wide truncate max-w-[240px] md:max-w-md">
             {pageTitle}
           </h2>
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold-dark to-gold flex items-center justify-center font-bold text-slate-950 text-xs shadow-md shadow-gold/15">
-            {currentUser.avatar || currentUser.name.slice(0, 2).toUpperCase()}
+          <button
+            onClick={() => setThemeMode(themeMode === 'light' ? 'dark' : 'light')}
+            className="p-2 text-[#7D7D7D] dark:text-[#94A3B8] hover:text-[#4B4B4B] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/30 rounded-xl transition duration-150 focus-visible:ring-2 focus-visible:ring-[#A8B89A]/50 outline-none"
+            title={themeMode === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            aria-label="Toggle theme mode"
+          >
+            {themeMode === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+ 
+          {/* Top-Right GA Avatar Dropdown Menu */}
+          <div className="relative" ref={profileMenuRef}>
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="w-8 h-8 rounded-full bg-[#A8B89A] text-white flex items-center justify-center font-bold text-xs hover:brightness-105 active:scale-[0.95] transition-all focus:outline-none cursor-pointer"
+              title="Account Menu"
+              aria-haspopup="true"
+              aria-expanded={showProfileMenu}
+            >
+              {currentUser.avatar || currentUser.name.slice(0, 2).toUpperCase()}
+            </button>
+
+            <AnimatePresence>
+              {showProfileMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-2 rounded-2xl shadow-xl z-50 text-left"
+                >
+                  <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                    <p className="text-[11px] font-bold text-[#4B4B4B] dark:text-[#F8FAFC] truncate leading-tight">{currentUser.name}</p>
+                    <p className="text-[9px] text-[#A8B89A] font-semibold uppercase tracking-wider mt-0.5 leading-tight">{currentUser.role}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      setShowProfileModal(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-[#4B4B4B] dark:text-[#E5E7EB] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left font-semibold transition"
+                  >
+                    <UserIcon size={12} className="text-[#A8B89A]" />
+                    View Profile Info
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      navigate('/settings');
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-[#4B4B4B] dark:text-[#E5E7EB] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left font-semibold transition"
+                  >
+                    <Settings size={12} className="text-[#A8B89A]" />
+                    Profile Settings
+                  </button>
+                  <div className="border-t border-slate-100 dark:border-slate-800/80 my-1.5" />
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      logout();
+                      navigate('/login');
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-[#C89A9A] hover:bg-rose-500/5 text-left font-semibold transition"
+                  >
+                    <Trash2 size={12} className="text-[#C89A9A]" />
+                    Logout Session
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </header>
@@ -267,16 +337,68 @@ function DashboardLayout() {
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.25 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.45, ease: [0.25, 1, 0.5, 1] }}
             className="w-full max-w-6xl mx-auto pb-12"
           >
             <Outlet />
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Profile Detail Modal Overlay */}
+      <AnimatePresence>
+        {showProfileModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm border border-slate-200 dark:border-slate-800/80 p-6 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-[24px] shadow-2xl relative text-left"
+            >
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X size={18} />
+              </button>
+              
+              <div className="flex flex-col items-center text-center space-y-3 mt-2">
+                <div className="w-16 h-16 rounded-full bg-[#A8B89A] text-white flex items-center justify-center font-bold text-lg shadow-xl shadow-[#A8B89A]/20">
+                  {currentUser.avatar || currentUser.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">{currentUser.name}</h2>
+                  <p className="text-xs text-[#A8B89A] font-semibold uppercase tracking-wider mt-0.5">{currentUser.role}</p>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-slate-800/60 my-4 pt-4 space-y-3 text-xs">
+                <div>
+                  <span className="block text-slate-400 uppercase tracking-widest font-bold text-[9px] mb-1">Email Address</span>
+                  <span className="text-slate-800 dark:text-slate-200 font-semibold">{currentUser.email || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="block text-slate-400 uppercase tracking-widest font-bold text-[9px] mb-1">Permissions Profile</span>
+                  <span className="text-slate-600 dark:text-slate-350">{getRolePermissionsDesc(currentUser.role)}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowProfileModal(false);
+                  navigate('/settings');
+                }}
+                className="w-full py-2.5 bg-[#A8B89A] hover:bg-[#96A689] text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all text-center block"
+              >
+                Edit Profile Settings
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -293,6 +415,7 @@ function DashboardViewRoute() {
       handleCreateProject={store.createProject}
       materials={store.materials}
       currentUser={store.currentUser}
+      procurements={store.procurements}
     />
   );
 }
@@ -425,12 +548,25 @@ function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
     projects,
     activeProjectId,
     setActiveProjectId,
-    currentUser,
-    logout
+    currentUser
   } = useAppStore();
 
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+  const projectDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (projectDropdownRef.current && !projectDropdownRef.current.contains(event.target as Node)) {
+        setProjectDropdownOpen(false);
+      }
+    };
+    if (projectDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [projectDropdownOpen]);
 
   const currentPath = location.pathname.split('/')[1] || 'dashboard';
 
@@ -458,9 +594,9 @@ function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
       case 'Admin':
         return allMenuItems;
       case 'Interior Designer':
-        return allMenuItems.filter(item => ['dashboard', 'projects', 'clients', 'selections', 'approval', 'vendors', 'quotes', 'budget', 'site-visits', 'procurement', 'installation', 'notifications', 'settings'].includes(item.id));
+        return allMenuItems.filter(item => ['dashboard', 'projects', 'selections', 'approval', 'site-visits', 'notifications', 'settings'].includes(item.id));
       case 'Project Manager':
-        return allMenuItems.filter(item => ['dashboard', 'projects', 'clients', 'approval', 'quotes', 'budget', 'site-visits', 'procurement', 'installation', 'reports', 'notifications', 'settings'].includes(item.id));
+        return allMenuItems.filter(item => ['dashboard', 'projects', 'clients', 'budget', 'installation', 'reports', 'notifications', 'settings'].includes(item.id));
       case 'Vendor Coordinator':
         return allMenuItems.filter(item => ['dashboard', 'vendors', 'procurement', 'notifications', 'settings'].includes(item.id));
       default: // Client or other
@@ -472,152 +608,164 @@ function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
 
   const renderInnerContent = (isDrawer = false) => (
     <>
-      <div className="space-y-6">
-        {/* Brand Logo */}
-        <div className="flex items-center justify-between mb-6 px-2">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-gold-dark to-gold rounded-lg flex items-center justify-center font-bold text-slate-950 text-lg">
-              GS
-            </div>
-            <div>
-              <h1 className="text-md font-bold tracking-wide text-white font-display">Glory Simon</h1>
-              <p className="text-xs text-gold font-semibold tracking-wider uppercase">Interiors</p>
-            </div>
-          </div>
-          {isDrawer && (
+      <div className="space-y-6 flex-1 flex flex-col justify-between">
+        <div className="space-y-6">
+          {/* Brand Logo */}
+          <div className="flex items-center justify-between mb-6 px-2">
             <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="p-1.5 text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition"
-              title="Close Menu"
+              onClick={() => {
+                navigate('/dashboard');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (setMobileMenuOpen) setMobileMenuOpen(false);
+              }}
+              className="flex items-center gap-3 text-left focus:outline-none cursor-pointer hover:opacity-95 active:scale-[0.99] transition-all bg-transparent border-none p-0"
             >
-              <X size={16} />
+              <div className="w-9 h-9 bg-[#A8B89A] rounded-xl flex items-center justify-center font-bold text-white text-md shadow-sm shrink-0">
+                GS
+              </div>
+              <div>
+                <h1 className="text-md font-bold tracking-wide text-[#4B4B4B] dark:text-[#F8FAFC] font-display leading-tight">Glory Simon</h1>
+                <p className="text-[9px] text-[#A8B89A] font-bold tracking-widest uppercase mt-0.5">Interiors</p>
+              </div>
             </button>
-          )}
-        </div>
-
-        {/* Compact User Profile Menu Card */}
-        <div className="mb-6 px-1 relative">
-          <button
-            type="button"
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="w-full flex items-center gap-3 bg-slate-950/80 border border-white/5 p-3 rounded-xl hover:bg-slate-900/80 cursor-pointer transition-all focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold outline-none"
-            title="Account Menu"
-            aria-haspopup="true"
-            aria-expanded={showProfileMenu}
-            aria-label="Account Menu"
-          >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-dark to-gold text-slate-950 flex items-center justify-center font-bold text-xs shadow-lg shadow-gold/15 shrink-0">
-              {currentUser.avatar || currentUser.name.slice(0, 2).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-[11px] font-bold text-gray-200 truncate leading-tight">{currentUser.name}</p>
-              <p className="text-[9px] text-gold font-semibold uppercase tracking-wider leading-tight mt-0.5">{currentUser.role}</p>
-            </div>
-          </button>
-
-          {/* Profile Dropdown Menu */}
-          <AnimatePresence>
-            {showProfileMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute left-0 right-0 bottom-full mb-2 bg-slate-900 border border-white/10 p-2 rounded-xl shadow-2xl z-50 backdrop-blur-xl text-left"
-                >
-                  <button
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      setShowProfileModal(true);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-gray-300 hover:bg-white/5 hover:text-white text-left font-semibold"
-                  >
-                    <Users size={12} className="text-gold" />
-                    View Profile Info
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      navigate('/settings');
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-gray-300 hover:bg-white/5 hover:text-white text-left font-semibold"
-                  >
-                    <Settings size={12} className="text-gold" />
-                    Profile Settings
-                  </button>
-                  <div className="border-t border-white/5 my-1.5" />
-                  <button
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      logout();
-                      navigate('/login');
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-red-400 hover:bg-red-500/10 text-left font-semibold"
-                  >
-                    <Trash2 size={12} className="text-red-400" />
-                    Logout Session
-                  </button>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Quick Project Switcher (Hidden for Vendor Coordinator) */}
-        {currentUser.role !== 'Vendor Coordinator' && (
-          <div className="mb-6 px-1">
-            <label htmlFor="sidebar-workspace-select" className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-2 px-1">
-              Active Workspace
-            </label>
-            <div className="flex items-center gap-2 bg-slate-950/80 border border-white/5 px-3 py-2 rounded-xl focus-within:ring-2 focus-within:ring-gold/50">
-              <FolderOpen size={14} className="text-gold" />
-              <select
-                id="sidebar-workspace-select"
-                value={activeProjectId || ''}
-                onChange={(e) => setActiveProjectId(Number(e.target.value))}
-                className="flex-1 bg-transparent text-xs text-gray-200 focus:outline-none cursor-pointer focus-visible:ring-1 focus-visible:ring-gold"
+            {isDrawer && (
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white rounded-lg transition"
+                title="Close Menu"
               >
-                {projects.map(p => (
-                  <option key={p.id} value={p.id} className="bg-slate-900 text-gray-200">
-                    {p.name.length > 20 ? p.name.substring(0, 18) + '...' : p.name}
-                  </option>
-                ))}
-              </select>
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Compact User Profile Menu Card (Static Div) */}
+          <div className="mb-6 px-1 relative">
+            <div className="w-full flex items-center gap-3 bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-850 p-3 rounded-2xl select-none">
+              <div className="w-8 h-8 rounded-full bg-[#A8B89A] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                {currentUser.avatar || currentUser.name.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[11px] font-bold text-[#4B4B4B] dark:text-[#F8FAFC] truncate leading-tight">{currentUser.name}</p>
+                <p className="text-[9px] text-[#A8B89A] font-semibold uppercase tracking-wider leading-tight mt-0.5">{currentUser.role}</p>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Navigation Menu */}
-        <nav className="space-y-1">
-          {menuItems.map(item => {
-            const Icon = item.icon;
-            const isActive = currentPath === item.id;
-            return (
+          {/* Quick Project Switcher (Hidden for Vendor Coordinator) */}
+          {currentUser.role !== 'Vendor Coordinator' && (
+            <div className="mb-6 px-1 relative" ref={projectDropdownRef}>
+              <label className="text-[10px] uppercase tracking-wider text-[#7D7D7D] dark:text-[#94A3B8] font-bold block mb-2 px-1">
+                Active Workspace
+              </label>
               <button
-                key={item.id}
-                onClick={() => {
-                  navigate('/' + item.id);
-                  if (isDrawer) setMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                  isActive
-                    ? 'bg-gradient-to-r from-gold-dark/20 to-gold/10 text-gold border-l-2 border-gold shadow-[0_0_15px_rgba(197,168,128,0.08)] pl-[14px]'
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                }`}
+                type="button"
+                onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
+                className="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 px-3 py-2 rounded-[24px] focus:outline-none transition-all duration-200 hover:border-[#A8B89A] hover:bg-slate-100/50 dark:hover:bg-slate-950/50 shadow-sm"
               >
-                <Icon size={16} className={isActive ? 'text-gold' : 'text-gray-400'} />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {(() => {
+                    const activeProj = projects.find(p => p.id === activeProjectId);
+                    return activeProj?.image_url ? (
+                      <img
+                        src={activeProj.image_url}
+                        alt=""
+                        className="w-6 h-6 rounded-[8px] object-cover shrink-0 border border-[#A8B89A]/20"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-[8px] bg-[#A8B89A]/10 flex items-center justify-center shrink-0">
+                        <FolderOpen size={12} className="text-[#A8B89A]" />
+                      </div>
+                    );
+                  })()}
+                  <span className="text-xs text-[#4B4B4B] dark:text-[#E5E7EB] font-bold truncate">
+                    {projects.find(p => p.id === activeProjectId)?.name || 'Select Project'}
+                  </span>
+                </div>
+                <ChevronDown size={12} className={`text-[#7D7D7D] dark:text-[#94A3B8] transition-transform duration-200 shrink-0 ${projectDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
-            );
-          })}
-        </nav>
-      </div>
+              
+              <AnimatePresence>
+                {projectDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute left-1 right-1 mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-[#A8B89A]/20 dark:border-[#A8B89A]/30 rounded-[20px] shadow-lg z-50 py-1.5 max-h-[260px] overflow-y-auto"
+                  >
+                    {projects.map(p => {
+                      const isSelected = p.id === activeProjectId;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveProjectId(p.id);
+                            setProjectDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-all duration-300 ease-in-out flex items-center gap-3 border-none ${
+                            isSelected
+                              ? 'bg-[#A8B89A]/10 text-[#A8B89A] font-bold'
+                              : 'text-[#4B4B4B] dark:text-[#E5E7EB] hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                          }`}
+                        >
+                          {p.image_url ? (
+                            <img
+                              src={p.image_url}
+                              alt=""
+                              className="w-8 h-8 rounded-lg object-cover shrink-0 border border-slate-100 dark:border-slate-800"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-[#A8B89A]/10 flex items-center justify-center shrink-0">
+                              <FolderOpen size={14} className="text-[#A8B89A]" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold truncate leading-snug">{p.name}</p>
+                            <p className="text-[9px] text-[#7D7D7D] dark:text-[#94A3B8] truncate leading-none mt-0.5">{p.client_name || 'No Client'} • {p.status}</p>
+                          </div>
+                          {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#A8B89A] shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
-      <div className="mt-auto space-y-3 pt-6 border-t border-white/5">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
-          <span className="text-[10px] font-medium text-gray-400 tracking-wider">WORKSPACE ACTIVE</span>
+          {/* Navigation Menu */}
+          <nav className="space-y-1">
+            {menuItems.map(item => {
+              const Icon = item.icon;
+              const isActive = currentPath === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    navigate('/' + item.id);
+                    if (isDrawer) setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold transition-all duration-200 ${
+                    isActive
+                      ? 'bg-[#F4F2EE] dark:bg-slate-800/50 text-[#4B4B4B] dark:text-[#F8FAFC] border-l-2 border-[#A8B89A] pl-[14px]'
+                      : 'text-[#7D7D7D] dark:text-[#94A3B8] hover:text-[#4B4B4B] dark:hover:text-white hover:bg-[#F8F6F3] dark:hover:bg-slate-800/30'
+                  }`}
+                >
+                  <Icon size={16} className={isActive ? 'text-[#A8B89A]' : 'text-[#7D7D7D]'} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center gap-3 px-2">
+            <div className="w-2 h-2 rounded-full bg-[#8AA17A] animate-pulse"></div>
+            <span className="text-[10px] font-medium text-[#7D7D7D] dark:text-[#94A3B8] tracking-wider">WORKSPACE ACTIVE</span>
+          </div>
         </div>
       </div>
     </>
@@ -626,7 +774,7 @@ function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar (visible on lg screens) */}
-      <aside className="hidden lg:flex w-64 bg-slate-900/80 backdrop-blur-xl border-r border-white/5 h-screen fixed top-0 left-0 flex-col p-6 z-30 overflow-y-auto justify-between">
+      <aside className="hidden lg:flex w-64 bg-white dark:bg-[#0F172A] border-r border-slate-200/60 dark:border-slate-800/80 h-screen fixed top-0 left-0 flex-col p-6 z-30 overflow-y-auto justify-between shadow-sm">
         {renderInnerContent(false)}
       </aside>
 
@@ -640,7 +788,7 @@ function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              className="lg:hidden fixed inset-0 bg-slate-950/20 backdrop-blur-sm z-40"
             />
 
             {/* Slide drawer */}
@@ -649,66 +797,13 @@ function Sidebar({ mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="lg:hidden w-64 bg-slate-900 border-r border-white/10 h-screen fixed top-0 left-0 flex flex-col p-6 z-50 overflow-y-auto justify-between shadow-2xl"
+              className="lg:hidden w-64 bg-white dark:bg-[#0F172A] border-r border-slate-200 dark:border-slate-800/80 h-screen fixed top-0 left-0 flex flex-col p-6 z-50 overflow-y-auto justify-between shadow-2xl"
             >
               {renderInnerContent(true)}
             </motion.aside>
           </>
         )}
-      </AnimatePresence>
-
-      {/* Profile Detail Modal Overlay */}
-      <AnimatePresence>
-        {showProfileModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm glass-panel border border-white/10 p-6 bg-slate-900 shadow-2xl relative text-left"
-            >
-              <button
-                onClick={() => setShowProfileModal(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition"
-              >
-                <X size={18} />
-              </button>
-              
-              <div className="flex flex-col items-center text-center space-y-3 mt-2">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gold-dark to-gold text-slate-950 flex items-center justify-center font-bold text-lg shadow-xl shadow-gold/20">
-                  {currentUser.avatar || currentUser.name.slice(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white font-display">{currentUser.name}</h2>
-                  <p className="text-xs text-gold font-semibold uppercase tracking-wider mt-0.5">{currentUser.role}</p>
-                </div>
-              </div>
-
-              <div className="border-t border-white/5 my-4 pt-4 space-y-3 text-xs">
-                <div>
-                  <span className="block text-gray-500 uppercase tracking-widest font-bold text-[9px] mb-1">Email Address</span>
-                  <span className="text-gray-200 font-semibold">{currentUser.email || 'N/A'}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 uppercase tracking-widest font-bold text-[9px] mb-1">Permissions Profile</span>
-                  <span className="text-gray-300">{getRolePermissionsDesc(currentUser.role)}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  setShowProfileModal(false);
-                  navigate('/settings');
-                }}
-                className="w-full py-2.5 bg-gradient-to-br from-gold-dark to-gold text-slate-950 text-xs font-bold rounded-xl hover:brightness-110 active:scale-[0.98] transition-all text-center block"
-              >
-                Edit Profile Settings
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </>
+      </AnimatePresence>    </>
   );
 }
 
@@ -723,15 +818,17 @@ interface DashboardViewProps {
   handleCreateProject: (data: any) => Promise<void>;
   materials: Material[];
   currentUser: User;
+  procurements: any[];
 }
 
-function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, handleCreateProject, materials, currentUser }: DashboardViewProps) {
+function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, handleCreateProject, materials, currentUser, procurements }: DashboardViewProps) {
   const [showAddProject, setShowAddProject] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Tiles');
   const [formData, setFormData] = useState({
     name: '', clientName: '', phone: '', email: '', location: '', type: 'Residential', budget: '', notes: '', startDate: '', assignedDesigner: ''
   });
 
-  if (!stats) return <div className="text-center py-20 text-gray-400">Loading dashboard data...</div>;
+  if (!stats) return <div className="text-center py-20 text-[#7D7D7D] text-sm">Loading dashboard data...</div>;
 
   const triggerCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -745,17 +842,22 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
     setFormData({ name: '', clientName: '', phone: '', email: '', location: '', type: 'Residential', budget: '', notes: '', startDate: '', assignedDesigner: '' });
   };
 
+  const filteredMaterials = materials.filter(m => m.category?.toLowerCase() === (selectedCategory === 'Fabrics' ? 'fabric' : selectedCategory.toLowerCase()));
+
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-10">
+      {/* Welcome Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white font-display">Workspace Overview</h2>
-          <p className="text-sm text-gray-400">Glory Simon Interiors Material Selection Registry</p>
+          <h2 className="text-4xl md:text-5xl font-extralight tracking-tight text-[#4B4B4B] dark:text-[#F8FAFC] font-display mt-4 mb-2">Welcome back, {currentUser.name}</h2>
+          <p className="text-sm text-[#7D7D7D] dark:text-[#94A3B8] font-light max-w-xl">
+            Manage projects, materials, vendors, and approvals with clarity and confidence.
+          </p>
         </div>
         {(currentUser.role === 'Admin' || currentUser.role === 'Project Manager') && (
           <button
-            onClick={() => setShowAddProject(true)}
-            className="px-4 py-2 bg-gradient-to-r from-gold-dark to-gold text-slate-950 rounded-xl font-semibold text-sm hover:brightness-110 shadow-lg hover:shadow-gold/10 transition-all flex items-center gap-2"
+            onClick={() => { resetForm(); setShowAddProject(true); }}
+            className="px-4 py-2.5 bg-[#A8B89A] hover:bg-[#96A689] text-white rounded-xl font-medium text-xs active:scale-[0.98] transition-all flex items-center gap-2 min-h-[44px] shadow-sm shadow-[#A8B89A]/15"
           >
             <Plus size={16} />
             <span>New Project</span>
@@ -763,142 +865,171 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
         )}
       </div>
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* KPI Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
         {[
-          { label: 'Total Projects', val: stats.totalProjects, sub: 'All pipeline logs', icon: FolderOpen, color: 'text-gold' },
-          { label: 'Active Projects', val: stats.activeProjects, sub: 'Ongoing jobs', icon: FolderOpen, color: 'text-sky-400' },
-          { label: 'Pending Material Approvals', val: stats.pendingMaterials, sub: 'Awaiting client approval', icon: Palette, color: 'text-amber-400' },
-          { label: 'Approved Materials', val: stats.approvedMaterials, sub: 'Sign-off complete', icon: Check, color: 'text-emerald-400' },
-          { label: 'Vendors', val: stats.activeVendors, sub: 'Sourced suppliers', icon: Users, color: 'text-purple-400' },
-          { label: 'Site Visits Scheduled', val: stats.siteVisitsScheduled || 0, sub: 'Visits logged', icon: Clock, color: 'text-rose-400' }
+          { label: 'Active Projects', val: stats.activeProjects, sub: 'Ongoing jobs', icon: FolderOpen, color: 'text-[#A8B89A] bg-[#A8B89A]/10' },
+          { label: 'Pending Material Approvals', val: stats.pendingMaterials, sub: 'Awaiting sign-off', icon: Palette, color: 'text-[#D7B57D] bg-[#D7B57D]/10' },
+          { label: 'Vendors', val: stats.activeVendors, sub: 'Sourced suppliers', icon: Users, color: 'text-[#8AA17A] bg-[#8AA17A]/10' },
+          { label: 'Site Visits', val: stats.siteVisitsScheduled || 0, sub: 'Visits logged', icon: Clock, color: 'text-[#7D7D7D] bg-slate-100' },
+          { label: 'Budget Usage', val: `${stats.budgetUsage?.utilizationPct || 0}%`, sub: 'Spent vs Allocation', icon: TrendingUp, color: 'text-[#C89A9A] bg-[#C89A9A]/10' },
+          { label: 'Procurement Status', val: `${procurements?.filter((p: any) => p.status === 'Ordered' || p.status === 'Shipped').length || 0} Active`, sub: 'In Transit/Ordered', icon: RefreshCw, color: 'text-[#8AA17A] bg-[#D8E2D0]' }
         ].map((c, i) => (
-          <div key={i} className="bg-slate-900/40 border border-white/5 p-4 rounded-2xl flex flex-col justify-between min-h-[100px]">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{c.label}</span>
-              <c.icon size={16} className={c.color} />
+          <div key={i} className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-5 rounded-[24px] flex flex-col justify-between min-h-[120px] shadow-sm hover:shadow transition-all duration-300">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[9px] font-bold text-[#7D7D7D] dark:text-[#94A3B8] uppercase tracking-wider">{c.label}</span>
+              <div className={`p-1.5 rounded-lg ${c.color.split(' ').slice(1).join(' ')}`}>
+                <c.icon size={14} className={c.color.split(' ')[0]} />
+              </div>
             </div>
             <div>
-              <p className="text-xl font-bold text-white mb-1 font-display">{c.val}</p>
-              <p className="text-[10px] text-gray-400">{c.sub}</p>
+              <p className="text-2xl font-light text-[#4B4B4B] dark:text-[#F8FAFC] mb-0.5 font-display">{c.val}</p>
+              <p className="text-[9px] text-[#7D7D7D] dark:text-[#94A3B8]/80 font-medium leading-none">{c.sub}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Visual Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Project Status Chart */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-4">
-          <h3 className="text-xs uppercase font-bold text-gray-400 tracking-wider">Project Status Distribution</h3>
-          <div className="space-y-3 pt-2">
-            {(() => {
-              const statusCounts = projects.reduce((acc: Record<string, number>, p) => {
-                acc[p.status] = (acc[p.status] || 0) + 1;
-                return acc;
-              }, {});
-              const total = projects.length || 1;
-              const stages = ['Enquiry', 'Material Selection', 'Design Approval', 'Execution', 'Completed'];
-              return stages.map(stage => {
-                const count = statusCounts[stage] || 0;
-                const pct = Math.round((count / total) * 100);
-                return (
-                  <div key={stage} className="space-y-1 text-xs">
-                    <div className="flex justify-between text-gray-300">
-                      <span>{stage}</span>
-                      <span className="font-semibold text-gold">{count} ({pct}%)</span>
-                    </div>
-                    <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                      <div className="h-full bg-gold" style={{ width: `${pct}%` }}></div>
-                    </div>
-                  </div>
-                );
-              });
-            })()}
-          </div>
+      {/* Project Progress Section */}
+      <div className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-6 rounded-[24px] shadow-sm space-y-6">
+        <div>
+          <h3 className="text-xs uppercase font-bold text-[#7D7D7D] dark:text-[#94A3B8] tracking-wider">Project Progress & Vitality</h3>
+          <p className="text-[11px] text-[#7D7D7D] dark:text-[#94A3B8]/80 mt-0.5">Real-time status check of active design contracts</p>
         </div>
-
-        {/* Material Categories Chart */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-4">
-          <h3 className="text-xs uppercase font-bold text-gray-400 tracking-wider">Selections by Category</h3>
-          <div className="space-y-3 pt-2">
-            {(() => {
-              const categories = ['Tiles', 'Laminates', 'Paints', 'Furniture', 'Lighting', 'Hardware', 'Fabric'];
-              const categoryCounts: Record<string, number> = {
-                'Tiles': 4,
-                'Laminates': 3,
-                'Paints': 2,
-                'Lighting': 2,
-                'Furniture': 2,
-                'Hardware': 1,
-                'Fabric': 1
-              };
-              const total = Object.values(categoryCounts).reduce((a, b) => a + b, 0) || 1;
-              return categories.map(cat => {
-                const count = categoryCounts[cat] || 0;
-                const pct = Math.round((count / total) * 100);
-                return (
-                  <div key={cat} className="space-y-1 text-xs">
-                    <div className="flex justify-between text-gray-300">
-                      <span>{cat}</span>
-                      <span className="font-semibold text-sky-400">{count} ({pct}%)</span>
-                    </div>
-                    <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                      <div className="h-full bg-sky-500" style={{ width: `${pct}%` }}></div>
-                    </div>
-                  </div>
-                );
-              });
-            })()}
-          </div>
-        </div>
-
-        {/* Budget Usage Chart */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl flex flex-col justify-between space-y-4">
-          <div>
-            <h3 className="text-xs uppercase font-bold text-gray-400 tracking-wider mb-4">Budget Usage Tracker</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <div>
-                  <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider">Total Allocated Budget</span>
-                  <span className="text-xl font-bold text-white">INR {(stats.budgetUsage?.totalBudget || 0).toLocaleString()}</span>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+          {projects.slice(0, 4).map((p) => {
+            const pct = p.total_selections && p.total_selections > 0 
+              ? Math.round((p.approved_selections! / p.total_selections) * 100) 
+              : 0;
+            // Circular progress SVG
+            const radius = 28;
+            const circumference = 2 * Math.PI * radius;
+            const strokeDashoffset = circumference - (pct / 100) * circumference;
+            
+            return (
+              <div 
+                key={p.id} 
+                className="flex flex-col items-center p-5 rounded-[24px] text-center space-y-3 relative overflow-hidden h-[180px] justify-between shadow-sm hover:shadow-md transition-all group bg-cover bg-center"
+                style={{ backgroundImage: p.image_url ? `url(${p.image_url})` : 'none' }}
+              >
+                {/* Dark overlay for readability and premium vibe */}
+                <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] group-hover:bg-black/55 transition-all duration-300 z-0" />
+                
+                {/* Circular Progress Indicator */}
+                <div className="relative w-16 h-16 flex items-center justify-center z-10 shrink-0">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="24"
+                      className="stroke-white/20"
+                      strokeWidth="3.5"
+                      fill="transparent"
+                    />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="24"
+                      className="stroke-[#A8B89A] transition-all duration-500"
+                      strokeWidth="3.5"
+                      fill="transparent"
+                      strokeDasharray={2 * Math.PI * 24}
+                      strokeDashoffset={2 * Math.PI * 24 - (pct / 100) * (2 * Math.PI * 24)}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[10px] font-bold text-white">{pct}%</span>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider">Total Spent Cost</span>
-                  <span className="text-md font-bold text-rose-400">INR {(stats.budgetUsage?.totalSpent || 0).toLocaleString()}</span>
+                
+                <div className="relative z-10 w-full">
+                  <p className="text-xs font-bold text-white truncate px-1" title={p.name}>{p.name}</p>
+                  <p className="text-[10px] text-[#A8B89A] font-medium">{p.status}</p>
                 </div>
               </div>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-gray-400">
-                  <span>Utilization Status</span>
-                  <span className="font-bold text-white">{stats.budgetUsage?.utilizationPct}% Utilized</span>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Material Showcase Overview Section */}
+      <div className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-6 rounded-[24px] shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h3 className="text-xs uppercase font-bold text-[#7D7D7D] dark:text-[#94A3B8] tracking-wider">Material Showcase & Selections</h3>
+            <p className="text-[11px] text-[#7D7D7D] dark:text-[#94A3B8]/80 mt-0.5">Explore catalog finishes and design approval states</p>
+          </div>
+          
+          {/* Category selector */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 max-w-full">
+            {['Tiles', 'Laminates', 'Paints', 'Furniture', 'Lighting', 'Hardware', 'Fabrics'].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-semibold transition-all ${
+                  selectedCategory === cat
+                    ? 'bg-[#A8B89A]/15 text-[#A8B89A] border border-[#A8B89A]/30'
+                    : 'bg-slate-50 dark:bg-slate-900 text-[#7D7D7D] dark:text-[#94A3B8] border border-transparent dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/50'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
+          {filteredMaterials.slice(0, 4).map(m => (
+            <div key={m.id} className="bg-[#F8F6F3]/40 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/80 p-5 rounded-[24px] flex flex-col justify-between text-center min-h-[260px] hover:shadow-md transition-all duration-300">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-[9px] font-bold text-[#A8B89A] uppercase tracking-wider">
+                  <span>{m.category}</span>
+                  <span className={`px-2 py-0.5 rounded-full border text-[8px] font-bold ${
+                    m.status === 'Approved' ? 'bg-[#8AA17A]/10 border-[#8AA17A]/20 text-[#8AA17A]' : 'bg-[#D7B57D]/10 border-[#D7B57D]/20 text-[#D7B57D]'
+                  }`}>
+                    {m.status || 'Pending'}
+                  </span>
                 </div>
-                <div className="w-full h-4 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-white/5">
-                  <div 
-                    className="h-full bg-gradient-to-r from-gold to-rose-500 rounded-full transition-all duration-500" 
-                    style={{ width: `${Math.min(stats.budgetUsage?.utilizationPct || 0, 100)}%` }}
-                  ></div>
+                
+                {/* Large Circular Focus Frame for Material Image */}
+                <div className="relative w-28 h-28 mx-auto rounded-full bg-[#EFEFEE] dark:bg-slate-950/50 flex items-center justify-center p-1 border border-slate-200/50 dark:border-slate-800/50 shadow-inner group overflow-hidden">
+                  <img
+                    src={m.image_url || '/assets/placeholder-material.png'}
+                    alt={m.name}
+                    className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-all duration-500"
+                  />
                 </div>
+                
+                <div>
+                  <p className="text-xs font-bold text-[#4B4B4B] dark:text-white line-clamp-1">{m.name}</p>
+                  <p className="text-[10px] text-[#7D7D7D] dark:text-[#94A3B8] mt-0.5">{m.brand || 'Vendor N/A'}</p>
+                </div>
+              </div>
+              
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] font-semibold text-[#4B4B4B] dark:text-[#F8FAFC]">
+                INR {m.unit_price?.toLocaleString()} / unit
               </div>
             </div>
-          </div>
-          <div className="text-[11px] p-3 bg-slate-950/40 border border-white/5 rounded-xl text-gray-400 leading-relaxed">
-            Overall budget utilization across active workspaces. Spent vs budget is updated automatically as material selections are approved.
-          </div>
+          ))}
+          {filteredMaterials.length === 0 && (
+            <div className="col-span-full py-12 text-center text-xs text-[#7D7D7D] dark:text-[#94A3B8] italic">
+              No materials registered in the {selectedCategory} category.
+            </div>
+          )}
         </div>
       </div>
 
       {/* Split Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Project Directory List */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl lg:col-span-2 space-y-4">
-          <h3 className="text-md font-semibold text-white">Active Projects Directory</h3>
+        <div className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-6 rounded-[24px] lg:col-span-2 space-y-4 shadow-sm">
+          <h3 className="text-md font-semibold text-[#4B4B4B] dark:text-white font-display">Active Projects Directory</h3>
           
           {/* Desktop Table View */}
           <div className="overflow-x-auto hidden sm:block">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-white/5 text-gray-400 font-medium">
+                <tr className="border-b border-slate-200/50 dark:border-slate-800/80 text-[#7D7D7D] dark:text-[#94A3B8] font-medium">
                   <th className="pb-3 pr-4">Project Name</th>
                   <th className="pb-3 pr-4">Client Type</th>
                   <th className="pb-3 pr-4">Status</th>
@@ -912,17 +1043,17 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
                     ? Math.round((p.approved_selections! / p.total_selections) * 100) 
                     : 0;
                   return (
-                    <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition duration-150">
+                    <tr key={p.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition duration-150">
                       <td className="py-3 pr-4">
                         <button
                           onClick={() => { setActiveProjectId(p.id); setCurrentTab('projects'); }}
-                          className="font-bold text-gold hover:underline text-left"
+                          className="font-bold text-[#4B4B4B] dark:text-white hover:text-[#A8B89A] hover:underline text-left"
                         >
                           {p.name}
                         </button>
-                        <p className="text-[10px] text-gray-400 mt-1">{p.client_name}</p>
+                        <p className="text-[10px] text-[#7D7D7D] dark:text-[#94A3B8] mt-1 font-medium">{p.client_name}</p>
                       </td>
-                      <td className="py-3 pr-4 text-gray-300">{p.client_type}</td>
+                      <td className="py-3 pr-4 text-[#7D7D7D] dark:text-slate-300">{p.client_type}</td>
                       <td className="py-3 pr-4">
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeStyles(p.status)}`}>
                           {p.status}
@@ -930,13 +1061,13 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
                       </td>
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-16 h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                            <div className="h-full bg-gold rounded-full" style={{ width: `${pct}%` }}></div>
+                          <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
+                            <div className="h-full bg-[#A8B89A] rounded-full" style={{ width: `${pct}%` }}></div>
                           </div>
-                          <span className="text-gray-400">{pct}%</span>
+                          <span className="text-[#7D7D7D] dark:text-slate-300 font-semibold">{pct}%</span>
                         </div>
                       </td>
-                      <td className="py-3 font-semibold text-gray-300">INR {p.budget.toLocaleString()}</td>
+                      <td className="py-3 font-semibold text-[#4B4B4B] dark:text-[#F8FAFC]">INR {p.budget.toLocaleString()}</td>
                     </tr>
                   );
                 })}
@@ -951,11 +1082,11 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
                 ? Math.round((p.approved_selections! / p.total_selections) * 100) 
                 : 0;
               return (
-                <div key={p.id} className="p-4 bg-slate-950/40 border border-white/5 rounded-xl space-y-3">
+                <div key={p.id} className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl space-y-3">
                   <div className="flex justify-between items-start">
                     <button
                       onClick={() => { setActiveProjectId(p.id); setCurrentTab('projects'); }}
-                      className="font-bold text-gold hover:underline text-left text-xs"
+                      className="font-bold text-[#4B4B4B] dark:text-white hover:text-[#A8B89A] hover:underline text-left text-xs"
                     >
                       {p.name}
                     </button>
@@ -964,24 +1095,24 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-[10px] text-gray-400">
+                  <div className="grid grid-cols-2 gap-2 text-[10px] text-[#7D7D7D] dark:text-slate-300">
                     <div>
-                      <span className="text-gray-500 block uppercase font-bold tracking-wider text-[8px]">Client</span>
-                      <span className="text-white font-medium">{p.client_name}</span>
+                      <span className="text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider text-[8px]">Client</span>
+                      <span className="text-slate-800 dark:text-white font-medium">{p.client_name}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500 block uppercase font-bold tracking-wider text-[8px]">Budget</span>
-                      <span className="text-white font-semibold">INR {p.budget.toLocaleString()}</span>
+                      <span className="text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider text-[8px]">Budget</span>
+                      <span className="text-slate-800 dark:text-white font-semibold">INR {p.budget.toLocaleString()}</span>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                    <span className="text-gray-400 text-[10px]">Approvals:</span>
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                    <span className="text-[#7D7D7D] dark:text-[#94A3B8] text-[10px]">Approvals:</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                        <div className="h-full bg-gold rounded-full" style={{ width: `${pct}%` }}></div>
+                      <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#A8B89A] rounded-full" style={{ width: `${pct}%` }}></div>
                       </div>
-                      <span className="text-gray-400 text-[10px]">{pct}%</span>
+                      <span className="text-[#7D7D7D] dark:text-slate-300 text-[10px]">{pct}%</span>
                     </div>
                   </div>
                 </div>
@@ -991,32 +1122,32 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
         </div>
 
         {/* Audit Activity Logs */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-4">
+        <div className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-6 rounded-[24px] space-y-4 shadow-sm">
           <div className="flex justify-between items-center">
-            <h3 className="text-md font-semibold text-white">Audited Selections Log</h3>
-            <Clock size={16} className="text-gold" />
+            <h3 className="text-md font-semibold text-[#4B4B4B] dark:text-white font-display">Audited Selections Log</h3>
+            <Clock size={16} className="text-[#A8B89A]" />
           </div>
           <div className="space-y-3 overflow-y-auto max-h-[300px] pr-2">
             {stats.recentActivity && stats.recentActivity.length > 0 ? (
               stats.recentActivity.map((act: any) => (
-                <div key={act.id} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl text-xs space-y-1.5">
+                <div key={act.id} className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl text-xs space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-gold">{act.user_name}</span>
-                    <span className="text-[10px] text-gray-400">{new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="font-semibold text-[#4B4B4B] dark:text-white">{act.user_name}</span>
+                    <span className="text-[10px] text-[#7D7D7D] dark:text-[#94A3B8]">{new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
-                  <p className="text-gray-300">{act.notes}</p>
-                  <div className="flex justify-between items-center pt-1 border-t border-white/5 text-[10px]">
-                    <span className="text-gray-500">Project: {act.project_name}</span>
+                  <p className="text-[#4B4B4B] dark:text-slate-350 font-light leading-relaxed">{act.notes}</p>
+                  <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800/80 text-[10px]">
+                    <span className="text-[#7D7D7D] dark:text-[#94A3B8]">Project: {act.project_name}</span>
                     <div className="flex items-center gap-1 font-bold">
-                      <span className="text-rose-400">{act.previous_status}</span>
-                      <ChevronRight size={10} className="text-gray-500" />
-                      <span className="text-emerald-400">{act.new_status}</span>
+                      <span className="text-[#C89A9A]">{act.previous_status}</span>
+                      <ChevronRight size={10} className="text-slate-400" />
+                      <span className="text-[#8AA17A]">{act.new_status}</span>
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-xs text-gray-400 text-center py-10">No status audit entries logged yet.</p>
+              <p className="text-xs text-[#7D7D7D] dark:text-[#94A3B8] text-center py-10">No status audit entries logged yet.</p>
             )}
           </div>
         </div>
@@ -1075,52 +1206,52 @@ function AIDesignAssistant({ materials }: { materials: Material[] }) {
   };
 
   return (
-    <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-4">
+    <div className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-6 rounded-[24px] space-y-4 shadow-sm">
       <div className="flex justify-between items-center">
-        <h3 className="text-md font-semibold text-white">Smart AI Design Matcher</h3>
-        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold border border-gold/30 text-gold bg-gold/10 uppercase tracking-wider">AI Layer</span>
+        <h3 className="text-md font-semibold text-[#4B4B4B] dark:text-white font-display">Smart AI Design Matcher</h3>
+        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold border border-[#A8B89A]/30 text-[#A8B89A] bg-[#A8B89A]/10 uppercase tracking-wider">AI Layer</span>
       </div>
       <div className="text-xs space-y-3">
-        <p className="text-gray-400">Suggest catalog material combinations matching style guidelines.</p>
+        <p className="text-[#7D7D7D] dark:text-[#94A3B8] font-light">Suggest catalog material combinations matching style guidelines.</p>
         <div className="flex gap-2">
           <select
             value={selectedStyle}
             onChange={(e) => setSelectedStyle(e.target.value)}
-            className="flex-1 bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none cursor-pointer focus:border-gold"
+            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 p-3 rounded-xl text-[#4B4B4B] dark:text-white outline-none cursor-pointer focus:border-[#A8B89A]"
           >
-            <option value="luxury">Modern Luxury Palette</option>
-            <option value="minimalist">Warm Minimalist Palette</option>
-            <option value="industrial">Bold Industrial Palette</option>
+            <option value="luxury" className="bg-white dark:bg-slate-900 text-[#4B4B4B] dark:text-white">Modern Luxury Palette</option>
+            <option value="minimalist" className="bg-white dark:bg-slate-900 text-[#4B4B4B] dark:text-white">Warm Minimalist Palette</option>
+            <option value="industrial" className="bg-white dark:bg-slate-900 text-[#4B4B4B] dark:text-white">Bold Industrial Palette</option>
           </select>
           <button
             onClick={generateGuide}
-            className="px-4 py-2 bg-gradient-to-r from-gold-dark to-gold text-slate-950 rounded-xl font-bold transition hover:brightness-110"
+            className="px-4 py-2 bg-[#A8B89A] hover:bg-[#96A689] text-white rounded-xl font-bold transition shadow-sm"
           >
             Match Materials
           </button>
         </div>
 
         {recommendation ? (
-          <div className="p-4 bg-slate-950/60 border border-gold/10 rounded-xl space-y-3 fade-in">
+          <div className="p-4 bg-[#F8F6F3]/50 dark:bg-slate-900/40 border border-[#A8B89A]/20 dark:border-[#A8B89A]/30 rounded-xl space-y-3 fade-in">
             <div>
-              <h4 className="font-bold text-gold">{recommendation.styleName} combination</h4>
-              <p className="text-gray-400 mt-1 leading-relaxed text-[11px]">{recommendation.description}</p>
+              <h4 className="font-bold text-[#A8B89A]">{recommendation.styleName} combination</h4>
+              <p className="text-[#7D7D7D] dark:text-[#94A3B8] mt-1 leading-relaxed text-[11px] font-light">{recommendation.description}</p>
             </div>
             <div className="space-y-2">
-              <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold block">Recommended items:</span>
+              <span className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold block">Recommended items:</span>
               {recommendation.items.map((m: any) => (
-                <div key={m.id} className="flex justify-between items-center bg-white/5 p-2 rounded-lg text-[11px]">
+                <div key={m.id} className="flex justify-between items-center bg-white dark:bg-[#0F172A] border border-slate-100 dark:border-slate-800/80 p-2 rounded-lg text-[11px] shadow-sm">
                   <div>
-                    <span className="font-semibold text-gray-200">{m.name}</span>
-                    <span className="text-gray-500 text-[10px] block">{m.brand} • {m.category}</span>
+                    <span className="font-semibold text-[#4B4B4B] dark:text-white">{m.name}</span>
+                    <span className="text-slate-400 dark:text-slate-500 text-[10px] block">{m.brand} • {m.category}</span>
                   </div>
-                  <span className="text-gold font-semibold">INR {m.unit_price}</span>
+                  <span className="text-[#8AA17A] font-semibold">INR {m.unit_price}</span>
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <div className="text-center py-10 text-gray-500 italic bg-slate-950/20 border border-dashed border-white/5 rounded-xl">
+          <div className="text-center py-10 text-slate-400 dark:text-slate-500 italic bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200/60 dark:border-slate-800/80 rounded-xl">
             Choose a palette preset to query styling recommendations.
           </div>
         )}
@@ -1142,14 +1273,14 @@ function CommunicationsFeed({ stats }: { stats: any }) {
       id: 2,
       type: 'email',
       to: 'Apex Marble & Tiles (Supplier)',
-      msg: '✅ Purchase Order Confirmed: PO #AP-928 dispatched for 432 units of Italian Carrara Vitrified Tile.',
+      msg: 'PO #AP-928 dispatched for 432 units of Italian Carrara Vitrified Tile.',
       time: '12 mins ago'
     },
     {
       id: 3,
       type: 'whatsapp',
       to: 'Rahul Dev (PM)',
-      msg: '🚨 Budget Cap Notice: Rathod Penthouse Villa budget reaches 92.5% utilization cap threshold.',
+      msg: '🚨 Budget Cap Notice: Penthouse Villa budget reaches 92.5% utilization cap threshold.',
       time: '1 hour ago'
     },
     {
@@ -1162,26 +1293,26 @@ function CommunicationsFeed({ stats }: { stats: any }) {
   ];
 
   return (
-    <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-4">
+    <div className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-6 rounded-[24px] space-y-4 shadow-sm">
       <div className="flex justify-between items-center">
-        <h3 className="text-md font-semibold text-white">Automated Communications log</h3>
-        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold border border-sky-500/30 text-sky-400 bg-sky-950/10 uppercase tracking-wider animate-pulse">Live API Feed</span>
+        <h3 className="text-md font-semibold text-[#4B4B4B] dark:text-white font-display">Automated Communications log</h3>
+        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold border border-sky-500/20 text-sky-600 bg-sky-50 uppercase tracking-wider">Live API Feed</span>
       </div>
       <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
         {communications.map(c => (
-          <div key={c.id} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl text-[11px] space-y-1.5">
+          <div key={c.id} className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-xl text-[11px] space-y-1.5 shadow-sm">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1.5">
                 <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
-                  c.type === 'whatsapp' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                  c.type === 'whatsapp' ? 'bg-[#8AA17A]/15 text-[#8AA17A] border border-[#8AA17A]/30' : 'bg-slate-100 dark:bg-slate-800 text-[#4B4B4B] dark:text-slate-300 border border-slate-200 dark:border-slate-800'
                 }`}>
                   {c.type === 'whatsapp' ? 'WhatsApp PO' : 'SMTP Email'}
                 </span>
-                <span className="text-gray-400 font-semibold">To: {c.to}</span>
+                <span className="text-[#7D7D7D] dark:text-[#94A3B8] font-semibold">To: {c.to}</span>
               </div>
-              <span className="text-gray-500 text-[9px]">{c.time}</span>
+              <span className="text-slate-400 dark:text-slate-500 text-[9px]">{c.time}</span>
             </div>
-            <p className="text-gray-300 leading-relaxed">{c.msg}</p>
+            <p className="text-[#4B4B4B] dark:text-slate-300 font-light leading-relaxed">{c.msg}</p>
           </div>
         ))}
       </div>
@@ -1234,6 +1365,7 @@ function ProjectsView({
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Project | null>(null);
   const [activeSubTab, setActiveSubTab] = useState('overview');
+  const [showDetailsPopup, setShowDetailsPopup] = useState(false);
 
   // Site visits and tasks form state
   const [showAddVisit, setShowAddVisit] = useState(false);
@@ -1314,13 +1446,13 @@ function ProjectsView({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white font-display">Client Projects Directory</h2>
-          <p className="text-sm text-gray-400">Add, track stages, and audit material files.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-display">Client Projects Directory</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Add, track stages, and audit material files.</p>
         </div>
         {(currentUser.role === 'Admin' || currentUser.role === 'Project Manager') && (
           <button
             onClick={() => { resetForm(); setShowAdd(true); }}
-            className="px-4 py-2 bg-gradient-to-r from-gold-dark to-gold text-slate-950 rounded-xl font-semibold text-sm hover:brightness-110 shadow-lg transition-all flex items-center gap-2"
+            className="px-4 py-2.5 bg-[#A8B89A] hover:bg-[#96A689] text-white rounded-xl font-normal text-sm transition-all flex items-center gap-2 min-h-[44px] shadow-sm cursor-pointer"
           >
             <Plus size={16} />
             <span>Add Project</span>
@@ -1329,22 +1461,22 @@ function ProjectsView({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-slate-900/40 border border-white/5 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+      <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-5 gap-3 text-xs shadow-sm">
         <div className="relative md:col-span-2">
-          <Search size={14} className="absolute left-3 top-3.5 text-gray-500" />
+          <Search size={14} className="absolute left-3 top-3.5 text-slate-400 dark:text-slate-500" />
           <input
             type="text"
             placeholder="Search by client or project name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-950 border border-white/5 pl-9 pr-3 py-3 rounded-xl text-white outline-none focus:border-gold"
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 pl-9 pr-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 transition-all"
           />
         </div>
         <div>
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-gray-300 outline-none cursor-pointer focus:border-gold"
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-700 dark:text-gray-300 outline-none cursor-pointer focus:border-emerald-500 transition-all"
           >
             <option value="">All Project Types</option>
             <option value="Residential">Residential</option>
@@ -1355,7 +1487,7 @@ function ProjectsView({
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-gray-300 outline-none cursor-pointer focus:border-gold"
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-700 dark:text-gray-300 outline-none cursor-pointer focus:border-emerald-500 transition-all"
           >
             <option value="">All Pipeline Stages</option>
             {filterStages.map(s => (
@@ -1367,7 +1499,7 @@ function ProjectsView({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="flex-1 bg-slate-950 border border-white/5 p-3 rounded-xl text-gray-300 outline-none cursor-pointer focus:border-gold"
+            className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-700 dark:text-gray-300 outline-none cursor-pointer focus:border-emerald-500 transition-all"
           >
             <option value="created_at">Date Created</option>
             <option value="name">Project Name</option>
@@ -1376,85 +1508,106 @@ function ProjectsView({
           </select>
           <button
             onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-            className="bg-slate-950 border border-white/5 p-3 rounded-xl text-gray-300 hover:text-gold transition"
+            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-600 dark:text-gray-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition"
           >
             <ArrowUpDown size={14} />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="space-y-6">
         {/* Project Directory Table */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl lg:col-span-2 space-y-4">
-          <h3 className="text-md font-semibold text-white">Project Files</h3>
+        <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 p-6 rounded-[24px] space-y-4 shadow-sm w-full">
+          <h3 className="text-md font-semibold text-slate-900 dark:text-white font-display">Project Files</h3>
           
           {/* Desktop/Tablet Table View */}
           <div className="overflow-x-auto hidden sm:block">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs border-separate border-spacing-y-2">
               <thead>
-                <tr className="border-b border-white/5 text-gray-400 font-medium">
-                  <th className="pb-3 pr-4">Project Name</th>
-                  <th className="pb-3 pr-4">Client Name</th>
-                  <th className="pb-3 pr-4">Project Type</th>
-                  <th className="pb-3 pr-4">Budget</th>
-                  <th className="pb-3 pr-4">Status</th>
-                  <th className="pb-3 pr-4">Start Date</th>
-                  <th className="pb-3 pr-4">Assigned Designer</th>
-                  <th className="pb-3 text-right">Actions</th>
+                <tr className="text-slate-400 dark:text-slate-500 font-medium">
+                  <th className="pb-2 pr-4 pl-4">Project Name</th>
+                  <th className="pb-2 pr-4">Client Name</th>
+                  <th className="pb-2 pr-4">Project Type</th>
+                  <th className="pb-2 pr-4">Budget</th>
+                  <th className="pb-2 pr-4">Status</th>
+                  <th className="pb-2 pr-4">Start Date</th>
+                  <th className="pb-2 pr-4">Assigned Designer</th>
+                  <th className="pb-2 text-right pr-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {projects.map(p => (
-                  <tr
-                    key={p.id}
-                    className={`border-b border-white/5 hover:bg-white/5 transition duration-150 cursor-pointer ${
-                      activeProjectId === p.id ? 'bg-white/5 border-l-2 border-gold pl-2' : ''
-                    }`}
-                    onClick={() => setActiveProjectId(p.id)}
-                  >
-                    <td className="py-3 pr-4 font-bold text-gray-200">
-                      {p.name}
-                      <p className="text-[9px] text-gray-500 font-normal mt-0.5">{p.address}</p>
-                    </td>
-                    <td className="py-3 pr-4 text-gray-300">{p.client_name}</td>
-                    <td className="py-3 pr-4 text-gray-400">{p.client_type}</td>
-                    <td className="py-3 pr-4 text-gold font-semibold">INR {p.budget.toLocaleString()}</td>
-                    <td className="py-3 pr-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeStyles(p.status)}`}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-4 text-gray-400">{p.start_date || 'N/A'}</td>
-                    <td className="py-3 pr-4 text-gray-400">{p.assigned_designer || 'N/A'}</td>
-                    <td className="py-3 text-right space-x-1" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => setActiveProjectId(p.id)}
-                        className="p-1.5 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-sky-400 transition"
-                        title="View Details"
-                      >
-                        <Eye size={12} />
-                      </button>
-                      {(currentUser.role === 'Admin' || currentUser.role === 'Project Manager') ? (
-                        <>
-                          <button
-                            onClick={() => loadEditData(p)}
-                            className="p-1.5 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-gold transition"
-                            title="Edit Project"
-                          >
-                            <Edit size={12} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProject(p.id)}
-                            className="p-1.5 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-rose-400 transition"
-                            title="Delete Project"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
+                {projects.map(p => {
+                  const isSelected = activeProjectId === p.id && showDetailsPopup;
+                  const bgClass = isSelected
+                    ? 'bg-[#A8B89A]/15 dark:bg-[#A8B89A]/20'
+                    : 'bg-slate-50/40 dark:bg-slate-900/20';
+                  
+                  return (
+                    <tr
+                      key={p.id}
+                      className="group cursor-pointer"
+                      onClick={() => {
+                        setActiveProjectId(p.id);
+                        setShowDetailsPopup(true);
+                      }}
+                    >
+                      <td className={`py-4 pl-4 pr-4 font-bold text-slate-900 dark:text-white first:rounded-l-2xl border-t border-b border-l border-slate-200/50 dark:border-slate-800/40 transition-all duration-300 ease-in-out group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-[#A8B89A]/15 ${bgClass}`}>
+                        {p.name}
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-normal mt-0.5">{p.address}</p>
+                      </td>
+                      <td className={`py-4 pr-4 text-slate-700 dark:text-slate-300 border-t border-b border-slate-200/50 dark:border-slate-800/40 transition-all duration-300 ease-in-out group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-[#A8B89A]/15 ${bgClass}`}>
+                        {p.client_name}
+                      </td>
+                      <td className={`py-4 pr-4 text-slate-500 dark:text-slate-400 border-t border-b border-slate-200/50 dark:border-slate-800/40 transition-all duration-300 ease-in-out group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-[#A8B89A]/15 ${bgClass}`}>
+                        {p.client_type}
+                      </td>
+                      <td className={`py-4 pr-4 text-[#8AA17A] font-semibold border-t border-b border-slate-200/50 dark:border-slate-800/40 transition-all duration-300 ease-in-out group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-[#A8B89A]/15 ${bgClass}`}>
+                        INR {p.budget.toLocaleString()}
+                      </td>
+                      <td className={`py-4 pr-4 border-t border-b border-slate-200/50 dark:border-slate-800/40 transition-all duration-300 ease-in-out group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-[#A8B89A]/15 ${bgClass}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeStyles(p.status)}`}>
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className={`py-4 pr-4 text-slate-500 dark:text-slate-400 border-t border-b border-slate-200/50 dark:border-slate-800/40 transition-all duration-300 ease-in-out group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-[#A8B89A]/15 ${bgClass}`}>
+                        {p.start_date || 'N/A'}
+                      </td>
+                      <td className={`py-4 pr-4 text-slate-500 dark:text-slate-400 border-t border-b border-slate-200/50 dark:border-slate-800/40 transition-all duration-300 ease-in-out group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-[#A8B89A]/15 ${bgClass}`}>
+                        {p.assigned_designer || 'N/A'}
+                      </td>
+                      <td className={`py-4 text-right space-x-1 last:rounded-r-2xl pr-4 border-t border-b border-r border-slate-200/50 dark:border-slate-800/40 transition-all duration-300 ease-in-out group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-[#A8B89A]/15 ${bgClass}`} onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => {
+                            setActiveProjectId(p.id);
+                            setShowDetailsPopup(true);
+                          }}
+                          className="p-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-sky-500 dark:hover:text-sky-400 transition cursor-pointer"
+                          title="View Details"
+                        >
+                          <Eye size={12} />
+                        </button>
+                        {(currentUser.role === 'Admin' || currentUser.role === 'Project Manager') ? (
+                          <>
+                            <button
+                              onClick={() => loadEditData(p)}
+                              className="p-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition cursor-pointer"
+                              title="Edit Project"
+                            >
+                              <Edit size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProject(p.id)}
+                              className="p-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 transition cursor-pointer"
+                              title="Delete Project"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1464,46 +1617,52 @@ function ProjectsView({
             {projects.map(p => (
               <div
                 key={p.id}
-                className={`p-4 bg-slate-950/40 border border-white/5 rounded-xl space-y-3 cursor-pointer transition-all ${
-                  activeProjectId === p.id ? 'bg-white/5 border-l-2 border-gold pl-3' : ''
+                className={`p-4 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-xl space-y-3 cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-white/5 ${
+                  activeProjectId === p.id && showDetailsPopup ? 'border-[#A8B89A]' : ''
                 }`}
-                onClick={() => setActiveProjectId(p.id)}
+                onClick={() => {
+                  setActiveProjectId(p.id);
+                  setShowDetailsPopup(true);
+                }}
               >
                 <div className="flex justify-between items-start gap-2">
                   <div>
-                    <h4 className="font-bold text-gray-200 text-xs">{p.name}</h4>
-                    <p className="text-[10px] text-gray-500 font-normal mt-0.5">{p.address}</p>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-xs">{p.name}</h4>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-normal mt-0.5">{p.address}</p>
                   </div>
                   <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeStyles(p.status)}`}>
                     {p.status}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[10px] text-gray-400">
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 dark:text-gray-400">
                   <div>
-                    <span className="text-gray-500 block uppercase font-bold tracking-wider text-[8px]">Client</span>
-                    <span className="text-white font-medium">{p.client_name}</span>
+                    <span className="text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider text-[8px]">Client</span>
+                    <span className="text-slate-800 dark:text-white font-medium">{p.client_name}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500 block uppercase font-bold tracking-wider text-[8px]">Type</span>
-                    <span className="text-white font-medium">{p.client_type}</span>
+                    <span className="text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider text-[8px]">Type</span>
+                    <span className="text-slate-800 dark:text-white font-medium">{p.client_type}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500 block uppercase font-bold tracking-wider text-[8px]">Budget</span>
-                    <span className="text-gold font-semibold">INR {p.budget.toLocaleString()}</span>
+                    <span className="text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider text-[8px]">Budget</span>
+                    <span className="text-[#8AA17A] font-semibold">INR {p.budget.toLocaleString()}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500 block uppercase font-bold tracking-wider text-[8px]">Designer</span>
-                    <span className="text-white font-medium">{p.assigned_designer || 'N/A'}</span>
+                    <span className="text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider text-[8px]">Designer</span>
+                    <span className="text-slate-800 dark:text-white font-medium">{p.assigned_designer || 'N/A'}</span>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-gray-400 text-[10px]">Start: {p.start_date || 'N/A'}</span>
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs" onClick={(e) => e.stopPropagation()}>
+                  <span className="text-slate-500 dark:text-gray-400 text-[10px]">Start: {p.start_date || 'N/A'}</span>
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => setActiveProjectId(p.id)}
-                      className="p-2 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-sky-400 transition min-h-[36px] flex items-center justify-center"
+                      onClick={() => {
+                        setActiveProjectId(p.id);
+                        setShowDetailsPopup(true);
+                      }}
+                      className="p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-sky-500 dark:hover:text-sky-400 transition min-h-[36px] flex items-center justify-center cursor-pointer"
                       title="View Details"
                     >
                       <Eye size={12} />
@@ -1512,14 +1671,14 @@ function ProjectsView({
                       <>
                         <button
                           onClick={() => loadEditData(p)}
-                          className="p-2 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-gold transition min-h-[36px] flex items-center justify-center"
+                          className="p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition min-h-[36px] flex items-center justify-center cursor-pointer"
                           title="Edit Project"
                         >
                           <Edit size={12} />
                         </button>
                         <button
                           onClick={() => handleDeleteProject(p.id)}
-                          className="p-2 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-rose-400 transition min-h-[36px] flex items-center justify-center"
+                          className="p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 transition min-h-[36px] flex items-center justify-center cursor-pointer"
                           title="Delete Project"
                         >
                           <Trash2 size={12} />
@@ -1532,324 +1691,421 @@ function ProjectsView({
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Detailed Side Panel Portal */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl">
-          {detailsLoading ? (
-            <div className="text-center py-20 text-gray-400 text-xs">Syncing project details...</div>
-          ) : activeDetails ? (
-            <div className="space-y-6">
-              <div className="border-b border-white/5 pb-4 space-y-2">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-lg font-bold text-white font-display">{activeDetails.project.name}</h3>
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeStyles(activeDetails.project.status)}`}>
-                    {activeDetails.project.status}
-                  </span>
+      {/* Project Details Modal Pop-up */}
+      <AnimatePresence>
+        {showDetailsPopup && activeDetails && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+            {/* Backdrop */}
+            <div 
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+              onClick={() => setShowDetailsPopup(false)}
+            />
+            {/* Modal Content */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-6 rounded-[28px] w-full max-w-4xl space-y-6 shadow-2xl overflow-y-auto max-h-[90vh] text-left relative z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white font-display">
+                      {activeDetails.project.name}
+                    </h3>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeStyles(activeDetails.project.status)}`}>
+                      {activeDetails.project.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+                    Client: <strong className="text-slate-800 dark:text-white">{activeDetails.project.client_name}</strong>
+                  </p>
                 </div>
-                <p className="text-xs text-gray-400">Client: <strong>{activeDetails.project.client_name}</strong></p>
-                <div className="flex flex-col gap-1 text-[10px] text-gray-500 pt-1">
-                  <span className="flex items-center gap-1"><Phone size={10} /> {activeDetails.project.client_phone}</span>
-                  <span className="flex items-center gap-1"><Mail size={10} /> {activeDetails.project.client_email}</span>
-                  <span className="flex items-center gap-1"><MapPin size={10} /> {activeDetails.project.address}</span>
-                </div>
+                <button 
+                  onClick={() => setShowDetailsPopup(false)} 
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2 focus-visible:ring-2 focus-visible:ring-emerald-500/50 outline-none rounded-lg cursor-pointer" 
+                  title="Close Details"
+                  aria-label="Close details popup"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
-              {/* Internal Tabs */}
-              <div className="flex flex-wrap gap-2 border-b border-white/5 pb-2 text-[10px] uppercase font-bold text-gray-400">
-                {['overview', 'spaces', 'concepts', 'site-visits', 'tasks', 'vendors', 'budget'].map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveSubTab(tab)}
-                    className={`pb-1 px-1 border-b-2 transition ${
-                      activeSubTab === tab ? 'border-gold text-gold font-bold' : 'border-transparent hover:text-white'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              {/* Subtab Contents */}
-              <div className="text-xs space-y-4">
-                {activeSubTab === 'overview' && (
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1.5">Design Notes</h4>
-                      <p className="p-3 bg-slate-950/60 border border-white/5 rounded-xl text-gray-300 leading-relaxed">
-                        {activeDetails.project.notes || 'No design notes mapped.'}
-                      </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Left Side: Core Metadata & Notes */}
+                <div className="md:col-span-1 space-y-4 md:border-r border-slate-100 dark:border-slate-800/60 md:pr-6">
+                  <div className="space-y-2 text-xs">
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500 block uppercase tracking-wider font-bold">Contact Information</span>
+                    <div className="flex flex-col gap-1.5 text-[10px] text-slate-600 dark:text-slate-300">
+                      <span className="flex items-center gap-1.5"><Phone size={10} className="text-[#A8B89A]" /> {activeDetails.project.client_phone}</span>
+                      <span className="flex items-center gap-1.5"><Mail size={10} className="text-[#A8B89A]" /> {activeDetails.project.client_email}</span>
+                      <span className="flex items-center gap-1.5"><MapPin size={10} className="text-[#A8B89A]" /> {activeDetails.project.address}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-slate-950/40 border border-white/5 rounded-xl">
-                        <span className="text-[9px] text-gray-500 block mb-0.5 uppercase tracking-wider font-bold">Budget Limit</span>
-                        <p className="font-bold text-white text-sm">INR {activeDetails.project.budget.toLocaleString()}</p>
+                  </div>
+
+                  <div className="border-t border-slate-100 dark:border-slate-800/60 pt-3 space-y-2 text-xs">
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500 block uppercase tracking-wider font-bold">Project Metadata</span>
+                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 block font-light">Type</span>
+                        <span className="text-slate-800 dark:text-white font-medium">{activeDetails.project.client_type}</span>
                       </div>
-                      <div className="p-3 bg-slate-950/40 border border-white/5 rounded-xl">
-                        <span className="text-[9px] text-gray-500 block mb-0.5 uppercase tracking-wider font-bold">Spaces Configured</span>
-                        <p className="font-bold text-white text-sm">{activeDetails.rooms.length} Rooms</p>
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 block font-light">Start Date</span>
+                        <span className="text-slate-800 dark:text-white font-medium">{activeDetails.project.start_date || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 block font-light">Designer</span>
+                        <span className="text-slate-800 dark:text-white font-medium">{activeDetails.project.assigned_designer || 'N/A'}</span>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {activeSubTab === 'spaces' && (
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center mb-1">
-                      <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Rooms Mapping</h4>
-                    </div>
-                    {activeDetails.rooms.map((r: Room) => (
-                      <div key={r.id} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-gray-200">{r.name}</p>
-                          <p className="text-[10px] text-gray-400 mt-0.5">Dims: {r.length}'x{r.width}'x{r.height}'</p>
-                        </div>
-                        <span className="text-[10px] text-gray-500 italic">{r.notes ? r.notes.substring(0, 25) + '...' : ''}</span>
-                      </div>
+                  <div className="border-t border-slate-100 dark:border-slate-800/60 pt-3">
+                    <h4 className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-1.5">Design Notes</h4>
+                    <p className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl text-slate-700 dark:text-slate-300 leading-relaxed text-[11px]">
+                      {activeDetails.project.notes || 'No design notes mapped.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right Side: Tabbed Dynamic Content */}
+                <div className="md:col-span-2 space-y-4">
+                  {/* Tab Selector */}
+                  <div className="flex flex-wrap gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2 text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+                    {['overview', 'spaces', 'concepts', 'site-visits', 'tasks', 'vendors', 'budget', 'photos'].map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveSubTab(tab)}
+                        className={`pb-1 px-1 border-b-2 transition cursor-pointer ${
+                          activeSubTab === tab ? 'border-[#A8B89A] text-[#8AA17A] font-bold' : 'border-transparent hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {tab}
+                      </button>
                     ))}
-                    {activeDetails.rooms.length === 0 && (
-                      <p className="text-gray-500 italic py-6 text-center">No rooms configured.</p>
-                    )}
                   </div>
-                )}
 
-                {activeSubTab === 'concepts' && (
-                  <div className="space-y-3">
-                    <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">Design Concepts (Approvals Portal)</h4>
-                    {activeDetails.rooms.flatMap((r: Room) => (r.concepts || []).map((c: any) => (
-                      <div key={c.id} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold text-gray-200">{c.title} ({r.name})</span>
-                          <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold border ${
-                            c.status === 'Approved' ? 'border-emerald-500 text-emerald-400 bg-emerald-950/20' :
-                            c.status === 'Revised' ? 'border-rose-500 text-rose-400 bg-rose-950/20' :
-                            'border-amber-500 text-amber-400 bg-amber-950/20'
-                          }`}>
-                            {c.status}
-                          </span>
+                  {/* Tab Content */}
+                  <div className="text-xs space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+                    {activeSubTab === 'overview' && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-xl">
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500 block mb-0.5 uppercase tracking-wider font-bold">Budget Limit</span>
+                          <p className="font-bold text-slate-900 dark:text-white text-sm">INR {activeDetails.project.budget.toLocaleString()}</p>
                         </div>
-                        <p className="text-gray-400 text-[11px]">{c.description}</p>
-                        <div className="flex gap-2 justify-end pt-1">
-                          <button
-                            onClick={() => handleUpdateConceptStatus(c.id, 'Approved')}
-                            className="px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 hover:bg-emerald-500/30 font-semibold text-[10px] transition"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleUpdateConceptStatus(c.id, 'Revised')}
-                            className="px-2 py-1 bg-rose-500/20 border border-rose-500/30 rounded text-rose-400 hover:bg-rose-500/30 font-semibold text-[10px] transition"
-                          >
-                            Request Revision
-                          </button>
+                        <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-xl">
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500 block mb-0.5 uppercase tracking-wider font-bold">Spaces Configured</span>
+                          <p className="font-bold text-slate-900 dark:text-white text-sm">{activeDetails.rooms.length} Rooms</p>
                         </div>
                       </div>
-                    )))}
-                    {activeDetails.rooms.flatMap((r: Room) => r.concepts || []).length === 0 && (
-                      <p className="text-gray-500 italic py-6 text-center">No design concepts uploaded.</p>
-                    )}
-                  </div>
-                )}
-
-                {activeSubTab === 'site-visits' && (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center mb-1">
-                      <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Site Visits Log</h4>
-                      {['Admin', 'Interior Designer', 'Project Manager'].includes(currentUser.role) && (
-                        <button
-                          onClick={() => setShowAddVisit(!showAddVisit)}
-                          className="text-[10px] font-bold text-gold hover:underline"
-                        >
-                          {showAddVisit ? 'Cancel' : '+ Book Site Visit'}
-                        </button>
-                      )}
-                    </div>
-
-                    {showAddVisit && (
-                      <form onSubmit={async (e) => {
-                        e.preventDefault();
-                        await handleCreateSiteVisit(visitForm);
-                        setShowAddVisit(false);
-                        setVisitForm({ visitDate: '', visitorName: '', notes: '' });
-                      }} className="p-3 bg-slate-950 border border-white/5 rounded-xl space-y-3">
-                        <div className="grid grid-cols-2 gap-2 text-[10px]">
-                          <div>
-                            <label className="block text-gray-400 mb-1">Date</label>
-                            <input
-                              type="date" required
-                              value={visitForm.visitDate} onChange={(e) => setVisitForm({ ...visitForm, visitDate: e.target.value })}
-                              className="w-full bg-slate-900 border border-white/5 p-2 rounded text-white outline-none focus:border-gold"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-gray-400 mb-1">Visitor Name</label>
-                            <input
-                              type="text" required placeholder="e.g. Rahul Dev (PM)"
-                              value={visitForm.visitorName} onChange={(e) => setVisitForm({ ...visitForm, visitorName: e.target.value })}
-                              className="w-full bg-slate-900 border border-white/5 p-2 rounded text-white outline-none focus:border-gold"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-gray-400 mb-1 text-[10px]">Site Notes</label>
-                          <textarea
-                            rows={2} placeholder="Slab dimensions, measurements..."
-                            value={visitForm.notes} onChange={(e) => setVisitForm({ ...visitForm, notes: e.target.value })}
-                            className="w-full bg-slate-900 border border-white/5 p-2 rounded text-white outline-none focus:border-gold text-[10px]"
-                          />
-                        </div>
-                        <button type="submit" className="w-full bg-gold text-slate-950 p-2 rounded font-bold text-[10px]">
-                          SCHEDULE VISIT
-                        </button>
-                      </form>
                     )}
 
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                      {activeDetails.siteVisits.map((v: SiteVisit) => (
-                        <div key={v.id} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl space-y-2">
-                          <div className="flex justify-between items-center text-[10px] text-gray-400">
-                            <span className="font-bold text-gray-200">{v.visitor_name}</span>
-                            <span>{v.visit_date}</span>
-                          </div>
-                          <p className="text-gray-300 leading-relaxed">{v.notes}</p>
-                          <div className="flex gap-2 items-center text-[9px] text-gold font-bold">
-                            <MapPin size={10} />
-                            <span>Site measurements logged</span>
-                          </div>
+                    {activeSubTab === 'spaces' && (
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center mb-1">
+                          <h4 className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold">Rooms Mapping</h4>
                         </div>
-                      ))}
-                      {activeDetails.siteVisits.length === 0 && (
-                        <p className="text-gray-500 italic py-6 text-center">No site visits recorded yet.</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {activeSubTab === 'tasks' && (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center mb-1">
-                      <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Snag Lists & Tasks</h4>
-                      {['Admin', 'Interior Designer', 'Project Manager'].includes(currentUser.role) && (
-                        <button
-                          onClick={() => setShowAddTask(!showAddTask)}
-                          className="text-[10px] font-bold text-gold hover:underline"
-                        >
-                          {showAddTask ? 'Cancel' : '+ Add Snag Item'}
-                        </button>
-                      )}
-                    </div>
-
-                    {showAddTask && (
-                      <form onSubmit={async (e) => {
-                        e.preventDefault();
-                        await handleCreateTask(taskForm);
-                        setShowAddTask(false);
-                        setTaskForm({ title: '', assignedTo: 'Designer', dueDate: '' });
-                      }} className="p-3 bg-slate-950 border border-white/5 rounded-xl space-y-3">
-                        <div>
-                          <label className="block text-gray-400 mb-1 text-[10px]">Task Title</label>
-                          <input
-                            type="text" required placeholder="e.g. Check tile grout leveling"
-                            value={taskForm.title} onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-                            className="w-full bg-slate-900 border border-white/5 p-2 rounded text-white outline-none focus:border-gold text-[10px]"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-[10px]">
-                          <div>
-                            <label className="block text-gray-400 mb-1">Assigned Role</label>
-                            <select
-                              value={taskForm.assignedTo} onChange={(e) => setTaskForm({ ...taskForm, assignedTo: e.target.value })}
-                              className="w-full bg-slate-900 border border-white/5 p-2 rounded text-white outline-none focus:border-gold cursor-pointer"
-                            >
-                              <option value="Designer">Interior Designer</option>
-                              <option value="Project Manager">Project Manager</option>
-                              <option value="Site Engineer">Site Engineer</option>
-                              <option value="Vendor Coordinator">Vendor Coordinator</option>
-                              <option value="Admin">Administrator</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-gray-400 mb-1">Due Date</label>
-                            <input
-                              type="date"
-                              value={taskForm.dueDate} onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
-                              className="w-full bg-slate-900 border border-white/5 p-2 rounded text-white outline-none focus:border-gold"
-                            />
-                          </div>
-                        </div>
-                        <button type="submit" className="w-full bg-gold text-slate-950 p-2 rounded font-bold text-[10px]">
-                          ADD SNAG TASK
-                        </button>
-                      </form>
-                    )}
-
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                      {activeDetails.tasks.map((t: Task) => (
-                        <div key={t.id} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={t.status === 'Completed'}
-                              disabled={currentUser.role === 'Client'}
-                              onChange={(e) => handleUpdateTaskStatus(t.id, e.target.checked ? 'Completed' : 'In Progress')}
-                              className="accent-gold h-4 w-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            />
+                        {activeDetails.rooms.map((r: Room) => (
+                          <div key={r.id} className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl flex justify-between items-center">
                             <div>
-                              <p className={`font-medium ${t.status === 'Completed' ? 'line-through text-gray-500' : 'text-gray-200'}`}>
-                                {t.title}
-                              </p>
-                              <p className="text-[10px] text-gray-400 mt-0.5">
-                                Assigned: {t.assigned_to} • Due: {t.due_date || 'No Date'}
-                              </p>
+                              <p className="font-bold text-slate-900 dark:text-slate-200">{r.name}</p>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Dims: {r.length}'x{r.width}'x{r.height}'</p>
+                            </div>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 italic">{r.notes ? r.notes.substring(0, 25) + '...' : ''}</span>
+                          </div>
+                        ))}
+                        {activeDetails.rooms.length === 0 && (
+                          <p className="text-slate-400 dark:text-slate-500 italic py-6 text-center">No rooms configured.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {activeSubTab === 'concepts' && (
+                      <div className="space-y-3">
+                        <h4 className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-1">Design Concepts (Approvals Portal)</h4>
+                        {activeDetails.rooms.flatMap((r: Room) => (r.concepts || []).map((c: any) => (
+                          <div key={c.id} className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-slate-900 dark:text-slate-200">{c.title} ({r.name})</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold border ${
+                                c.status === 'Approved' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' :
+                                c.status === 'Revised' ? 'border-rose-500 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20' :
+                                'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20'
+                              }`}>
+                                {c.status}
+                              </span>
+                            </div>
+                            <p className="text-slate-500 dark:text-slate-400 text-[11px]">{c.description}</p>
+                            <div className="flex gap-2 justify-end pt-1">
+                              <button
+                                onClick={() => handleUpdateConceptStatus(c.id, 'Approved')}
+                                className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 font-semibold text-[10px] transition cursor-pointer"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleUpdateConceptStatus(c.id, 'Revised')}
+                                className="px-2 py-1 bg-rose-500/10 border border-rose-500/20 rounded text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 font-semibold text-[10px] transition cursor-pointer"
+                              >
+                                Request Revision
+                              </button>
                             </div>
                           </div>
-                          {currentUser.role !== 'Client' && (
+                        )))}
+                        {activeDetails.rooms.flatMap((r: Room) => r.concepts || []).length === 0 && (
+                          <p className="text-slate-400 dark:text-slate-500 italic py-6 text-center">No design concepts uploaded.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {activeSubTab === 'site-visits' && (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center mb-1">
+                          <h4 className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold">Site Visits Log</h4>
+                          {['Admin', 'Interior Designer', 'Project Manager'].includes(currentUser.role) && (
                             <button
-                              onClick={() => handleDeleteTask(t.id)}
-                              className="p-1 text-gray-500 hover:text-rose-400 transition"
+                              onClick={() => setShowAddVisit(!showAddVisit)}
+                              className="text-[10px] font-bold text-[#8AA17A] hover:underline cursor-pointer"
                             >
-                              <Trash2 size={12} />
+                              {showAddVisit ? 'Cancel' : '+ Book Site Visit'}
                             </button>
                           )}
                         </div>
-                      ))}
-                      {activeDetails.tasks.length === 0 && (
-                        <p className="text-gray-500 italic py-6 text-center">No tasks assigned.</p>
-                      )}
-                    </div>
-                  </div>
-                )}
 
-                {activeSubTab === 'vendors' && (
-                  <div className="space-y-3">
-                    <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">Procured Vendors</h4>
-                    {Array.from(new Set(activeDetails.selections.map((s: any) => s.vendor_name))).map((vName: any) => {
-                      if (!vName) return null;
-                      return (
-                        <div key={vName} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl flex items-center justify-between">
-                          <span className="font-semibold text-gray-300">{vName}</span>
-                          <span className="text-[10px] text-gold uppercase font-bold tracking-wider">Active Supplier</span>
+                        {showAddVisit && (
+                          <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            await handleCreateSiteVisit(visitForm);
+                            setShowAddVisit(false);
+                            setVisitForm({ visitDate: '', visitorName: '', notes: '' });
+                          }} className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-xl space-y-3">
+                            <div className="grid grid-cols-2 gap-2 text-[10px]">
+                              <div>
+                                <label className="block text-slate-500 dark:text-slate-400 mb-1">Date</label>
+                                <input
+                                  type="date" required
+                                  value={visitForm.visitDate} onChange={(e) => setVisitForm({ ...visitForm, visitDate: e.target.value })}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-2 rounded text-slate-900 dark:text-white outline-none focus:border-[#A8B89A]"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-slate-500 dark:text-slate-400 mb-1">Visitor Name</label>
+                                <input
+                                  type="text" required placeholder="e.g. Rahul Dev (PM)"
+                                  value={visitForm.visitorName} onChange={(e) => setVisitForm({ ...visitForm, visitorName: e.target.value })}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-2 rounded text-slate-900 dark:text-white outline-none focus:border-[#A8B89A]"
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-slate-500 dark:text-slate-400 mb-1 text-[10px]">Site Notes</label>
+                              <textarea
+                                rows={2} placeholder="Slab dimensions, measurements..."
+                                value={visitForm.notes} onChange={(e) => setVisitForm({ ...visitForm, notes: e.target.value })}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-2 rounded text-slate-900 dark:text-white outline-none focus:border-[#A8B89A] text-[10px]"
+                              />
+                            </div>
+                            <button type="submit" className="w-full bg-[#A8B89A] hover:bg-[#96A689] text-white p-2 rounded font-bold text-[10px] cursor-pointer">
+                              SCHEDULE VISIT
+                            </button>
+                          </form>
+                        )}
+
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                          {activeDetails.siteVisits.map((v: SiteVisit) => (
+                            <div key={v.id} className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl space-y-2">
+                              <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
+                                <span className="font-bold text-slate-900 dark:text-slate-200">{v.visitor_name}</span>
+                                <span>{v.visit_date}</span>
+                              </div>
+                              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{v.notes}</p>
+                              <div className="flex gap-2 items-center text-[9px] text-[#8AA17A] font-bold">
+                                <MapPin size={10} />
+                                <span>Site measurements logged</span>
+                              </div>
+                            </div>
+                          ))}
+                          {activeDetails.siteVisits.length === 0 && (
+                            <p className="text-slate-400 dark:text-slate-500 italic py-6 text-center">No site visits recorded yet.</p>
+                          )}
                         </div>
-                      );
-                    })}
-                    {activeDetails.selections.filter((s: any) => s.vendor_name).length === 0 && (
-                      <p className="text-gray-500 italic py-6 text-center">No vendors assigned to selections.</p>
+                      </div>
+                    )}
+
+                    {activeSubTab === 'tasks' && (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center mb-1">
+                          <h4 className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold">Snag Lists & Tasks</h4>
+                          {['Admin', 'Interior Designer', 'Project Manager'].includes(currentUser.role) && (
+                            <button
+                              onClick={() => setShowAddTask(!showAddTask)}
+                              className="text-[10px] font-bold text-[#8AA17A] hover:underline cursor-pointer"
+                            >
+                              {showAddTask ? 'Cancel' : '+ Add Snag Item'}
+                            </button>
+                          )}
+                        </div>
+
+                        {showAddTask && (
+                          <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            await handleCreateTask(taskForm);
+                            setShowAddTask(false);
+                            setTaskForm({ title: '', assignedTo: 'Designer', dueDate: '' });
+                          }} className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-xl space-y-3">
+                            <div>
+                              <label className="block text-slate-500 dark:text-slate-400 mb-1 text-[10px]">Task Title</label>
+                              <input
+                                type="text" required placeholder="e.g. Check tile grout leveling"
+                                value={taskForm.title} onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-2 rounded text-slate-900 dark:text-white outline-none focus:border-[#A8B89A] text-[10px]"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-[10px]">
+                              <div>
+                                <label className="block text-slate-500 dark:text-slate-400 mb-1">Assigned Role</label>
+                                <select
+                                  value={taskForm.assignedTo} onChange={(e) => setTaskForm({ ...taskForm, assignedTo: e.target.value })}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-2 rounded text-slate-900 dark:text-white outline-none focus:border-[#A8B89A] cursor-pointer"
+                                >
+                                  <option value="Designer">Interior Designer</option>
+                                  <option value="Project Manager">Project Manager</option>
+                                  <option value="Site Engineer">Site Engineer</option>
+                                  <option value="Vendor Coordinator">Vendor Coordinator</option>
+                                  <option value="Admin">Administrator</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-slate-500 dark:text-slate-400 mb-1">Due Date</label>
+                                <input
+                                  type="date"
+                                  value={taskForm.dueDate} onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-2 rounded text-slate-900 dark:text-white outline-none focus:border-[#A8B89A]"
+                                />
+                              </div>
+                            </div>
+                            <button type="submit" className="w-full bg-[#A8B89A] hover:bg-[#96A689] text-white p-2 rounded font-bold text-[10px] cursor-pointer">
+                              ADD SNAG TASK
+                            </button>
+                          </form>
+                        )}
+
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                          {activeDetails.tasks.map((t: Task) => (
+                            <div key={t.id} className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={t.status === 'Completed'}
+                                  disabled={currentUser.role === 'Client'}
+                                  onChange={(e) => handleUpdateTaskStatus(t.id, e.target.checked ? 'Completed' : 'In Progress')}
+                                  className="accent-emerald-500 h-4 w-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                />
+                                <div>
+                                  <p className={`font-medium ${t.status === 'Completed' ? 'line-through text-slate-400 dark:text-gray-500' : 'text-slate-900 dark:text-slate-200'}`}>
+                                    {t.title}
+                                  </p>
+                                  <p className="text-[10px] text-slate-400 dark:text-gray-400 mt-0.5">
+                                    Assigned: {t.assigned_to} • Due: {t.due_date || 'No Date'}
+                                  </p>
+                                </div>
+                              </div>
+                              {currentUser.role !== 'Client' && (
+                                <button
+                                  onClick={() => handleDeleteTask(t.id)}
+                                  className="p-1 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition cursor-pointer"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          {activeDetails.tasks.length === 0 && (
+                            <p className="text-slate-400 dark:text-slate-500 italic py-6 text-center">No tasks assigned.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeSubTab === 'vendors' && (
+                      <div className="space-y-3">
+                        <h4 className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-1">Procured Vendors</h4>
+                        {Array.from(new Set(activeDetails.selections.map((s: any) => s.vendor_name))).map((vName: any) => {
+                          if (!vName) return null;
+                          return (
+                            <div key={vName} className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl flex items-center justify-between">
+                              <span className="font-semibold text-slate-800 dark:text-slate-300">{vName}</span>
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider">Active Supplier</span>
+                            </div>
+                          );
+                        })}
+                        {activeDetails.selections.filter((s: any) => s.vendor_name).length === 0 && (
+                          <p className="text-slate-400 dark:text-slate-500 italic py-6 text-center">No vendors assigned to selections.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {activeSubTab === 'budget' && (
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-1">Budget utilization</h4>
+                        <BudgetSummaryPanel activeDetails={activeDetails} />
+                      </div>
+                    )}
+
+                    {activeSubTab === 'photos' && (
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] uppercase tracking-wider text-[#A8B89A] font-bold mb-1.5">Project Photos Gallery</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {/* Photo 1 */}
+                          <div className="space-y-1.5 group/photo cursor-pointer relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-850">
+                            <img
+                              src={activeDetails.project.image_url || '/assets/projects/rathods_villa.png'}
+                              alt="Main Exterior View"
+                              className="w-full h-32 object-cover transition-all duration-300 group-hover/photo:scale-105"
+                            />
+                            <div className="p-2 bg-slate-50 dark:bg-slate-950/60 text-[10px] text-[#4B4B4B] dark:text-gray-300 font-medium">Main Exterior View</div>
+                          </div>
+
+                          {/* Photo 2 */}
+                          <div className="space-y-1.5 group/photo cursor-pointer relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-850">
+                            <img
+                              src={`/assets/projects/project_${activeDetails.project.id}_2.png`}
+                              alt="Interior View 1"
+                              className="w-full h-32 object-cover transition-all duration-300 group-hover/photo:scale-105"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/assets/backgrounds/luxury_villa.png';
+                              }}
+                            />
+                            <div className="p-2 bg-slate-50 dark:bg-slate-950/60 text-[10px] text-[#4B4B4B] dark:text-gray-300 font-medium">Interior Perspective A</div>
+                          </div>
+
+                          {/* Photo 3 */}
+                          <div className="space-y-1.5 group/photo cursor-pointer relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-850">
+                            <img
+                              src={`/assets/projects/project_${activeDetails.project.id}_3.png`}
+                              alt="Interior View 2"
+                              className="w-full h-32 object-cover transition-all duration-300 group-hover/photo:scale-105"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/assets/backgrounds/modern_living_room.png';
+                              }}
+                            />
+                            <div className="p-2 bg-slate-50 dark:bg-slate-950/60 text-[10px] text-[#4B4B4B] dark:text-gray-300 font-medium">Interior Perspective B</div>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                )}
-
-                {activeSubTab === 'budget' && (
-                  <div className="space-y-4">
-                    <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">Budget utilization</h4>
-                    <BudgetSummaryPanel activeDetails={activeDetails} />
-                  </div>
-                )}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-20 text-gray-500 italic text-xs">Select a project folder to inspect overview fields.</div>
-          )}
-        </div>
-      </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Add Project Modal */}
       {showAdd && (
@@ -1887,13 +2143,13 @@ interface ProjectModalProps {
 
 function ProjectModal({ title, formData, setFormData, onClose, onSubmit }: ProjectModalProps) {
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="pm-title" className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl w-full max-w-lg space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div role="dialog" aria-modal="true" aria-labelledby="pm-title" className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-6 rounded-3xl w-full max-w-lg space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]">
         <div className="flex justify-between items-center">
-          <h3 id="pm-title" className="text-lg font-bold text-white font-display">{title}</h3>
+          <h3 id="pm-title" className="text-lg font-bold text-slate-900 dark:text-white font-display">{title}</h3>
           <button 
             onClick={onClose} 
-            className="text-gray-400 hover:text-white p-2 min-h-[44px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold outline-none rounded-lg" 
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2 min-h-[44px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 outline-none rounded-lg" 
             title="Close"
             aria-label="Close modal"
           >
@@ -1903,60 +2159,60 @@ function ProjectModal({ title, formData, setFormData, onClose, onSubmit }: Proje
         <form onSubmit={onSubmit} className="space-y-4 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="pm-name" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Project Name</label>
+              <label htmlFor="pm-name" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Project Name</label>
               <input
                 id="pm-name"
                 type="text" required placeholder="e.g. Rathod Penthouse"
                 value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full bg-slate-950 border border-white/5 px-3 py-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
             <div>
-              <label htmlFor="pm-client" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Client Name</label>
+              <label htmlFor="pm-client" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Client Name</label>
               <input
                 id="pm-client"
                 type="text" required placeholder="e.g. Sidharth Rathod"
                 value={formData.clientName} onChange={(e) => setFormData({...formData, clientName: e.target.value})}
-                className="w-full bg-slate-950 border border-white/5 px-3 py-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="pm-phone" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Phone Number</label>
+              <label htmlFor="pm-phone" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Phone Number</label>
               <input
                 id="pm-phone"
                 type="tel" placeholder="+91 99999..."
                 value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                className="w-full bg-slate-950 border border-white/5 px-3 py-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
             <div>
-              <label htmlFor="pm-email" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Email Address</label>
+              <label htmlFor="pm-email" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Email Address</label>
               <input
                 id="pm-email"
                 type="email" placeholder="client@mail.com"
                 value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full bg-slate-950 border border-white/5 px-3 py-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="pm-location" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Site Address Location</label>
+              <label htmlFor="pm-location" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Site Address Location</label>
               <input
                 id="pm-location"
                 type="text" placeholder="Thane, Mumbai"
                 value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})}
-                className="w-full bg-slate-950 border border-white/5 px-3 py-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
             <div>
-              <label htmlFor="pm-type" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Project Type</label>
+              <label htmlFor="pm-type" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Project Type</label>
               <select
                 id="pm-type"
                 value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}
-                className="w-full bg-slate-950 border border-white/5 px-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] cursor-pointer focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               >
                 <option value="Residential">Residential</option>
                 <option value="Commercial">Commercial</option>
@@ -1965,43 +2221,43 @@ function ProjectModal({ title, formData, setFormData, onClose, onSubmit }: Proje
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="pm-start" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Start Date</label>
+              <label htmlFor="pm-start" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Start Date</label>
               <input
                 id="pm-start"
                 type="date"
                 value={formData.startDate || ''} onChange={(e) => setFormData({...formData, startDate: e.target.value})}
-                className="w-full bg-slate-950 border border-white/5 px-3 py-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
             <div>
-              <label htmlFor="pm-designer" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Designer Assigned</label>
+              <label htmlFor="pm-designer" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Designer Assigned</label>
               <input
                 id="pm-designer"
                 type="text" placeholder="e.g. Nisha Sen"
                 value={formData.assignedDesigner || ''} onChange={(e) => setFormData({...formData, assignedDesigner: e.target.value})}
-                className="w-full bg-slate-950 border border-white/5 px-3 py-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
           <div>
-            <label htmlFor="pm-budget" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Allocated Budget Limit (INR)</label>
+            <label htmlFor="pm-budget" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Allocated Budget Limit (INR)</label>
             <input
               id="pm-budget"
               type="number" placeholder="45000"
               value={formData.budget} onChange={(e) => setFormData({...formData, budget: e.target.value})}
-              className="w-full bg-slate-950 border border-white/5 px-3 py-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
             />
           </div>
           <div>
-            <label htmlFor="pm-notes" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Notes</label>
+            <label htmlFor="pm-notes" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Notes</label>
             <textarea
               id="pm-notes"
               placeholder="Vibe preferences, spatial details..." rows={2}
               value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})}
-              className="w-full bg-slate-950 border border-white/5 px-3 py-3 rounded-xl text-white outline-none focus:border-gold min-h-[48px] focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 px-3 py-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 min-h-[48px] focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
             />
           </div>
-          <button type="submit" className="w-full bg-gradient-to-r from-gold-dark to-gold text-slate-950 py-3 rounded-xl font-bold tracking-wider min-h-[48px] flex items-center justify-center transition hover:brightness-110 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-gold/50 outline-none">
+          <button type="submit" className="w-full bg-[#A8B89A] hover:bg-[#96A689] text-white py-3 rounded-xl font-bold tracking-wider min-h-[48px] flex items-center justify-center transition active:scale-[0.99] outline-none cursor-pointer shadow-sm">
             SUBMIT PROJECT FOLDER
           </button>
         </form>
@@ -2021,15 +2277,15 @@ function BudgetSummaryPanel({ activeDetails }: { activeDetails: any }) {
 
   return (
     <div className="space-y-3">
-      <div className={`p-4 border rounded-2xl ${getBudgetBorderColor(pct)} bg-slate-950/40 space-y-2`}>
+      <div className={`p-4 border rounded-2xl ${getBudgetBorderColor(pct)} bg-white dark:bg-slate-950/40 space-y-2`}>
         <div className="flex justify-between items-center">
-          <span className="font-bold uppercase tracking-wider text-[9px] text-gray-400">Total Spend Rate</span>
+          <span className="font-bold uppercase tracking-wider text-[9px] text-slate-400 dark:text-slate-500">Total Spend Rate</span>
           <span className={`text-xs font-bold ${getBudgetTextColor(pct)}`}>{pct}% Used</span>
         </div>
-        <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
           <div className={`h-full rounded-full ${getBudgetBarColor(pct)}`} style={{ width: `${pct}%` }}></div>
         </div>
-        <div className="flex justify-between text-[10px] text-gray-500">
+        <div className="flex justify-between text-[10px] text-slate-500">
           <span>Spent: INR {totalSpent.toLocaleString()}</span>
           <span>Cap: INR {budgetLimit.toLocaleString()}</span>
         </div>
@@ -2042,26 +2298,26 @@ function BudgetSummaryPanel({ activeDetails }: { activeDetails: any }) {
 function getBudgetBorderColor(pct: number) {
   if (pct > 100) return 'border-rose-500 shadow-[0_0_15px_rgba(239,68,68,0.15)]';
   if (pct >= 75) return 'border-amber-500/80';
-  return 'border-white/5';
+  return 'border-slate-200 dark:border-slate-800/80';
 }
 function getBudgetTextColor(pct: number) {
-  if (pct > 100) return 'text-rose-400';
-  if (pct >= 75) return 'text-amber-400';
-  return 'text-emerald-400';
+  if (pct > 100) return 'text-rose-500 dark:text-rose-400';
+  if (pct >= 75) return 'text-amber-500 dark:text-amber-400';
+  return 'text-emerald-500 dark:text-emerald-400';
 }
 function getBudgetBarColor(pct: number) {
   if (pct > 100) return 'bg-rose-500';
   if (pct >= 75) return 'bg-amber-500';
-  return 'bg-gold';
+  return 'bg-emerald-500';
 }
 
 function getBadgeStyles(status: string) {
   switch (status) {
-    case 'Completed': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-    case 'Material Selection': return 'bg-gold/10 text-gold border-gold/20';
-    case 'Design Approval': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-    case 'Execution': return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-    default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+    case 'Completed': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+    case 'Material Selection': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+    case 'Design Approval': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
+    case 'Execution': return 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20';
+    default: return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20';
   }
 }
 
@@ -2154,13 +2410,13 @@ function SelectionsView({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white font-display">Material Selection Matrix</h2>
-          <p className="text-sm text-gray-400">Assign, compare supplier costs, and approve client finishes.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-display">Material Selection Matrix</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Assign, compare supplier costs, and approve client finishes.</p>
         </div>
         {(currentUser.role === 'Admin' || currentUser.role === 'Interior Designer') && (
           <button
             onClick={() => setShowAddRoom(true)}
-            className="px-4 py-2 bg-gradient-to-r from-gold-dark to-gold text-slate-950 rounded-xl font-semibold text-sm hover:brightness-110 shadow-lg transition-all flex items-center gap-2"
+            className="px-4 py-2.5 bg-[#A8B89A] hover:bg-[#96A689] text-white rounded-xl font-normal text-sm transition-all flex items-center gap-2 min-h-[44px] shadow-sm cursor-pointer"
           >
             <Plus size={16} />
             <span>Add Space Room</span>
@@ -2176,8 +2432,8 @@ function SelectionsView({
             onClick={() => setActiveRoomId(r.id)}
             className={`px-4 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 border transition ${
               activeRoomId === r.id
-                ? 'bg-gold-dark/20 border-gold text-gold font-bold'
-                : 'bg-slate-900/60 border-white/5 text-gray-400 hover:text-white'
+                ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/5 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5'
             }`}
           >
             <Home size={14} />
@@ -2188,42 +2444,42 @@ function SelectionsView({
       </div>
 
       {currentRoom && (
-        <div className="p-4 bg-slate-900/40 border border-white/5 rounded-2xl text-xs space-y-1">
-          <h3 className="font-bold text-gray-200">{currentRoom.name} Architectural details</h3>
-          <p className="text-gray-400">
+        <div className="p-4 bg-white/95 dark:bg-slate-900/40 border border-[#A8B89A]/15 dark:border-slate-800/80 rounded-[20px] text-xs space-y-1 shadow-sm">
+          <h3 className="font-bold text-[#4B4B4B] dark:text-[#E5E7EB]">{currentRoom.name} Architectural details</h3>
+          <p className="text-[#7D7D7D] dark:text-[#94A3B8]">
             Dimensions: Height: {currentRoom.height} ft | Area Layout Notes: {currentRoom.notes || 'None logged.'}
           </p>
         </div>
       )}
 
       {/* Category Selection Tabs & View Mode Toggles */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-white/5 pb-2">
-        <div className="flex flex-wrap gap-2 uppercase text-[10px] font-bold text-gray-400">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-2">
+        <div className="flex flex-wrap gap-2 uppercase text-[10px] font-bold text-slate-400 dark:text-slate-500">
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={`pb-2 px-1 border-b-2 transition ${
-                activeCategory === cat ? 'border-gold text-gold font-bold' : 'border-transparent hover:text-white'
+                activeCategory === cat ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold' : 'border-transparent hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {cat}
             </button>
           ))}
         </div>
-        <div className="flex gap-1 bg-slate-950 border border-white/5 p-1 rounded-xl self-start sm:self-auto">
+        <div className="flex gap-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/5 p-1 rounded-xl self-start sm:self-auto shadow-inner">
           <button
             onClick={() => setViewMode('card')}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition ${
-              viewMode === 'card' ? 'bg-gold text-slate-950' : 'text-gray-400 hover:text-white'
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 ${
+              viewMode === 'card' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Card View
           </button>
           <button
             onClick={() => setViewMode('table')}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition ${
-              viewMode === 'table' ? 'bg-gold text-slate-950' : 'text-gray-400 hover:text-white'
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 ${
+              viewMode === 'table' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Table View
@@ -2234,68 +2490,68 @@ function SelectionsView({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Selected Items */}
         <div className="lg:col-span-2 space-y-4">
-          <h3 className="text-xs uppercase font-bold text-gray-500 tracking-wider">Active Selections</h3>
+          <h3 className="text-xs uppercase font-bold text-slate-400 dark:text-gray-500 tracking-wider">Active Selections</h3>
           {roomSelections.length > 0 ? (
             viewMode === 'card' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {roomSelections.map((sel: MaterialSelection) => (
-                  <div key={sel.id} className="bg-slate-900/40 border border-white/5 p-5 rounded-2xl space-y-4">
+                  <div key={sel.id} className="glass-panel p-5 bg-white/95 dark:bg-slate-900/40 border border-[#A8B89A]/15 dark:border-slate-800/80 space-y-4 shadow-sm">
                     <div className="flex gap-4">
                       {sel.image_url ? (
                         <img
                           src={sel.image_url}
                           alt={sel.material_name}
-                          className="w-16 h-16 rounded-xl flex-shrink-0 object-cover bg-slate-950 border border-white/5"
+                          className="w-16 h-16 rounded-[16px] flex-shrink-0 object-cover bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/15"
                         />
                       ) : (
-                        <div className="w-16 h-16 rounded-xl flex-shrink-0 bg-slate-950 border border-white/5 flex items-center justify-center font-bold text-[10px] uppercase text-gray-500">
+                        <div className="w-16 h-16 rounded-[16px] flex-shrink-0 bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/15 flex items-center justify-center font-bold text-[10px] uppercase text-slate-500">
                           {sel.category?.substring(0, 4)}
                         </div>
                       )}
                       <div className="flex-1 space-y-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
-                          <h4 className="font-bold text-white text-sm truncate">{sel.material_name}</h4>
+                          <h4 className="font-bold text-[#4B4B4B] dark:text-[#E5E7EB] text-sm truncate">{sel.material_name}</h4>
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeClass(sel.status)}`}>
                             {sel.status}
                           </span>
                         </div>
-                        <p className="text-[10px] text-gray-500">{sel.brand} • SKU: {sel.sku}</p>
-                        <p className="text-xs font-semibold text-gold mt-1">INR {sel.unit_price?.toLocaleString()} / unit</p>
+                        <p className="text-[10px] text-[#7D7D7D] dark:text-[#94A3B8]">{sel.brand} • SKU: {sel.sku}</p>
+                        <p className="text-xs font-semibold text-[#8AA17A] mt-1">INR {sel.unit_price?.toLocaleString()} / unit</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <label className="block text-gray-500 text-[10px] mb-1 uppercase font-bold tracking-wider">Quantity</label>
+                        <label className="block text-[#7D7D7D] dark:text-[#94A3B8] text-[10px] mb-1 uppercase font-bold tracking-wider">Quantity</label>
                         <input
                           type="number"
                           defaultValue={sel.quantity}
                           disabled={currentUser.role === 'Client'}
                           onBlur={(e) => handleUpdateSelection(sel.id, { quantity: parseFloat(e.target.value) || 1 })}
-                          className="w-full bg-slate-950 border border-white/5 px-2 py-1.5 rounded-lg text-white disabled:opacity-50"
+                          className="w-full bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/20 dark:border-slate-800/80 px-2.5 py-1.5 rounded-xl text-[#4B4B4B] dark:text-white outline-none focus:border-[#A8B89A] transition-all disabled:opacity-50"
                         />
                       </div>
                       <div>
-                        <label className="block text-gray-500 text-[10px] mb-1 uppercase font-bold tracking-wider">Supplier</label>
+                        <label className="block text-[#7D7D7D] dark:text-[#94A3B8] text-[10px] mb-1 uppercase font-bold tracking-wider">Supplier</label>
                         <select
                           value={sel.vendor_id || ''}
                           disabled={currentUser.role === 'Client'}
                           onChange={(e) => handleUpdateSelection(sel.id, { vendorId: Number(e.target.value) })}
-                          className="w-full bg-slate-950 border border-white/5 px-2 py-1.5 rounded-lg text-white disabled:opacity-50"
+                          className="w-full bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/20 dark:border-slate-800/80 px-2.5 py-1.5 rounded-xl text-[#4B4B4B] dark:text-white outline-none focus:border-[#A8B89A] transition-all disabled:opacity-50"
                         >
                           {vendors.map(v => (
-                            <option key={v.id} value={v.id}>{v.name}</option>
+                            <option key={v.id} value={v.id} className="bg-white dark:bg-slate-900 text-[#4B4B4B] dark:text-white">{v.name}</option>
                           ))}
                         </select>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center text-xs pt-3 border-t border-white/5">
-                      <span className="font-semibold text-gray-400">Total: INR {(sel.quantity * sel.unit_price!).toLocaleString()}</span>
+                    <div className="flex justify-between items-center text-xs pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                      <span className="font-semibold text-[#4B4B4B] dark:text-[#E5E7EB]">Total: INR {(sel.quantity * sel.unit_price!).toLocaleString()}</span>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => openAuditDrawer(sel.id)}
-                          className="p-1.5 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-gold transition"
+                          className="p-1.5 bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/20 dark:border-slate-800/80 rounded-lg text-[#7D7D7D] hover:text-[#A8B89A] transition"
                           title="Audit Trail Logs"
                         >
                           <Clock size={12} />
@@ -2303,7 +2559,7 @@ function SelectionsView({
                         {currentUser.role !== 'Client' && (
                           <button
                             onClick={() => handleDeleteSelection(sel.id)}
-                            className="p-1.5 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-rose-400 transition"
+                            className="p-1.5 bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/20 dark:border-slate-800/80 rounded-lg text-[#7D7D7D] hover:text-[#C89A9A] transition"
                             title="Delete"
                           >
                             <Trash2 size={12} />
@@ -2317,7 +2573,7 @@ function SelectionsView({
                       <button
                         onClick={() => handleUpdateSelection(sel.id, { status: 'Approved' })}
                         className={`py-1.5 border rounded-lg transition ${
-                          sel.status === 'Approved' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'border-white/5 text-gray-400 hover:text-white'
+                          sel.status === 'Approved' ? 'bg-[#8AA17A]/15 border-[#8AA17A]/30 text-[#8AA17A]' : 'border-[#A8B89A]/25 dark:border-slate-800/80 text-[#7D7D7D] dark:text-gray-400 hover:text-[#4B4B4B] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/35'
                         }`}
                       >
                         Approve
@@ -2325,7 +2581,7 @@ function SelectionsView({
                       <button
                         onClick={() => handleUpdateSelection(sel.id, { status: 'Rejected' })}
                         className={`py-1.5 border rounded-lg transition ${
-                          sel.status === 'Rejected' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'border-white/5 text-gray-400 hover:text-white'
+                          sel.status === 'Rejected' ? 'bg-[#C89A9A]/15 border-[#C89A9A]/30 text-[#C89A9A]' : 'border-[#A8B89A]/25 dark:border-slate-800/80 text-[#7D7D7D] dark:text-gray-400 hover:text-[#4B4B4B] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/35'
                         }`}
                       >
                         Reject
@@ -2333,7 +2589,7 @@ function SelectionsView({
                       <button
                         onClick={() => handleUpdateSelection(sel.id, { status: 'Replaced' })}
                         className={`py-1.5 border rounded-lg transition ${
-                          sel.status === 'Replaced' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'border-white/5 text-gray-400 hover:text-white'
+                          sel.status === 'Replaced' ? 'bg-[#D7B57D]/15 border-[#D7B57D]/30 text-[#D7B57D]' : 'border-[#A8B89A]/25 dark:border-slate-800/80 text-[#7D7D7D] dark:text-gray-400 hover:text-[#4B4B4B] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/35'
                         }`}
                       >
                         Replace
@@ -2343,12 +2599,12 @@ function SelectionsView({
                 ))}
               </div>
             ) : (
-              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl">
+              <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 p-6 rounded-2xl shadow-sm">
                 {/* Desktop/Tablet Table View */}
                 <div className="overflow-x-auto hidden sm:block">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-white/5 text-gray-400 font-medium">
+                      <tr className="border-b border-slate-200 dark:border-slate-800/80 text-slate-400 dark:text-gray-400 font-medium">
                         <th className="pb-3 pr-4">Material Details</th>
                         <th className="pb-3 pr-4">Supplier Sourced</th>
                         <th className="pb-3 pr-4">Quantity / Price</th>
@@ -2359,16 +2615,16 @@ function SelectionsView({
                     </thead>
                     <tbody>
                       {roomSelections.map((sel: MaterialSelection) => (
-                        <tr key={sel.id} className="border-b border-white/5 hover:bg-white/5 transition duration-150">
+                        <tr key={sel.id} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-white/5 transition duration-150">
                           <td className="py-3 pr-4">
-                            <span className="font-bold text-gray-200">{sel.material_name}</span>
-                            <p className="text-[10px] text-gray-500">{sel.brand}</p>
+                            <span className="font-bold text-slate-900 dark:text-gray-200">{sel.material_name}</span>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400">{sel.brand}</p>
                           </td>
-                          <td className="py-3 pr-4">{sel.vendor_name}</td>
-                          <td className="py-3 pr-4">
+                          <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{sel.vendor_name}</td>
+                          <td className="py-3 pr-4 text-slate-500 dark:text-slate-400">
                             <span>{sel.quantity} unit @ INR {sel.unit_price}</span>
                           </td>
-                          <td className="py-3 pr-4 font-semibold text-gray-300">
+                          <td className="py-3 pr-4 font-semibold text-slate-900 dark:text-gray-300">
                             INR {(sel.quantity * sel.unit_price!).toLocaleString()}
                           </td>
                           <td className="py-3 pr-4">
@@ -2379,14 +2635,14 @@ function SelectionsView({
                           <td className="py-3 text-right space-x-2">
                             <button
                               onClick={() => openAuditDrawer(sel.id)}
-                              className="p-1.5 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-gold transition"
+                              className="p-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition"
                             >
                               <Clock size={12} />
                             </button>
                             {currentUser.role !== 'Client' && (
                               <button
                                 onClick={() => handleDeleteSelection(sel.id)}
-                                className="p-1.5 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-rose-400 transition"
+                                className="p-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-rose-500 transition"
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -2401,41 +2657,41 @@ function SelectionsView({
                 {/* Mobile Card Stack View */}
                 <div className="space-y-3 sm:hidden">
                   {roomSelections.map((sel: MaterialSelection) => (
-                    <div key={sel.id} className="p-4 bg-slate-950/40 border border-white/5 rounded-xl space-y-2">
+                    <div key={sel.id} className="p-4 bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-xl space-y-2 shadow-sm">
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <span className="font-bold text-gray-200">{sel.material_name}</span>
-                          <p className="text-[10px] text-gray-500">{sel.brand}</p>
+                          <span className="font-bold text-slate-900 dark:text-gray-200">{sel.material_name}</span>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400">{sel.brand}</p>
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getBadgeClass(sel.status)}`}>
                           {sel.status}
                         </span>
                       </div>
-                      <div className="text-[10px] text-gray-400 space-y-1.5 pt-1">
+                      <div className="text-[10px] text-slate-500 dark:text-gray-400 space-y-1.5 pt-1">
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Supplier:</span>
-                          <span className="text-white font-medium">{sel.vendor_name || 'N/A'}</span>
+                          <span className="text-slate-400 dark:text-slate-500">Supplier:</span>
+                          <span className="text-slate-800 dark:text-white font-medium">{sel.vendor_name || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Quantity / Price:</span>
-                          <span className="text-white">{sel.quantity} unit @ INR {sel.unit_price}</span>
+                          <span className="text-slate-400 dark:text-slate-500">Quantity / Price:</span>
+                          <span className="text-slate-800 dark:text-white">{sel.quantity} unit @ INR {sel.unit_price}</span>
                         </div>
-                        <div className="flex justify-between border-t border-white/5 pt-1">
-                          <span className="text-gray-500 font-semibold">Total Cost:</span>
-                          <span className="text-gold font-bold">INR {(sel.quantity * sel.unit_price!).toLocaleString()}</span>
+                        <div className="flex justify-between border-t border-slate-100 dark:border-slate-800/80 pt-1">
+                          <span className="text-slate-400 dark:text-slate-500 font-semibold">Total Cost:</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">INR {(sel.quantity * sel.unit_price!).toLocaleString()}</span>
                         </div>
                       </div>
-                      <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+                      <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
                         <button
                           onClick={() => openAuditDrawer(sel.id)}
-                          className="p-2 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-gold transition min-h-[36px] flex items-center justify-center"
+                          className="p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition min-h-[36px] flex items-center justify-center"
                         >
                           <Clock size={12} />
                         </button>
                         {currentUser.role !== 'Client' && (
                           <button
                             onClick={() => handleDeleteSelection(sel.id)}
-                            className="p-2 bg-slate-950 border border-white/5 rounded-lg text-gray-400 hover:text-rose-400 transition min-h-[36px] flex items-center justify-center"
+                            className="p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-lg text-slate-500 dark:text-gray-400 hover:text-rose-500 transition min-h-[36px] flex items-center justify-center"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -2447,38 +2703,38 @@ function SelectionsView({
               </div>
             )
           ) : (
-            <p className="text-gray-500 italic py-10 bg-slate-900/10 border border-dashed border-white/5 rounded-2xl text-center">No material finishes added to this space yet. Browse the catalogue on the right.</p>
+            <p className="text-slate-400 dark:text-slate-500 italic py-10 bg-slate-100/50 dark:bg-slate-900/10 border border-dashed border-slate-200 dark:border-white/5 rounded-2xl text-center">No material finishes added to this space yet. Browse the catalogue on the right.</p>
           )}
         </div>
 
         {/* Catalog Browser */}
         <div>
-          <h3 className="text-xs uppercase font-bold text-gray-500 tracking-wider mb-4">Supplier Catalogue</h3>
+          <h3 className="text-xs uppercase font-bold text-slate-400 dark:text-gray-500 tracking-wider mb-4">Supplier Catalogue</h3>
           <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
             {materials
               .filter(m => m.category === activeCategory)
               .map(mat => (
-                <div key={mat.id} className="bg-slate-900/40 border border-white/5 p-4 rounded-2xl flex flex-col justify-between space-y-3">
+                <div key={mat.id} className="glass-panel p-4 bg-white/95 dark:bg-slate-900/40 border border-[#A8B89A]/15 dark:border-slate-800/80 flex flex-col justify-between space-y-3 shadow-sm">
                   <div className="flex gap-3 items-start">
                     {mat.image_url && (
                       <img
                         src={mat.image_url}
                         alt={mat.name}
-                        className="w-12 h-12 rounded-lg object-cover bg-slate-950 border border-white/5 flex-shrink-0"
+                        className="w-12 h-12 rounded-[12px] object-cover bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/15 flex-shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-gray-200 text-xs truncate" title={mat.name}>{mat.name}</h4>
-                      <p className="text-[10px] text-gray-500 mt-0.5">{mat.brand} • Sourced by {mat.vendor_name || 'Direct'}</p>
+                      <h4 className="font-bold text-[#4B4B4B] dark:text-[#E5E7EB] text-xs truncate" title={mat.name}>{mat.name}</h4>
+                      <p className="text-[10px] text-[#7D7D7D] dark:text-[#94A3B8] mt-0.5">{mat.brand} • Sourced by {mat.vendor_name || 'Direct'}</p>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-semibold text-gold">INR {mat.unit_price} / unit</span>
+                    <span className="text-xs font-semibold text-[#8AA17A] dark:text-emerald-400">INR {mat.unit_price} / unit</span>
                   </div>
                   {currentUser.role !== 'Client' && (
                     <button
                       onClick={() => handleAddSelection({ roomId: activeRoomId, materialId: mat.id, vendorId: mat.vendor_id, quantity: 1, notes: 'Initial intake selection' })}
-                      className="w-full py-2 bg-slate-950 border border-white/5 text-gray-300 hover:bg-gold hover:text-slate-950 transition-all rounded-xl text-xs font-semibold"
+                      className="w-full py-2 bg-[#A8B89A] hover:bg-[#96A689] text-white transition-all rounded-xl text-xs font-semibold border-none active:scale-[0.98]"
                       disabled={!activeRoomId}
                     >
                       + Map to {currentRoom ? currentRoom.name : 'Space'}
@@ -2492,37 +2748,37 @@ function SelectionsView({
 
       {/* Audit Drawer popup */}
       {auditSelectionId && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-end">
-          <div className="w-full max-w-md bg-slate-900 border-l border-white/10 p-6 h-full flex flex-col shadow-2xl">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex justify-end">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800/80 p-6 h-full flex flex-col shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-md font-bold text-white font-display">Selection Audit Trail</h3>
-              <button onClick={() => setAuditSelectionId(null)} className="text-gray-400 hover:text-white">
+              <h3 className="text-md font-bold text-slate-900 dark:text-white font-display">Selection Audit Trail</h3>
+              <button onClick={() => setAuditSelectionId(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white">
                 <X size={20} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 text-xs">
               {auditLoading ? (
-                <div className="text-center py-20 text-gray-500">Syncing audit records...</div>
+                <div className="text-center py-20 text-slate-400 dark:text-gray-500">Syncing audit records...</div>
               ) : auditLogs.length > 0 ? (
                 auditLogs.map((log, i) => (
-                  <div key={log.id} className="relative pl-6 border-l border-white/10 pb-4">
-                    <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-gold border border-slate-900"></div>
+                  <div key={log.id} className="relative pl-6 border-l border-slate-200 dark:border-slate-800/80 pb-4">
+                    <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-emerald-500 border border-white dark:border-slate-900"></div>
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center text-[10px]">
-                        <span className="font-semibold text-gold">{log.user_name}</span>
-                        <span className="text-gray-400">{new Date(log.created_at).toLocaleString()}</span>
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">{log.user_name}</span>
+                        <span className="text-slate-400 dark:text-slate-500">{new Date(log.created_at).toLocaleString()}</span>
                       </div>
-                      <p className="text-gray-300">{log.notes}</p>
+                      <p className="text-slate-700 dark:text-gray-300">{log.notes}</p>
                       <div className="flex gap-2 items-center text-[10px] font-bold">
-                        <span className="text-rose-400 uppercase">{log.previous_status}</span>
-                        <ChevronRight size={10} className="text-gray-500" />
-                        <span className="text-emerald-400 uppercase">{log.new_status}</span>
+                        <span className="text-rose-500 dark:text-rose-400 uppercase">{log.previous_status}</span>
+                        <ChevronRight size={10} className="text-slate-400" />
+                        <span className="text-emerald-500 dark:text-emerald-400 uppercase">{log.new_status}</span>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-500 py-20">No status audit entries mapped.</p>
+                <p className="text-center text-slate-400 dark:text-gray-500 py-20">No status audit entries mapped.</p>
               )}
             </div>
           </div>
@@ -2531,13 +2787,13 @@ function SelectionsView({
 
       {/* Add Room Modal */}
       {showAddRoom && (
-        <div role="dialog" aria-modal="true" aria-labelledby="arm-title" className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl w-full max-w-sm space-y-6 shadow-2xl">
+        <div role="dialog" aria-modal="true" aria-labelledby="arm-title" className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-6 rounded-3xl w-full max-w-sm space-y-6 shadow-2xl">
             <div className="flex justify-between items-center">
-              <h3 id="arm-title" className="text-lg font-bold text-white font-display">Configure Room Space</h3>
+              <h3 id="arm-title" className="text-lg font-bold text-slate-900 dark:text-white font-display">Configure Room Space</h3>
               <button 
                 onClick={() => setShowAddRoom(false)} 
-                className="text-gray-400 hover:text-white p-1 focus-visible:ring-2 focus-visible:ring-gold/50 rounded-lg outline-none"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded-lg outline-none"
                 aria-label="Close add room space modal"
               >
                 <X size={20} />
@@ -2545,53 +2801,53 @@ function SelectionsView({
             </div>
             <form onSubmit={triggerAddRoom} className="space-y-4 text-xs">
               <div>
-                <label htmlFor="arm-name" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Space Name</label>
+                <label htmlFor="arm-name" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Space Name</label>
                 <input
                   id="arm-name"
                   type="text" required placeholder="e.g. Master Bedroom"
                   value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
                 />
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label htmlFor="arm-length" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[9px]">Length (ft)</label>
+                  <label htmlFor="arm-length" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[9px]">Length (ft)</label>
                   <input
                     id="arm-length"
                     type="number" placeholder="14"
                     value={roomL} onChange={(e) => setRoomL(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label htmlFor="arm-width" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[9px]">Width (ft)</label>
+                  <label htmlFor="arm-width" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[9px]">Width (ft)</label>
                   <input
                     id="arm-width"
                     type="number" placeholder="12"
                     value={roomW} onChange={(e) => setRoomW(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label htmlFor="arm-height" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[9px]">Height (ft)</label>
+                  <label htmlFor="arm-height" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[9px]">Height (ft)</label>
                   <input
                     id="arm-height"
                     type="number" placeholder="10"
                     value={roomH} onChange={(e) => setRoomH(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
                   />
                 </div>
               </div>
               <div>
-                <label htmlFor="arm-notes" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Space Notes</label>
+                <label htmlFor="arm-notes" className="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Space Notes</label>
                 <textarea
                   id="arm-notes"
                   placeholder="Wiring parameters, tiling area specs..." rows={2}
                   value={roomNotes} onChange={(e) => setRoomNotes(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
                 />
               </div>
-              <button type="submit" className="w-full bg-gradient-to-r from-gold-dark to-gold text-slate-950 p-3 rounded-xl font-bold tracking-wider min-h-[48px] flex items-center justify-center transition hover:brightness-110 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-gold/50 outline-none">
+              <button type="submit" className="w-full bg-[#A8B89A] hover:bg-[#96A689] text-white p-3 rounded-xl font-bold tracking-wider min-h-[48px] flex items-center justify-center transition active:scale-[0.99] outline-none cursor-pointer shadow-sm">
                 CREATE ROOM SPACE
               </button>
             </form>
@@ -3228,11 +3484,12 @@ interface SettingsViewProps {
 }
 
 function SettingsView({ currentUser, updateUserProfile, brandTheme, setBrandTheme }: SettingsViewProps) {
+  const navigate = useNavigate();
   const [name, setName] = useState(currentUser.name);
   const [email, setEmail] = useState(currentUser.email || '');
   const [saved, setSaved] = useState(false);
 
-  const { themeMode, setThemeMode, backgroundStyle, setBackgroundStyle } = useAppStore();
+  const { themeMode, setThemeMode, backgroundStyle, setBackgroundStyle, logout } = useAppStore();
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -3244,78 +3501,133 @@ function SettingsView({ currentUser, updateUserProfile, brandTheme, setBrandThem
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white font-display">System Settings & Profile</h2>
-        <p className="text-sm text-gray-400">Configure your workspace variables, audit profiles, and brand themes.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-display">System Settings & Profile</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Configure your workspace variables, audit profiles, and brand themes.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        {/* Profile Card Form */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-6">
-          <h3 className="text-md font-semibold text-white font-display">User Profile Details</h3>
-          
-          <form onSubmit={handleSave} className="space-y-4 text-xs">
-            <div>
-              <label htmlFor="settings-name" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Full Name</label>
-              <input
-                id="settings-name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="settings-email" className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Email Address</label>
-              <input
-                id="settings-email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-white outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:border-gold transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-400 mb-1.5 font-semibold uppercase tracking-wider text-[10px]">System Access Role (Read-Only)</label>
-              <div className="w-full bg-slate-950/50 border border-white/5 p-3 rounded-xl text-gold font-bold">
-                {currentUser.role}
+        {/* Profile Card Form & Account Session */}
+        <div className="space-y-6">
+          <div className="glass-panel p-6 bg-white/95 dark:bg-slate-900/40 border border-[#A8B89A]/15 dark:border-slate-800/80 space-y-6 shadow-sm">
+            <h3 className="text-md font-semibold text-[#4B4B4B] dark:text-[#E5E7EB] font-display">User Profile Details</h3>
+            
+            <form onSubmit={handleSave} className="space-y-4 text-xs">
+              <div>
+                <label htmlFor="settings-name" className="block text-[#7D7D7D] dark:text-[#94A3B8] mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Full Name</label>
+                <input
+                  id="settings-name"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/20 dark:border-slate-800/80 p-3 rounded-xl text-[#4B4B4B] dark:text-white outline-none focus:border-[#A8B89A] transition-all"
+                />
               </div>
-            </div>
 
-            <div className="pt-2 flex items-center justify-between gap-4">
+              <div>
+                <label htmlFor="settings-email" className="block text-[#7D7D7D] dark:text-[#94A3B8] mb-1.5 font-semibold uppercase tracking-wider text-[10px]">Email Address</label>
+                <input
+                  id="settings-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/20 dark:border-slate-800/80 p-3 rounded-xl text-[#4B4B4B] dark:text-white outline-none focus:border-[#A8B89A] transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#7D7D7D] dark:text-[#94A3B8] mb-1.5 font-semibold uppercase tracking-wider text-[10px]">System Access Role (Read-Only)</label>
+                <div className="w-full bg-[#F8F6F3]/50 dark:bg-slate-950/50 border border-[#A8B89A]/15 dark:border-slate-800/80 p-3 rounded-xl text-[#8AA17A] dark:text-emerald-400 font-bold">
+                  {currentUser.role}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-[#A8B89A] hover:bg-[#96A689] text-white font-medium rounded-xl hover:brightness-105 active:scale-[0.98] transition-all outline-none shadow-sm shadow-[#A8B89A]/10 cursor-pointer"
+                >
+                  Save Changes
+                </button>
+                <AnimatePresence>
+                  {saved && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="text-[#8AA17A] font-semibold"
+                    >
+                      Profile saved!
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+            </form>
+          </div>
+
+          <div className="glass-panel p-6 bg-white/95 dark:bg-slate-900/40 border border-[#A8B89A]/15 dark:border-slate-800/80 space-y-4 shadow-sm">
+            <h3 className="text-md font-semibold text-[#4B4B4B] dark:text-[#E5E7EB] font-display">Account Session</h3>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">Manage your active authentication session and security credentials.</p>
+            <div className="pt-2">
               <button
-                type="submit"
-                className="px-6 py-2.5 bg-gradient-to-br from-gold-dark to-gold text-slate-950 font-bold rounded-xl hover:brightness-110 active:scale-[0.98] transition-all focus-visible:ring-2 focus-visible:ring-gold/50 outline-none"
+                type="button"
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                }}
+                className="w-full sm:w-auto px-6 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-[#C89A9A] text-xs font-semibold rounded-xl transition duration-150 flex items-center justify-center gap-2 cursor-pointer border border-rose-500/20 hover:border-rose-500/40 outline-none"
               >
-                Save Changes
+                <Trash2 size={14} className="text-[#C89A9A]" />
+                Terminate Active Session (Logout)
               </button>
-              <AnimatePresence>
-                {saved && (
-                  <motion.span
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="text-emerald-400 font-semibold"
-                  >
-                    Profile saved!
-                  </motion.span>
-                )}
-              </AnimatePresence>
             </div>
-          </form>
+          </div>
         </div>
 
         {/* Appearance Settings */}
-        <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl space-y-6">
-          <h3 className="text-md font-semibold text-white font-display">Appearance Settings</h3>
+        <div className="glass-panel p-6 bg-white/95 dark:bg-slate-900/40 border border-[#A8B89A]/15 dark:border-slate-800/80 space-y-6 shadow-sm">
+          <h3 className="text-md font-semibold text-[#4B4B4B] dark:text-[#E5E7EB] font-display">Appearance Settings</h3>
           
           <div className="space-y-6 text-xs">
+            {/* Theme Mode Toggle */}
+            <div className="space-y-3 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+              <label className="block text-[#7D7D7D] dark:text-[#94A3B8] font-semibold uppercase tracking-wider text-[10px]">Theme Mode</label>
+              <div className="flex gap-2 p-1 bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/15 dark:border-slate-800/80 rounded-xl shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => setThemeMode('light')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-250 ${
+                    themeMode === 'light'
+                      ? 'bg-white dark:bg-slate-900 text-[#A8B89A] shadow-sm border border-[#A8B89A]/15 dark:border-slate-800'
+                      : 'text-[#7D7D7D] hover:text-[#4B4B4B] dark:hover:text-white border border-transparent'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m0 13.5V21M5.25 12H3m18 0h-2.25m-2.813-6.187l-1.59 1.59M7.05 16.95l-1.59 1.59m13.062 0l-1.59-1.59M7.05 7.05L5.46 5.46M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"></path>
+                  </svg>
+                  <span>Light Mode</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setThemeMode('dark')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-250 ${
+                    themeMode === 'dark'
+                      ? 'bg-white dark:bg-slate-900 text-[#A8B89A] shadow-sm border border-[#A8B89A]/15 dark:border-slate-800'
+                      : 'text-[#7D7D7D] hover:text-[#4B4B4B] dark:hover:text-white border border-transparent'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"></path>
+                  </svg>
+                  <span>Dark Mode</span>
+                </button>
+              </div>
+            </div>
+
             {/* Background Style Selector (Preview Cards) */}
             <div className="space-y-3">
-              <label className="block text-gray-400 font-semibold uppercase tracking-wider text-[10px]">Luxury Background Texture</label>
+              <label className="block text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Luxury Background Texture</label>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { id: 'villa', label: 'Luxury Villa', src: '/assets/backgrounds/luxury_villa.png' },
@@ -3331,12 +3643,12 @@ function SettingsView({ currentUser, updateUserProfile, brandTheme, setBrandThem
                       onClick={() => setBackgroundStyle(option.id as any)}
                       className={`group relative flex flex-col text-left rounded-xl overflow-hidden border transition-all outline-none ${
                         selected 
-                          ? 'border-gold ring-2 ring-gold/30 bg-slate-950/40' 
-                          : 'border-white/5 hover:border-white/20 bg-slate-950/20'
+                          ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-slate-50 dark:bg-slate-950/40' 
+                          : 'border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-white/20 bg-slate-50 dark:bg-slate-950/20'
                       }`}
                     >
                       {/* Image Thumbnail */}
-                      <div className="aspect-[16/10] w-full overflow-hidden bg-slate-950 relative">
+                      <div className="aspect-[16/10] w-full overflow-hidden bg-slate-100 dark:bg-slate-950 relative">
                         <img 
                           src={option.src} 
                           alt={option.label}
@@ -3346,7 +3658,7 @@ function SettingsView({ currentUser, updateUserProfile, brandTheme, setBrandThem
                         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
                         {/* Selected Indicator */}
                         {selected && (
-                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gold text-slate-950 flex items-center justify-center shadow-lg border border-white/25">
+                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg border border-white/25">
                             <svg className="w-3.5 h-3.5 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                             </svg>
@@ -3357,7 +3669,7 @@ function SettingsView({ currentUser, updateUserProfile, brandTheme, setBrandThem
                       {/* Label */}
                       <div className="p-2.5">
                         <span className={`text-[10px] font-bold block truncate transition-colors ${
-                          selected ? 'text-gold' : 'text-gray-400 group-hover:text-white'
+                          selected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
                         }`}>
                           {option.label}
                         </span>
@@ -3368,7 +3680,7 @@ function SettingsView({ currentUser, updateUserProfile, brandTheme, setBrandThem
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/5 text-[10px] text-gray-500 leading-relaxed space-y-1">
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed space-y-1">
               <p>Background selections apply instantly and persist across refresh actions.</p>
               <p>Parallax scrolling is optimized for desktop viewports and disabled on mobile devices.</p>
             </div>

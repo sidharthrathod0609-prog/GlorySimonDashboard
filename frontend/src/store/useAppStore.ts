@@ -48,11 +48,15 @@ interface AppState {
   setActiveProjectId: (id: number | null) => void;
   
   // Auth Actions
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   sendPasswordReset: (email: string) => Promise<boolean>;
   updateUserProfile: (name: string, email: string) => void;
   addUser: (user: User) => void;
+  requestAccess: (name: string, email: string, role: 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator', password: string) => void;
+  handleAccessRequest: (email: string, status: 'Approved' | 'Declined') => void;
+  cancelAccess: (email: string) => void;
+  deleteUserAccess: (email: string) => void;
   
   // Client Actions
   fetchClients: () => Promise<void>;
@@ -112,7 +116,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   vendors: [],
   stats: null,
   brandTheme: 'gold',
-  themeMode: (localStorage.getItem('gs_theme_mode') as any) || 'dark',
+  themeMode: (localStorage.getItem('gs_theme_mode') as any) || 'light',
   backgroundStyle: (localStorage.getItem('gs_background_style') as any) || 'villa',
   activeProjectId: null,
   projectDetails: null,
@@ -121,16 +125,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Auth defaults with localStorage persistence
   isAuthenticated: localStorage.getItem('gs_isAuthenticated') === 'true',
   currentUser: JSON.parse(localStorage.getItem('gs_currentUser') || 'null') || {
-    name: 'Glory Simon Admin',
-    email: 'admin@glorysimon.com',
+    name: 'Zotha',
+    email: 'zotha@glorysimon.com',
     role: 'Admin',
-    avatar: 'GA'
+    avatar: 'Z'
   },
   usersList: JSON.parse(localStorage.getItem('gs_usersList') || 'null') || [
-    { name: 'Glory Simon Admin', email: 'admin@glorysimon.com', role: 'Admin', avatar: 'GA', password: 'Admin123' },
-    { name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', avatar: 'NS', password: 'Design123' },
-    { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD', password: 'PM123' },
-    { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN', password: 'Vendor123' }
+    { name: 'Zotha', email: 'zotha@glorysimon.com', role: 'Admin', avatar: 'Z', password: 'Admin123', status: 'Approved' },
+    { name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', avatar: 'NS', password: 'Design123', status: 'Approved' },
+    { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD', password: 'PM123', status: 'Approved' },
+    { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN', password: 'Vendor123', status: 'Approved' }
   ],
   clients: [],
   procurements: JSON.parse(localStorage.getItem('gs_procurements') || 'null') || [
@@ -145,7 +149,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     { id: 'Furniture', task: 'Furniture', status: 'Not Started', progress: 0, notes: 'Sofa sourcing completed. Site delivery pending' }
   ],
   quotations: JSON.parse(localStorage.getItem('gs_quotations') || 'null') || [
-    { id: 1, date: '2026-06-18', clientName: 'Sidharth Rathod', projectName: 'Rathod Penthouse Villa', items: [
+    { id: 1, date: '2026-06-18', clientName: 'Sidharth Rathod', projectName: "Rathod's Villa", items: [
       { material: 'Italian Carrara Vitrified Tile', quantity: 400, unitCost: 120, gst: 18, total: 56640 }
     ], total: 56640 }
   ],
@@ -153,7 +157,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     { id: 1, type: 'approval', title: 'Material Approval Pending', message: 'Chevron Dark Slate Tile for Executive Boardroom requires client approval', date: '10 mins ago', read: false },
     { id: 2, type: 'visit', title: 'Site Visit Reminder', message: 'Drywall check booked for Priya Cozy 2BHK Apartment at 10:00 AM tomorrow', date: '2 hours ago', read: false },
     { id: 3, type: 'vendor', title: 'Vendor Follow-up', message: 'Linen Beige Blackout Curtain PO requires coordinator dispatch signature', date: '5 hours ago', read: true },
-    { id: 4, type: 'budget', title: 'Budget Exceeded Alert', message: 'Rathod Penthouse Villa has exceeded its allocated budget cap limit!', date: '1 day ago', read: false }
+    { id: 4, type: 'budget', title: 'Budget Exceeded Alert', message: "Rathod's Villa has exceeded its allocated budget cap limit!", date: '1 day ago', read: false }
   ],
 
   // State Switchers
@@ -181,12 +185,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     const user = usersList.find(u => u.email.toLowerCase() === trimmedEmail);
 
     if (user && user.password === password) {
+      const status = user.status || 'Approved';
+      if (status === 'Pending') {
+        return { success: false, error: 'Your access request is pending admin approval.' };
+      }
+      if (status === 'Declined') {
+        return { success: false, error: 'Your access request has been declined or suspended.' };
+      }
       localStorage.setItem('gs_isAuthenticated', 'true');
       localStorage.setItem('gs_currentUser', JSON.stringify(user));
       set({ isAuthenticated: true, currentUser: user });
-      return true;
+      return { success: true };
     }
-    return false;
+    return { success: false, error: 'Invalid email address or password.' };
   },
 
   logout: () => {
@@ -213,9 +224,82 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addUser: (user) => {
     const { usersList } = get();
-    const updated = [...usersList, user];
+    const updated = [...usersList, { ...user, status: user.status || 'Approved' }];
     localStorage.setItem('gs_usersList', JSON.stringify(updated));
     set({ usersList: updated });
+  },
+
+  requestAccess: (name, email, role, password) => {
+    const { usersList, notifications } = get();
+    const initials = name.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    
+    const newUser: User = {
+      name,
+      email,
+      role,
+      avatar: initials || 'US',
+      password,
+      status: 'Pending'
+    };
+    
+    const updatedUsers = [...usersList, newUser];
+    localStorage.setItem('gs_usersList', JSON.stringify(updatedUsers));
+    
+    // Add access request notification at the beginning
+    const newNotification = {
+      id: Date.now(),
+      type: 'access',
+      title: 'New Access Request',
+      message: `${name} has requested access as ${role}.`,
+      date: 'Just now',
+      read: false,
+      requestEmail: email
+    };
+    const updatedNotifications = [newNotification, ...notifications];
+    localStorage.setItem('gs_notifications', JSON.stringify(updatedNotifications));
+    
+    set({ usersList: updatedUsers, notifications: updatedNotifications });
+  },
+
+  handleAccessRequest: (email, status) => {
+    const { usersList, notifications } = get();
+    
+    const updatedUsers = usersList.map(u => 
+      u.email.toLowerCase() === email.toLowerCase() ? { ...u, status } : u
+    );
+    localStorage.setItem('gs_usersList', JSON.stringify(updatedUsers));
+    
+    const statusLabel = status === 'Approved' ? 'Approved' : 'Declined';
+    const updatedNotifications = notifications.map(n => {
+      if (n.type === 'access' && n.requestEmail?.toLowerCase() === email.toLowerCase()) {
+        return {
+          ...n,
+          title: `Access Request ${statusLabel}`,
+          message: `[${statusLabel}] ${n.message.replace('has requested', 'requested')}`,
+          read: true
+        };
+      }
+      return n;
+    });
+    localStorage.setItem('gs_notifications', JSON.stringify(updatedNotifications));
+    
+    set({ usersList: updatedUsers, notifications: updatedNotifications });
+  },
+
+  cancelAccess: (email) => {
+    const { usersList } = get();
+    const updatedUsers = usersList.map(u => 
+      u.email.toLowerCase() === email.toLowerCase() ? { ...u, status: 'Declined' } : u
+    );
+    localStorage.setItem('gs_usersList', JSON.stringify(updatedUsers));
+    set({ usersList: updatedUsers });
+  },
+
+  deleteUserAccess: (email) => {
+    const { usersList } = get();
+    const updatedUsers = usersList.filter(u => u.email.toLowerCase() !== email.toLowerCase());
+    localStorage.setItem('gs_usersList', JSON.stringify(updatedUsers));
+    set({ usersList: updatedUsers });
   },
   fetchClients: async () => {
     try {

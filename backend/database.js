@@ -13,7 +13,7 @@ async function getDb() {
 
 async function initDb() {
   const db = await getDb();
-  
+
   // Enable foreign keys
   await db.run('PRAGMA foreign_keys = ON');
 
@@ -40,6 +40,7 @@ async function initDb() {
       notes TEXT,
       start_date TEXT DEFAULT NULL,
       assigned_designer TEXT DEFAULT NULL,
+      image_url TEXT DEFAULT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
     );
@@ -162,6 +163,11 @@ async function initDb() {
   } catch (e) {
     // Already exists
   }
+  try {
+    await db.run('ALTER TABLE projects ADD COLUMN image_url TEXT DEFAULT NULL');
+  } catch (e) {
+    // Already exists
+  }
 
   // Check if we already have clients. If so, database is seeded, skip.
   const clientsCount = await db.get('SELECT COUNT(*) as count FROM clients');
@@ -185,20 +191,20 @@ async function initDb() {
 
   // Seed materials
   await db.run(`INSERT INTO materials (category, name, brand, sku, unit_price, image_url, vendor_id) VALUES
-    ('Tiles', 'Italian Carrara Vitrified Tile', 'Kajaria', 'KAJ-CAR-01', 120.00, '/assets/materials/carrara_tile.svg', 1),
-    ('Tiles', 'Chevron Dark Slate Tile', 'Somany', 'SOM-CHV-02', 95.00, '/assets/materials/chevron_tile.svg', 1),
-    ('Laminates', 'Teak Wood Matte Laminate', 'Greenlam', 'GRN-TEAK-05', 45.00, '/assets/materials/teak_laminate.svg', 2),
-    ('Laminates', 'Glossy Charcoal Laminate', 'CenturyPly', 'CEN-CHAR-12', 55.00, '/assets/materials/charcoal_laminate.svg', 2),
-    ('Paints', 'Royale Silk Warm Alabaster', 'Asian Paints', 'AP-ROY-ALB', 15.00, '/assets/materials/warm_alabaster.svg', 3),
-    ('Paints', 'Deep Teal Matte Accent', 'Asian Paints', 'AP-ROY-TEA', 18.00, '/assets/materials/deep_teal.svg', 3),
-    ('Lighting', 'Magnetic Track Profile Light', 'Philips', 'PH-MAG-TRK', 250.00, '/assets/materials/track_light.svg', 4),
-    ('Lighting', 'Warm Recessed COB Light 6W', 'Havells', 'HV-COB-06', 15.00, '/assets/materials/cob_light.svg', 4),
-    ('Furniture', 'Chesterfield Emerald Velvet Sofa', 'Royal Oak', 'RO-CHS-VEL', 1200.00, '/assets/materials/velvet_sofa.svg', 5),
-    ('Furniture', 'Ergonomic Mesh Task Chair', 'Featherlite', 'FL-ERG-MSH', 180.00, '/assets/materials/office_chair.svg', 5),
-    ('Hardware', 'Brushed Brass Knurled Handles', 'Hettich', 'HET-BB-KN', 12.00, '/assets/materials/brass_handle.svg', 6),
-    ('Hardware', 'Soft-Close Drawer Runners', 'Ebco', 'EB-SCDR-45', 25.00, '/assets/materials/drawer_slides.svg', 6),
-    ('Fabric', 'Linen Beige Blackout Curtain', 'Ddecor', 'DD-LIN-BGE', 35.00, '/assets/materials/beige_curtain.svg', 7),
-    ('Fabric', 'Textured Rust Boucle Cushion', 'Ddecor', 'DD-TEX-RST', 15.00, '/assets/materials/rust_boucle.svg', 7)
+    ('Tiles', 'Italian Carrara Vitrified Tile', 'Kajaria', 'KAJ-CAR-01', 120.00, '/assets/materials/carrara_tile.png', 1),
+    ('Tiles', 'Chevron Dark Slate Tile', 'Somany', 'SOM-CHV-02', 95.00, '/assets/materials/chevron_tile.png', 1),
+    ('Laminates', 'Teak Wood Matte Laminate', 'Greenlam', 'GRN-TEAK-05', 45.00, '/assets/materials/teak_laminate.png', 2),
+    ('Laminates', 'Glossy Charcoal Laminate', 'CenturyPly', 'CEN-CHAR-12', 55.00, '/assets/materials/charcoal_laminate.png', 2),
+    ('Paints', 'Royale Silk Warm Alabaster', 'Asian Paints', 'AP-ROY-ALB', 15.00, '/assets/materials/warm_alabaster.png', 3),
+    ('Paints', 'Deep Teal Matte Accent', 'Asian Paints', 'AP-ROY-TEA', 18.00, '/assets/materials/deep_teal.png', 3),
+    ('Lighting', 'Magnetic Track Profile Light', 'Philips', 'PH-MAG-TRK', 250.00, '/assets/materials/track_light.png', 4),
+    ('Lighting', 'Warm Recessed COB Light 6W', 'Havells', 'HV-COB-06', 15.00, '/assets/materials/cob_light.png', 4),
+    ('Furniture', 'Chesterfield Emerald Velvet Sofa', 'Royal Oak', 'RO-CHS-VEL', 1200.00, '/assets/materials/velvet_sofa.png', 5),
+    ('Furniture', 'Ergonomic Mesh Task Chair', 'Featherlite', 'FL-ERG-MSH', 180.00, '/assets/materials/office_chair.png', 5),
+    ('Hardware', 'Brushed Brass Knurled Handles', 'Hettich', 'HET-BB-KN', 12.00, '/assets/materials/brass_handle.png', 6),
+    ('Hardware', 'Soft-Close Drawer Runners', 'Ebco', 'EB-SCDR-45', 25.00, '/assets/materials/drawer_slides.png', 6),
+    ('Fabric', 'Linen Beige Blackout Curtain', 'Ddecor', 'DD-LIN-BGE', 35.00, '/assets/materials/beige_curtain.png', 7),
+    ('Fabric', 'Textured Rust Boucle Cushion', 'Ddecor', 'DD-TEX-RST', 15.00, '/assets/materials/rust_boucle.png', 7)
   `);
 
   // Seed clients
@@ -206,17 +212,17 @@ async function initDb() {
     ('Sidharth Rathod', 'sidharth@example.com', '+91 99999 88888', 'Self-Employed', 'Residential', 'Active'),
     ('Suman Sharma', 'suman@nexustech.com', '+91 88888 77777', 'Nexus Tech Solutions', 'Commercial', 'Active'),
     ('Priya Patel', 'priya@example.com', '+91 77777 66666', 'N/A', 'Residential', 'Active'),
-    ('Glory Simon Admin', 'admin@glorysimon.com', '+91 11111 22222', 'Glory Simon Interiors', 'Commercial', 'Active')
+    ('Zotha', 'zotha@glorysimon.com', '+91 11111 22222', 'Glory Simon Interiors', 'Commercial', 'Active')
   `);
 
   // Seed projects
-  await db.run(`INSERT INTO projects (client_id, name, status, budget, address, notes) VALUES
-    (1, 'Rathod Penthouse Villa', 'Material Selection', 45000.00, 'Flat 1402, Highrise Heights, Bandra West, Mumbai', 'Luxury residential design with high-end fixtures.'),
-    (2, 'Nexus Tech Corporate HQ', 'Design Approval', 85000.00, 'Block B, Tech Park, Outer Ring Road, Mumbai', 'Commercial executive space with acoustic configurations.'),
-    (3, 'Priya Cozy 2BHK Apartment', 'Site Visit', 18000.00, 'C-302, Green Avenue, Thane, Mumbai', 'Budget-friendly space improvements.'),
-    (4, 'Glory Simon Experience Studio', 'Execution', 35000.00, 'Showroom 3, Galleria Mall, Lower Parel, Mumbai', 'Brand concept showcase development.'),
-    (1, 'Golden Crest Mansion', 'Material Selection', 120000.00, 'Plot 43, Sector 8, Noida', 'Premium residency development.'),
-    (3, 'Azur Bay Villa', 'Space Planning', 75000.00, 'Coastal Road, Alibaug, Maharashtra', 'Beachfront luxury villa design with modern minimalist style.')
+  await db.run(`INSERT INTO projects (client_id, name, status, budget, address, notes, image_url) VALUES
+    (1, "Rathod's Villa", 'Material Selection', 45000.00, 'Flat 1402, Highrise Heights, Bandra West, Mumbai', 'Luxury residential design with high-end fixtures.', '/assets/projects/rathods_villa.png'),
+    (2, 'Nexus Tech Corporate HQ', 'Design Approval', 85000.00, 'Block B, Tech Park, Outer Ring Road, Mumbai', 'Commercial executive space with acoustic configurations.', '/assets/projects/nexus_hq.png'),
+    (3, 'Priya Cozy 2BHK Apartment', 'Site Visit', 18000.00, 'C-302, Green Avenue, Thane, Mumbai', 'Budget-friendly space improvements.', '/assets/projects/priya_apartment.png'),
+    (4, 'Glory Simon Experience Studio', 'Execution', 35000.00, 'Showroom 3, Galleria Mall, Lower Parel, Mumbai', 'Brand concept showcase development.', '/assets/projects/experience_studio.png'),
+    (1, 'Golden Crest Mansion', 'Material Selection', 120000.00, 'Plot 43, Sector 8, Noida', 'Premium residency development.', '/assets/projects/golden_crest.png'),
+    (3, 'Azure Bay Villa', 'Space Planning', 75000.00, 'Coastal Road, Alibaug, Maharashtra', 'Beachfront luxury villa design with modern minimalist style.', '/assets/projects/azure_bay.png')
   `);
 
   // Seed rooms
@@ -281,9 +287,13 @@ async function initDb() {
 
   // Seed site visits
   await db.run(`INSERT INTO site_visits (project_id, visit_date, visitor_name, notes, photos) VALUES
-    (1, '2026-06-10', 'Rahul Dev (Site Engineer)', 'Verified core dimensions. Ceiling slab heights are exactly 10.5 ft. Dampness checked, walls are dry.', '/assets/photos/visit_rathod_1.svg'),
-    (2, '2026-06-11', 'Rahul Dev (Site Engineer)', 'Acoustic insulation properties in Boardroom checked. Floor leveling required before tiling.', '/assets/photos/visit_nexus_1.svg'),
-    (3, '2026-06-14', 'Nisha Sen (Designer)', 'Took space snapshots for aesthetic concept discussions with Priya. Client prefers beige-brown warmth.', '/assets/photos/visit_priya_1.svg')
+    (1, '2026-06-10T11:00:00', 'Rahul Dev (Site Engineer)', 'Verified core dimensions. Ceiling slab heights are exactly 10.5 ft. Dampness checked, walls are dry.', '/assets/photos/visit_rathod_1.svg'),
+    (2, '2026-06-11T10:00:00', 'Rahul Dev (Site Engineer)', 'Acoustic insulation properties in Boardroom checked. Floor leveling required before tiling.', '/assets/photos/visit_nexus_1.svg'),
+    (3, '2026-06-14T15:30:00', 'Nisha Sen (Designer)', 'Took space snapshots for aesthetic concept discussions with Priya. Client prefers beige-brown warmth.', '/assets/photos/visit_priya_1.svg'),
+    (1, '2026-06-02T10:00:00', 'Nisha Sen (Designer)', 'Initial site measurements, space blueprint analysis, window dimension check.', '/assets/photos/visit_rathod_1.svg'),
+    (1, '2026-06-05T14:30:00', 'Rahul Dev (Project Manager)', 'Structural load walkthrough, electrical layout validation.', '/assets/photos/visit_rathod_1.svg'),
+    (1, '2026-06-15T15:00:00', 'Nisha Sen (Designer)', 'Sourced material finish matching on-site under direct sunlight.', '/assets/photos/visit_rathod_1.svg'),
+    (1, '2026-06-18T10:30:00', 'Sidharth Rathod (Client)', 'Walkthrough of false ceiling framework, walkthrough preview checkpoints and design signature.', '/assets/photos/visit_rathod_1.svg')
   `);
 
   // Seed expenses

@@ -48,15 +48,16 @@ interface AppState {
   setActiveProjectId: (id: number | null) => void;
   
   // Auth Actions
+  fetchUsers: () => Promise<void>;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   sendPasswordReset: (email: string) => Promise<boolean>;
   updateUserProfile: (name: string, email: string) => void;
-  addUser: (user: User) => void;
-  requestAccess: (name: string, email: string, role: 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator', password: string) => void;
-  handleAccessRequest: (email: string, status: 'Approved' | 'Declined') => void;
-  cancelAccess: (email: string) => void;
-  deleteUserAccess: (email: string) => void;
+  addUser: (user: User) => Promise<void>;
+  requestAccess: (name: string, email: string, role: 'Interior Designer' | 'Project Manager' | 'Vendor Coordinator', password: string) => Promise<void>;
+  handleAccessRequest: (email: string, status: 'Approved' | 'Declined') => Promise<void>;
+  cancelAccess: (email: string) => Promise<void>;
+  deleteUserAccess: (email: string) => Promise<void>;
   
   // Client Actions
   fetchClients: () => Promise<void>;
@@ -105,7 +106,7 @@ interface AppState {
   updateInstallationStatus: (taskId: number, status: string) => Promise<void>;
   createQuotation: (data: any) => Promise<void>;
   deleteQuotation: (id: number) => Promise<void>;
-  fetchNotifications: () => void;
+  fetchNotifications: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -130,12 +131,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     role: 'Admin',
     avatar: 'Z'
   },
-  usersList: JSON.parse(localStorage.getItem('gs_usersList') || 'null') || [
-    { name: 'Zotha', email: 'zotha@glorysimon.com', role: 'Admin', avatar: 'Z', password: 'Admin123', status: 'Approved' },
-    { name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', avatar: 'NS', password: 'Design123', status: 'Approved' },
-    { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD', password: 'PM123', status: 'Approved' },
-    { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN', password: 'Vendor123', status: 'Approved' }
-  ],
+  usersList: [],
   clients: [],
   procurements: JSON.parse(localStorage.getItem('gs_procurements') || 'null') || [
     { id: 1, material: 'Italian Carrara Vitrified Tile', vendor: 'Apex Marble & Tiles', quantity: 432, orderedDate: '2026-06-10', deliveryDate: '2026-06-20', status: 'Shipped' },
@@ -177,27 +173,25 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   // Auth Actions
-  login: async (email, password) => {
-    // Simulate minor network validation delay
-    await new Promise(resolve => setTimeout(resolve, 400));
-    const { usersList } = get();
-    const trimmedEmail = email.trim().toLowerCase();
-    const user = usersList.find(u => u.email.toLowerCase() === trimmedEmail);
+  fetchUsers: async () => {
+    try {
+      const users = await db.getUsers();
+      set({ usersList: users });
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    }
+  },
 
-    if (user && user.password === password) {
-      const status = user.status || 'Approved';
-      if (status === 'Pending') {
-        return { success: false, error: 'Your access request is pending admin approval.' };
-      }
-      if (status === 'Declined') {
-        return { success: false, error: 'Your access request has been declined or suspended.' };
-      }
+  login: async (email, password) => {
+    try {
+      const user = await db.loginUser(email, password);
       localStorage.setItem('gs_isAuthenticated', 'true');
       localStorage.setItem('gs_currentUser', JSON.stringify(user));
       set({ isAuthenticated: true, currentUser: user });
       return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
     }
-    return { success: false, error: 'Invalid email address or password.' };
   },
 
   logout: () => {
@@ -207,10 +201,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   sendPasswordReset: async (email) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const { usersList } = get();
-    const trimmedEmail = email.trim().toLowerCase();
-    return usersList.some(u => u.email.toLowerCase() === trimmedEmail);
+    try {
+      const users = await db.getUsers();
+      const trimmedEmail = email.trim().toLowerCase();
+      return users.some(u => u.email.toLowerCase() === trimmedEmail);
+    } catch (err) {
+      console.error('Error in sendPasswordReset:', err);
+      return false;
+    }
   },
 
   updateUserProfile: (name, email) => {
@@ -222,84 +220,51 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ currentUser: updated });
   },
 
-  addUser: (user) => {
-    const { usersList } = get();
-    const updated = [...usersList, { ...user, status: user.status || 'Approved' }];
-    localStorage.setItem('gs_usersList', JSON.stringify(updated));
-    set({ usersList: updated });
+  addUser: async (user) => {
+    try {
+      await db.createUser(user);
+      await get().fetchUsers();
+    } catch (err) {
+      console.error('Error adding user:', err);
+    }
   },
 
-  requestAccess: (name, email, role, password) => {
-    const { usersList, notifications } = get();
-    const initials = name.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    
-    const newUser: User = {
-      name,
-      email,
-      role,
-      avatar: initials || 'US',
-      password,
-      status: 'Pending'
-    };
-    
-    const updatedUsers = [...usersList, newUser];
-    localStorage.setItem('gs_usersList', JSON.stringify(updatedUsers));
-    
-    // Add access request notification at the beginning
-    const newNotification = {
-      id: Date.now(),
-      type: 'access',
-      title: 'New Access Request',
-      message: `${name} has requested access as ${role}.`,
-      date: 'Just now',
-      read: false,
-      requestEmail: email
-    };
-    const updatedNotifications = [newNotification, ...notifications];
-    localStorage.setItem('gs_notifications', JSON.stringify(updatedNotifications));
-    
-    set({ usersList: updatedUsers, notifications: updatedNotifications });
+  requestAccess: async (name, email, role, password) => {
+    try {
+      await db.registerUser({ name, email, role, password });
+      await get().fetchUsers();
+      await get().fetchNotifications();
+    } catch (err) {
+      console.error('Error requesting access:', err);
+    }
   },
 
-  handleAccessRequest: (email, status) => {
-    const { usersList, notifications } = get();
-    
-    const updatedUsers = usersList.map(u => 
-      u.email.toLowerCase() === email.toLowerCase() ? { ...u, status } : u
-    );
-    localStorage.setItem('gs_usersList', JSON.stringify(updatedUsers));
-    
-    const statusLabel = status === 'Approved' ? 'Approved' : 'Declined';
-    const updatedNotifications = notifications.map(n => {
-      if (n.type === 'access' && n.requestEmail?.toLowerCase() === email.toLowerCase()) {
-        return {
-          ...n,
-          title: `Access Request ${statusLabel}`,
-          message: `[${statusLabel}] ${n.message.replace('has requested', 'requested')}`,
-          read: true
-        };
-      }
-      return n;
-    });
-    localStorage.setItem('gs_notifications', JSON.stringify(updatedNotifications));
-    
-    set({ usersList: updatedUsers, notifications: updatedNotifications });
+  handleAccessRequest: async (email, status) => {
+    try {
+      await db.updateUserStatus(email, status);
+      await get().fetchUsers();
+      await get().fetchNotifications();
+    } catch (err) {
+      console.error('Error handling access request:', err);
+    }
   },
 
-  cancelAccess: (email) => {
-    const { usersList } = get();
-    const updatedUsers = usersList.map(u => 
-      u.email.toLowerCase() === email.toLowerCase() ? { ...u, status: 'Declined' } : u
-    );
-    localStorage.setItem('gs_usersList', JSON.stringify(updatedUsers));
-    set({ usersList: updatedUsers });
+  cancelAccess: async (email) => {
+    try {
+      await db.updateUserStatus(email, 'Declined');
+      await get().fetchUsers();
+    } catch (err) {
+      console.error('Error canceling user access:', err);
+    }
   },
 
-  deleteUserAccess: (email) => {
-    const { usersList } = get();
-    const updatedUsers = usersList.filter(u => u.email.toLowerCase() !== email.toLowerCase());
-    localStorage.setItem('gs_usersList', JSON.stringify(updatedUsers));
-    set({ usersList: updatedUsers });
+  deleteUserAccess: async (email) => {
+    try {
+      await db.deleteUser(email);
+      await get().fetchUsers();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+    }
   },
   fetchClients: async () => {
     try {
@@ -677,9 +642,32 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   // Live Alerts & Notifications Feed
-  fetchNotifications: () => {
+  fetchNotifications: async () => {
     const { projects, stats } = get();
     const list: any[] = [];
+
+    // Fetch users first to see if any are pending
+    let fetchedUsersList: User[] = [];
+    try {
+      fetchedUsersList = await db.getUsers();
+    } catch (e) {
+      console.error('Error getting users for notifications:', e);
+      fetchedUsersList = get().usersList;
+    }
+
+    // 0. Access requests (highest priority - insert first)
+    const pendingUsers = fetchedUsersList.filter(u => u.status === 'Pending');
+    pendingUsers.forEach((u, index) => {
+      list.push({
+        id: Date.now() + 100 + index,
+        type: 'access',
+        title: 'New Access Request',
+        message: `${u.name} has requested access as ${u.role}.`,
+        date: 'Just now',
+        read: false,
+        requestEmail: u.email
+      });
+    });
     
     // 1. Budget Alerts
     if (stats?.budgetUsage && stats.budgetUsage.utilizationPct > 100) {

@@ -150,6 +150,16 @@ async function initDb() {
       photos TEXT,
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS users (
+      email TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL,
+      avatar TEXT,
+      password TEXT NOT NULL,
+      status TEXT CHECK(status IN ('Pending', 'Approved', 'Declined')) DEFAULT 'Pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   // Run dynamic migrations for pre-existing databases
@@ -167,6 +177,22 @@ async function initDb() {
     await db.run('ALTER TABLE projects ADD COLUMN image_url TEXT DEFAULT NULL');
   } catch (e) {
     // Already exists
+  }
+
+  // Seed default users if users table is empty (always checked on startup)
+  try {
+    const usersCount = await db.get('SELECT COUNT(*) as count FROM users');
+    if (usersCount.count === 0) {
+      console.log('Seeding default system users...');
+      await db.run(`INSERT INTO users (name, email, role, avatar, password, status) VALUES
+        ('Zotha', 'zotha@glorysimon.com', 'Admin', 'Z', 'Admin123', 'Approved'),
+        ('Nisha Sen', 'designer@glorysimon.com', 'Interior Designer', 'NS', 'Design123', 'Approved'),
+        ('Rahul Dev', 'pm@glorysimon.com', 'Project Manager', 'RD', 'PM123', 'Approved'),
+        ('Meera Nair', 'vendor@glorysimon.com', 'Vendor Coordinator', 'MN', 'Vendor123', 'Approved')
+      `);
+    }
+  } catch (err) {
+    console.error('Error seeding default users:', err);
   }
 
   // Check if we already have clients. If so, database is seeded, skip.

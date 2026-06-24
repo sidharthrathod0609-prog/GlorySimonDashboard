@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { User } from '../types';
 import { Plus, Search, X, Trash2, UserCheck, UserX } from 'lucide-react';
@@ -8,11 +8,16 @@ export default function Users() {
   const { 
     usersList, 
     currentUser, 
+    fetchUsers,
     addUser, 
     handleAccessRequest, 
     cancelAccess, 
     deleteUserAccess 
   } = useAppStore();
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
   
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);

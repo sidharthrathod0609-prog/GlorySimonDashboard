@@ -804,6 +804,153 @@ app.delete('/api/vendors/:id', async (req, res) => {
   }
 });
 
+// --- USERS & AUTH API ENDPOINTS ---
+
+// 1. Get all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const db = await getDb();
+    const users = await db.all('SELECT name, email, role, avatar, status FROM users ORDER BY created_at DESC');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Authenticate User (Login)
+app.post('/api/users/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
+  }
+
+  try {
+    const db = await getDb();
+    const user = await db.get('SELECT * FROM users WHERE LOWER(email) = LOWER(?)', [email.trim()]);
+    
+    if (!user || user.password !== password) {
+      return res.status(401).json({ error: 'Invalid email address or password.' });
+    }
+
+    const status = user.status || 'Approved';
+    if (status === 'Pending') {
+      return res.status(403).json({ error: 'Your access request is pending admin approval.' });
+    }
+    if (status === 'Declined') {
+      return res.status(403).json({ error: 'Your access request has been declined or suspended.' });
+    }
+
+    res.json({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      status: user.status
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Request Access (Register)
+app.post('/api/users/register', async (req, res) => {
+  const { name, email, role, password } = req.body;
+  if (!name || !email || !role || !password) {
+    return res.status(400).json({ error: 'All fields are required.' });
+  }
+
+  try {
+    const db = await getDb();
+    const existing = await db.get('SELECT email FROM users WHERE LOWER(email) = LOWER(?)', [email.trim()]);
+    if (existing) {
+      return res.status(409).json({ error: 'An account with this email address already exists.' });
+    }
+
+    const initials = name.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    await db.run(
+      `INSERT INTO users (name, email, role, avatar, password, status) VALUES (?, ?, ?, ?, ?, 'Pending')`,
+      [name, email.trim(), role, initials || 'US', password]
+    );
+
+    res.status(201).json({ success: true, message: 'Access request submitted successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. Create User (Admin Manual Add)
+app.post('/api/users', async (req, res) => {
+  const { name, email, role, password } = req.body;
+  if (!name || !email || !role || !password) {
+    return res.status(400).json({ error: 'All fields are required.' });
+  }
+
+  try {
+    const db = await getDb();
+    const existing = await db.get('SELECT email FROM users WHERE LOWER(email) = LOWER(?)', [email.trim()]);
+    if (existing) {
+      return res.status(409).json({ error: 'An account with this email address already exists.' });
+    }
+
+    const initials = name.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    await db.run(
+      `INSERT INTO users (name, email, role, avatar, password, status) VALUES (?, ?, ?, ?, ?, 'Approved')`,
+      [name, email.trim(), role, initials || 'US', password]
+    );
+
+    res.status(201).json({ success: true, message: 'User created successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. Update User Access Status (Approve/Decline/Suspend)
+app.put('/api/users/:email/status', async (req, res) => {
+  const { email } = req.params;
+  const { status } = req.body;
+  
+  if (!status || !['Pending', 'Approved', 'Declined'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid or missing status value.' });
+  }
+
+  try {
+    const db = await getDb();
+    const result = await db.run(
+      'UPDATE users SET status = ? WHERE LOWER(email) = LOWER(?)',
+      [status, email.trim()]
+    );
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'User account not found.' });
+    }
+
+    res.json({ success: true, message: 'User access status updated successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. Delete User Account
+app.delete('/api/users/:email', async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    const db = await getDb();
+    const result = await db.run(
+      'DELETE FROM users WHERE LOWER(email) = LOWER(?)',
+      [email.trim()]
+    );
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'User account not found.' });
+    }
+
+    res.json({ success: true, message: 'User account successfully deleted.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Start listening
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);

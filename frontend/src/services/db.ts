@@ -8,12 +8,22 @@ import {
   Expense,
   Task,
   SiteVisit,
-  DesignConcept
+  DesignConcept,
+  User,
+  Client
 } from '../types';
 
 const API_BASE = 'http://localhost:5000/api';
 
 export interface IDatabaseService {
+  // Users & Auth
+  getUsers(): Promise<User[]>;
+  loginUser(email: string, password: string): Promise<User>;
+  registerUser(userData: Partial<User> & { password?: string }): Promise<void>;
+  createUser(userData: Partial<User> & { password?: string }): Promise<void>;
+  updateUserStatus(email: string, status: 'Pending' | 'Approved' | 'Declined'): Promise<void>;
+  deleteUser(email: string): Promise<void>;
+
   // Dashboard & Stats
   getDashboardStats(): Promise<any>;
 
@@ -72,6 +82,71 @@ export interface IDatabaseService {
 // 1. APIDatabaseService (Active Production Implementation)
 // ----------------------------------------------------
 export class APIDatabaseService implements IDatabaseService {
+  async getUsers() {
+    const res = await fetch(`${API_BASE}/users`);
+    if (!res.ok) throw new Error('Failed to fetch users');
+    return res.json();
+  }
+
+  async loginUser(email: string, password: string) {
+    const res = await fetch(`${API_BASE}/users/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to authenticate');
+    }
+    return res.json();
+  }
+
+  async registerUser(userData: Partial<User> & { password?: string }) {
+    const res = await fetch(`${API_BASE}/users/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to register');
+    }
+  }
+
+  async createUser(userData: Partial<User> & { password?: string }) {
+    const res = await fetch(`${API_BASE}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to create user');
+    }
+  }
+
+  async updateUserStatus(email: string, status: 'Pending' | 'Approved' | 'Declined') {
+    const res = await fetch(`${API_BASE}/users/${encodeURIComponent(email)}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to update user status');
+    }
+  }
+
+  async deleteUser(email: string) {
+    const res = await fetch(`${API_BASE}/users/${encodeURIComponent(email)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to delete user');
+    }
+  }
+
   async getDashboardStats() {
     const res = await fetch(`${API_BASE}/dashboard/stats`);
     if (!res.ok) throw new Error('Failed to fetch dashboard stats');
@@ -312,6 +387,81 @@ export class APIDatabaseService implements IDatabaseService {
 // 2. MockDatabaseService (Client-Side LocalStorage Mock)
 // ----------------------------------------------------
 export class MockDatabaseService implements IDatabaseService {
+  async getUsers() {
+    await this.simulateDelay();
+    return this.getLocalStorage<User[]>('gs_usersList', [
+      { name: 'Zotha', email: 'zotha@glorysimon.com', role: 'Admin', avatar: 'Z', password: 'Admin123', status: 'Approved' },
+      { name: 'Nisha Sen', email: 'designer@glorysimon.com', role: 'Interior Designer', avatar: 'NS', password: 'Design123', status: 'Approved' },
+      { name: 'Rahul Dev', email: 'pm@glorysimon.com', role: 'Project Manager', avatar: 'RD', password: 'PM123', status: 'Approved' },
+      { name: 'Meera Nair', email: 'vendor@glorysimon.com', role: 'Vendor Coordinator', avatar: 'MN', password: 'Vendor123', status: 'Approved' }
+    ]);
+  }
+
+  async loginUser(email: string, password: string) {
+    await this.simulateDelay();
+    const users = await this.getUsers();
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
+    if (!user || user.password !== password) {
+      throw new Error('Invalid email address or password.');
+    }
+    return user;
+  }
+
+  async registerUser(userData: Partial<User> & { password?: string }) {
+    await this.simulateDelay();
+    const users = await this.getUsers();
+    if (users.some(u => u.email.toLowerCase() === userData.email?.toLowerCase().trim())) {
+      throw new Error('An account with this email address already exists.');
+    }
+    const initials = userData.name?.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
+    const newUser: User = {
+      name: userData.name || 'New User',
+      email: userData.email || '',
+      role: userData.role || 'Interior Designer',
+      avatar: initials,
+      password: userData.password,
+      status: 'Pending'
+    };
+    users.push(newUser);
+    this.setLocalStorage('gs_usersList', users);
+  }
+
+  async createUser(userData: Partial<User> & { password?: string }) {
+    await this.simulateDelay();
+    const users = await this.getUsers();
+    if (users.some(u => u.email.toLowerCase() === userData.email?.toLowerCase().trim())) {
+      throw new Error('An account with this email address already exists.');
+    }
+    const initials = userData.name?.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'US';
+    const newUser: User = {
+      name: userData.name || 'New User',
+      email: userData.email || '',
+      role: userData.role || 'Interior Designer',
+      avatar: initials,
+      password: userData.password,
+      status: 'Approved'
+    };
+    users.push(newUser);
+    this.setLocalStorage('gs_usersList', users);
+  }
+
+  async updateUserStatus(email: string, status: 'Pending' | 'Approved' | 'Declined') {
+    await this.simulateDelay();
+    const users = await this.getUsers();
+    const idx = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase().trim());
+    if (idx === -1) throw new Error('User account not found.');
+    users[idx] = { ...users[idx], status };
+    this.setLocalStorage('gs_usersList', users);
+  }
+
+  async deleteUser(email: string) {
+    await this.simulateDelay();
+    let users = await this.getUsers();
+    const filtered = users.filter(u => u.email.toLowerCase() !== email.toLowerCase().trim());
+    if (filtered.length === users.length) throw new Error('User account not found.');
+    this.setLocalStorage('gs_usersList', filtered);
+  }
+
   private simulateDelay(): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 200));
   }

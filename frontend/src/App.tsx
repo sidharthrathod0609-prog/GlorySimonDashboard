@@ -915,8 +915,12 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
             return (
               <div 
                 key={p.id} 
-                className="flex flex-col items-center p-5 rounded-[24px] text-center space-y-3 relative overflow-hidden h-[180px] justify-between shadow-sm hover:shadow-md transition-all group bg-cover bg-center"
+                className="flex flex-col items-center p-5 rounded-[24px] text-center space-y-3 relative overflow-hidden h-[180px] justify-between shadow-sm hover:shadow-md transition-all group bg-cover bg-center cursor-pointer active:scale-[0.98]"
                 style={{ backgroundImage: p.image_url ? `url(${p.image_url})` : 'none' }}
+                onClick={() => {
+                  setActiveProjectId(p.id);
+                  navigate('/projects', { state: { openDetails: true, projectId: p.id } });
+                }}
               >
                 {/* Dark overlay for readability and premium vibe */}
                 <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] group-hover:bg-black/55 transition-all duration-300 z-0" />

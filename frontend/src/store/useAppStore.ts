@@ -236,6 +236,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().fetchNotifications();
     } catch (err) {
       console.error('Error requesting access:', err);
+      throw err;
     }
   },
 

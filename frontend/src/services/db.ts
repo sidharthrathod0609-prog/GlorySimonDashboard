@@ -419,6 +419,13 @@ export class MockDatabaseService implements IDatabaseService {
     if (!user || user.password !== password) {
       throw new Error('Invalid email address or password.');
     }
+    const status = user.status || 'Approved';
+    if (status === 'Pending') {
+      throw new Error('Your access request is pending admin approval.');
+    }
+    if (status === 'Declined') {
+      throw new Error('Your access request has been declined or suspended.');
+    }
     return user;
   }
 

@@ -69,13 +69,13 @@ export default function Login() {
       }
 
       await new Promise(resolve => setTimeout(resolve, 600));
-      requestAccess(regName, regEmail, regRole, regPassword);
+      await requestAccess(regName, regEmail, regRole, regPassword);
       setRegSuccess(true);
       setRegName('');
       setRegEmail('');
       setRegPassword('');
-    } catch (err) {
-      setError('An error occurred during registration.');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during registration.');
     } finally {
       setLoading(false);
     }

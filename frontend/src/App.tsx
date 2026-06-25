@@ -1239,15 +1239,53 @@ function AIDesignAssistant({ materials }: { materials: Material[] }) {
       <div className="text-xs space-y-3">
         <p className="text-[#7D7D7D] dark:text-[#94A3B8] font-light">Suggest catalog material combinations matching style guidelines.</p>
         <div className="flex gap-2">
-          <select
-            value={selectedStyle}
-            onChange={(e) => setSelectedStyle(e.target.value)}
-            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 p-3 rounded-xl text-[#4B4B4B] dark:text-white outline-none cursor-pointer focus:border-[#A8B89A]"
-          >
-            <option value="luxury" className="bg-white dark:bg-slate-900 text-[#4B4B4B] dark:text-white">Modern Luxury Palette</option>
-            <option value="minimalist" className="bg-white dark:bg-slate-900 text-[#4B4B4B] dark:text-white">Warm Minimalist Palette</option>
-            <option value="industrial" className="bg-white dark:bg-slate-900 text-[#4B4B4B] dark:text-white">Bold Industrial Palette</option>
-          </select>
+          <div className="relative flex-1" ref={styleDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 p-3 rounded-xl text-[#4B4B4B] dark:text-white outline-none cursor-pointer flex items-center justify-between text-left focus:border-[#A8B89A] transition-all text-xs font-normal"
+            >
+              <span>
+                {selectedStyle === 'luxury' && 'Modern Luxury Palette'}
+                {selectedStyle === 'minimalist' && 'Warm Minimalist Palette'}
+                {selectedStyle === 'industrial' && 'Bold Industrial Palette'}
+              </span>
+              <ChevronDown size={14} className={`text-slate-400 dark:text-slate-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            <AnimatePresence>
+              {dropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="absolute left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 p-1.5 rounded-xl shadow-xl z-50 overflow-hidden"
+                >
+                  {[
+                    { val: 'luxury', label: 'Modern Luxury Palette' },
+                    { val: 'minimalist', label: 'Warm Minimalist Palette' },
+                    { val: 'industrial', label: 'Bold Industrial Palette' }
+                  ].map((opt) => (
+                    <button
+                      key={opt.val}
+                      type="button"
+                      onClick={() => {
+                        setSelectedStyle(opt.val);
+                        setDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-xs font-semibold ${
+                        selectedStyle === opt.val
+                          ? 'bg-[#A8B89A]/15 text-[#A8B89A]'
+                          : 'text-[#4B4B4B] dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <button
             onClick={generateGuide}
             className="px-4 py-2 bg-[#A8B89A] hover:bg-[#96A689] text-white rounded-xl font-bold transition shadow-sm"

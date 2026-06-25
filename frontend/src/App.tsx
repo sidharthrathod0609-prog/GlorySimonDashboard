@@ -831,6 +831,7 @@ interface DashboardViewProps {
 }
 
 function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, handleCreateProject, materials, currentUser, procurements }: DashboardViewProps) {
+  const navigate = useNavigate();
   const [showAddProject, setShowAddProject] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Tiles');
   const [formData, setFormData] = useState({

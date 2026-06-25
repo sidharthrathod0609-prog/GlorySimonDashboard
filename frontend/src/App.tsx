@@ -854,15 +854,6 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
             Manage projects, materials, vendors, and approvals with clarity and confidence.
           </p>
         </div>
-        {(currentUser.role === 'Admin' || currentUser.role === 'Project Manager') && (
-          <button
-            onClick={() => { resetForm(); setShowAddProject(true); }}
-            className="px-4 py-2.5 bg-[#A8B89A] hover:bg-[#96A689] text-white rounded-xl font-medium text-xs active:scale-[0.98] transition-all flex items-center gap-2 min-h-[44px] shadow-sm shadow-[#A8B89A]/15"
-          >
-            <Plus size={16} />
-            <span>New Project</span>
-          </button>
-        )}
       </div>
 
       {/* KPI Metrics Cards */}

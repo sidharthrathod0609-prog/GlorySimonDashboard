@@ -13,7 +13,22 @@ import {
   Client
 } from '../types';
 
-const API_BASE = 'http://localhost:5000/api';
+const getApiBase = () => {
+  const hostname = window.location.hostname;
+  if (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.') ||
+    /^(172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname) ||
+    hostname.endsWith('.local')
+  ) {
+    return `http://${hostname}:5000/api`;
+  }
+  return 'http://localhost:5000/api';
+};
+
+const API_BASE = getApiBase();
 
 export interface IDatabaseService {
   // Users & Auth
@@ -1202,9 +1217,20 @@ export class SupabaseDatabaseService implements IDatabaseService {
 // ----------------------------------------------------
 // DEFAULT CLIENT INSTANCE DISPATCHER
 // ----------------------------------------------------
-// Auto-detect environment: if running on local dev server, connect to Express + SQLite backend.
+// Auto-detect environment: if running on local dev server (including local network IPs), connect to Express + SQLite backend.
 // Otherwise, fall back to the offline MockDatabaseService for seamless cloud hosting (Vercel).
-export const db: IDatabaseService =
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? new APIDatabaseService()
-    : new MockDatabaseService();
+const isLocalDev = () => {
+  const hostname = window.location.hostname;
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.') ||
+    /^(172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname) ||
+    hostname.endsWith('.local')
+  );
+};
+
+export const db: IDatabaseService = isLocalDev()
+  ? new APIDatabaseService()
+  : new MockDatabaseService();

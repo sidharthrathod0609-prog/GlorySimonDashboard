@@ -869,14 +869,18 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
       {/* KPI Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
         {[
-          { label: 'Active Projects', val: stats.activeProjects, sub: 'Ongoing jobs', icon: FolderOpen, color: 'text-[#A8B89A] bg-[#A8B89A]/10' },
-          { label: 'Pending Material Approvals', val: stats.pendingMaterials, sub: 'Awaiting sign-off', icon: Palette, color: 'text-[#D7B57D] bg-[#D7B57D]/10' },
-          { label: 'Vendors', val: stats.activeVendors, sub: 'Sourced suppliers', icon: Users, color: 'text-[#8AA17A] bg-[#8AA17A]/10' },
-          { label: 'Site Visits', val: stats.siteVisitsScheduled || 0, sub: 'Visits logged', icon: Clock, color: 'text-[#7D7D7D] bg-slate-100' },
-          { label: 'Budget Usage', val: `${stats.budgetUsage?.utilizationPct || 0}%`, sub: 'Spent vs Allocation', icon: TrendingUp, color: 'text-[#C89A9A] bg-[#C89A9A]/10' },
-          { label: 'Procurement Status', val: `${procurements?.filter((p: any) => p.status === 'Ordered' || p.status === 'Shipped').length || 0} Active`, sub: 'In Transit/Ordered', icon: RefreshCw, color: 'text-[#8AA17A] bg-[#D8E2D0]' }
+          { label: 'Active Projects', val: stats.activeProjects, sub: 'Ongoing jobs', icon: FolderOpen, color: 'text-[#A8B89A] bg-[#A8B89A]/10', path: '/projects' },
+          { label: 'Pending Material Approvals', val: stats.pendingMaterials, sub: 'Awaiting sign-off', icon: Palette, color: 'text-[#D7B57D] bg-[#D7B57D]/10', path: '/approval' },
+          { label: 'Vendors', val: stats.activeVendors, sub: 'Sourced suppliers', icon: Users, color: 'text-[#8AA17A] bg-[#8AA17A]/10', path: '/vendors' },
+          { label: 'Site Visits', val: stats.siteVisitsScheduled || 0, sub: 'Visits logged', icon: Clock, color: 'text-[#7D7D7D] bg-slate-100', path: '/site-visits' },
+          { label: 'Budget Usage', val: `${stats.budgetUsage?.utilizationPct || 0}%`, sub: 'Spent vs Allocation', icon: TrendingUp, color: 'text-[#C89A9A] bg-[#C89A9A]/10', path: '/budget' },
+          { label: 'Procurement Status', val: `${procurements?.filter((p: any) => p.status === 'Ordered' || p.status === 'Shipped').length || 0} Active`, sub: 'In Transit/Ordered', icon: RefreshCw, color: 'text-[#8AA17A] bg-[#D8E2D0]', path: '/procurement' }
         ].map((c, i) => (
-          <div key={i} className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-5 rounded-[24px] flex flex-col justify-between min-h-[120px] shadow-sm hover:shadow transition-all duration-300">
+          <div
+            key={i}
+            onClick={() => navigate(c.path)}
+            className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-5 rounded-[24px] flex flex-col justify-between min-h-[120px] shadow-sm hover:shadow transition-all duration-300 cursor-pointer hover:border-[#A8B89A]/50 dark:hover:border-[#A8B89A]/50 hover:scale-[1.01] active:scale-[0.99]"
+          >
             <div className="flex justify-between items-center mb-3">
               <span className="text-[9px] font-bold text-[#7D7D7D] dark:text-[#94A3B8] uppercase tracking-wider">{c.label}</span>
               <div className={`p-1.5 rounded-lg ${c.color.split(' ').slice(1).join(' ')}`}>

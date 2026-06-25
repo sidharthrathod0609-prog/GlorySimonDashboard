@@ -261,6 +261,15 @@ function DashboardLayout() {
         
         <div className="flex items-center gap-3">
           <button
+            onClick={() => navigate('/notifications')}
+            className="p-2 text-[#7D7D7D] dark:text-[#94A3B8] hover:text-[#4B4B4B] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/30 rounded-xl transition duration-150 focus-visible:ring-2 focus-visible:ring-[#A8B89A]/50 outline-none cursor-pointer"
+            title="System Alerts"
+            aria-label="View notifications"
+          >
+            <Bell size={18} />
+          </button>
+
+          <button
             onClick={() => setThemeMode(themeMode === 'light' ? 'dark' : 'light')}
             className="p-2 text-[#7D7D7D] dark:text-[#94A3B8] hover:text-[#4B4B4B] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/30 rounded-xl transition duration-150 focus-visible:ring-2 focus-visible:ring-[#A8B89A]/50 outline-none"
             title={themeMode === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}

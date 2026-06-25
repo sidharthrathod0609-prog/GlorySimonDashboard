@@ -1185,6 +1185,22 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
 function AIDesignAssistant({ materials }: { materials: Material[] }) {
   const [selectedStyle, setSelectedStyle] = useState('luxury');
   const [recommendation, setRecommendation] = useState<any>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const styleDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (styleDropdownRef.current && !styleDropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   const presets: any = {
     luxury: {

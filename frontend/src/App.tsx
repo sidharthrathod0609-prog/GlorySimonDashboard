@@ -933,7 +933,7 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
                 style={{ backgroundImage: p.image_url ? `url(${p.image_url})` : 'none' }}
                 onClick={() => {
                   setActiveProjectId(p.id);
-                  navigate('/projects', { state: { openDetails: true, projectId: p.id } });
+                  setShowDetailsPopup(true);
                 }}
               >
                 {/* Dark overlay for readability and premium vibe */}

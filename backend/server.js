@@ -951,6 +951,100 @@ app.delete('/api/users/:email', async (req, res) => {
   }
 });
 
+// ==========================================
+// 7. Communications & Notifications APIs
+// ==========================================
+
+// Get all communications
+app.get('/api/communications', async (req, res) => {
+  try {
+    const db = await getDb();
+    const list = await db.all('SELECT * FROM communications ORDER BY created_at DESC');
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create a new communication
+app.post('/api/communications', async (req, res) => {
+  const { projectId, type, recipient, message, status } = req.body;
+  try {
+    const db = await getDb();
+    const result = await db.run(
+      'INSERT INTO communications (project_id, type, recipient, message, status) VALUES (?, ?, ?, ?, ?)',
+      [projectId || null, type || 'email', recipient, message, status || 'Sent']
+    );
+    const newComm = await db.get('SELECT * FROM communications WHERE id = ?', [result.lastID]);
+    res.status(201).json(newComm);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all notifications
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const db = await getDb();
+    const list = await db.all('SELECT * FROM notifications ORDER BY created_at DESC');
+    // Map SQLite read 0/1 to boolean false/true
+    const formatted = list.map(n => ({
+      ...n,
+      read: !!n.read
+    }));
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create a new notification
+app.post('/api/notifications', async (req, res) => {
+  const { type, title, message, date, requestEmail } = req.body;
+  try {
+    const db = await getDb();
+    const result = await db.run(
+      'INSERT INTO notifications (type, title, message, date, read, requestEmail) VALUES (?, ?, ?, ?, 0, ?)',
+      [type, title, message, date || 'Just now', requestEmail || null]
+    );
+    const newNotif = await db.get('SELECT * FROM notifications WHERE id = ?', [result.lastID]);
+    res.status(201).json({
+      ...newNotif,
+      read: !!newNotif.read
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark notification as read/unread
+app.put('/api/notifications/:id/read', async (req, res) => {
+  const { id } = req.params;
+  const { read } = req.body;
+  try {
+    const db = await getDb();
+    await db.run(
+      'UPDATE notifications SET read = ? WHERE id = ?',
+      [read ? 1 : 0, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete a notification
+app.delete('/api/notifications/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const db = await getDb();
+    await db.run('DELETE FROM notifications WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Start listening
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);

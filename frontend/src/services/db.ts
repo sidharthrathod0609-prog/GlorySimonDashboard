@@ -91,6 +91,14 @@ export interface IDatabaseService {
   getMaterialReport(query?: string): Promise<any[]>;
   getVendorReport(): Promise<any[]>;
   getBudgetReport(): Promise<any[]>;
+
+  // Communications & Notifications
+  getCommunications(): Promise<any[]>;
+  createCommunication(commData: any): Promise<any>;
+  getNotifications(): Promise<any[]>;
+  createNotification(notifData: any): Promise<any>;
+  markNotificationRead(id: number, read: boolean): Promise<void>;
+  deleteNotification(id: number): Promise<void>;
 }
 
 // ----------------------------------------------------

@@ -110,6 +110,11 @@ interface AppState {
   createQuotation: (data: any) => Promise<void>;
   deleteQuotation: (id: number) => Promise<void>;
   fetchNotifications: () => Promise<void>;
+  fetchCommunications: () => Promise<void>;
+  createCommunication: (data: { projectId?: number; type?: string; recipient: string; message: string; status?: string }) => Promise<void>;
+  createNotification: (data: { type: string; title: string; message: string; date?: string; requestEmail?: string }) => Promise<void>;
+  markNotificationRead: (id: number, read: boolean) => Promise<void>;
+  deleteNotification: (id: number) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({

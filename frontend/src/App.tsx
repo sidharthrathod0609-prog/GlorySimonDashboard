@@ -170,6 +170,8 @@ function DashboardLayout() {
     fetchMaterials,
     fetchVendors,
     fetchClients,
+    fetchNotifications,
+    fetchCommunications,
     backgroundStyle,
     themeMode,
     setThemeMode,
@@ -213,6 +215,8 @@ function DashboardLayout() {
     fetchMaterials();
     fetchVendors();
     fetchClients();
+    fetchNotifications();
+    fetchCommunications();
   }, []);
 
   // Map route pathname to human-readable page titles for sticky top navigation bar

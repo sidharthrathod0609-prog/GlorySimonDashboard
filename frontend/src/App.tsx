@@ -841,9 +841,10 @@ interface DashboardViewProps {
   materials: Material[];
   currentUser: User;
   procurements: any[];
+  setShowDetailsPopup: (val: boolean) => void;
 }
 
-function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, handleCreateProject, materials, currentUser, procurements }: DashboardViewProps) {
+function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, handleCreateProject, materials, currentUser, procurements, setShowDetailsPopup }: DashboardViewProps) {
   const navigate = useNavigate();
   const [showAddProject, setShowAddProject] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Tiles');

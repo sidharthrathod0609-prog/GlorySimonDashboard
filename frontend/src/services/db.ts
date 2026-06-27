@@ -404,6 +404,54 @@ export class APIDatabaseService implements IDatabaseService {
     });
     if (!res.ok) throw new Error('Failed to delete client');
   }
+
+  async getCommunications(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/communications`);
+    if (!res.ok) throw new Error('Failed to fetch communications');
+    return res.json();
+  }
+
+  async createCommunication(commData: any): Promise<any> {
+    const res = await fetch(`${API_BASE}/communications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(commData)
+    });
+    if (!res.ok) throw new Error('Failed to create communication');
+    return res.json();
+  }
+
+  async getNotifications(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/notifications`);
+    if (!res.ok) throw new Error('Failed to fetch notifications');
+    return res.json();
+  }
+
+  async createNotification(notifData: any): Promise<any> {
+    const res = await fetch(`${API_BASE}/notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(notifData)
+    });
+    if (!res.ok) throw new Error('Failed to create notification');
+    return res.json();
+  }
+
+  async markNotificationRead(id: number, read: boolean): Promise<void> {
+    const res = await fetch(`${API_BASE}/notifications/${id}/read`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ read })
+    });
+    if (!res.ok) throw new Error('Failed to mark notification read');
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    const res = await fetch(`${API_BASE}/notifications/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete notification');
+  }
 }
 
 // ----------------------------------------------------

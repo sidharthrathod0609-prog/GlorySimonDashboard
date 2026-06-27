@@ -472,6 +472,8 @@ function ProjectsViewRoute() {
       handleUpdateTaskStatus={store.updateTaskStatus}
       handleDeleteTask={store.deleteTask}
       currentUser={store.currentUser}
+      showDetailsPopup={store.showDetailsPopup}
+      setShowDetailsPopup={store.setShowDetailsPopup}
     />
   );
 }

@@ -435,6 +435,7 @@ function DashboardViewRoute() {
       materials={store.materials}
       currentUser={store.currentUser}
       procurements={store.procurements}
+      setShowDetailsPopup={store.setShowDetailsPopup}
     />
   );
 }

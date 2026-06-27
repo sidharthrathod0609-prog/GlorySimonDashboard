@@ -1160,6 +1160,81 @@ export class MockDatabaseService implements IDatabaseService {
     clients = clients.filter(c => c.id !== id);
     this.setLocalStorage('mock_clients', clients);
   }
+
+  async getCommunications(): Promise<any[]> {
+    await this.simulateDelay();
+    return this.getLocalStorage<any[]>('mock_communications', [
+      { id: 1, type: 'email', recipient: 'Sidharth Rathod (Client)', message: '⚠️ Sourcing Approval Pending: Deep Teal Matte Accent backdrop wall design requires client validation signature.', status: 'Sent', created_at: new Date().toISOString() },
+      { id: 2, type: 'email', recipient: 'Apex Marble & Tiles (Supplier)', message: 'PO #AP-928 dispatched for 432 units of Italian Carrara Vitrified Tile.', status: 'Sent', created_at: new Date().toISOString() },
+      { id: 3, type: 'email', recipient: 'Rahul Dev (PM)', message: '🚨 Budget Cap Notice: Penthouse Villa budget reaches 92.5% utilization cap threshold.', status: 'Sent', created_at: new Date().toISOString() },
+      { id: 4, type: 'email', recipient: 'Suman Sharma (Client)', message: '📅 Site Visit Confirmed: Schedule booked for Rahul Dev layout measurements verification on 2026-06-20.', status: 'Sent', created_at: new Date().toISOString() }
+    ]);
+  }
+
+  async createCommunication(commData: any): Promise<any> {
+    await this.simulateDelay();
+    const comms = await this.getCommunications();
+    const newComm = {
+      id: Date.now(),
+      type: commData.type || 'email',
+      recipient: commData.recipient,
+      message: commData.message,
+      status: commData.status || 'Sent',
+      created_at: new Date().toISOString()
+    };
+    comms.unshift(newComm);
+    this.setLocalStorage('mock_communications', comms);
+    return newComm;
+  }
+
+  async getNotifications(): Promise<any[]> {
+    await this.simulateDelay();
+    return this.getLocalStorage<any[]>('mock_notifications', [
+      { id: 1, type: 'approval', title: 'Material Approval Pending', message: 'Deep Teal Matte Accent backdrop wall design requires client validation signature', date: 'Just now', read: false },
+      { id: 2, type: 'vendor', title: 'Vendor Purchase Order', message: 'PO #AP-928 dispatched for 432 units of Italian Carrara Vitrified Tile.', date: '12 mins ago', read: false },
+      { id: 3, type: 'budget', title: 'Budget Warning', message: 'Penthouse Villa budget reaches 92.5% utilization cap threshold.', date: '1 hour ago', read: false },
+      { id: 4, type: 'visit', title: 'Site Visit Confirmed', message: 'Schedule booked for Rahul Dev layout measurements verification on 2026-06-20.', date: '2 hours ago', read: false },
+      { id: 5, type: 'approval', title: 'Material Approval Pending', message: 'Chevron Dark Slate Tile for Executive Boardroom requires client approval', date: '10 mins ago', read: false },
+      { id: 6, type: 'visit', title: 'Site Visit Reminder', message: 'Drywall check booked for Priya Cozy 2BHK Apartment at 10:00 AM tomorrow', date: '2 hours ago', read: false },
+      { id: 7, type: 'vendor', title: 'Vendor Follow-up', message: 'Linen Beige Blackout Curtain PO requires coordinator dispatch signature', date: '5 hours ago', read: true },
+      { id: 8, type: 'budget', title: 'Budget Exceeded Alert', message: "Rathod's Villa has exceeded its allocated budget cap limit!", date: '1 day ago', read: false }
+    ]);
+  }
+
+  async createNotification(notifData: any): Promise<any> {
+    await this.simulateDelay();
+    const list = await this.getNotifications();
+    const newNotif = {
+      id: Date.now(),
+      type: notifData.type,
+      title: notifData.title,
+      message: notifData.message,
+      date: notifData.date || 'Just now',
+      read: false,
+      requestEmail: notifData.requestEmail || null,
+      created_at: new Date().toISOString()
+    };
+    list.unshift(newNotif);
+    this.setLocalStorage('mock_notifications', list);
+    return newNotif;
+  }
+
+  async markNotificationRead(id: number, read: boolean): Promise<void> {
+    await this.simulateDelay();
+    const list = await this.getNotifications();
+    const idx = list.findIndex(n => n.id === id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], read };
+      this.setLocalStorage('mock_notifications', list);
+    }
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    await this.simulateDelay();
+    let list = await this.getNotifications();
+    list = list.filter(n => n.id !== id);
+    this.setLocalStorage('mock_notifications', list);
+  }
 }
 
 // ----------------------------------------------------
@@ -1273,6 +1348,30 @@ export class SupabaseDatabaseService implements IDatabaseService {
   }
 
   async getBudgetReport(): Promise<any[]> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async getCommunications(): Promise<any[]> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async createCommunication(commData: any): Promise<any> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async getNotifications(): Promise<any[]> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async createNotification(notifData: any): Promise<any> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async markNotificationRead(id: number, read: boolean): Promise<void> {
+    throw new Error('Supabase integration draft only.');
+  }
+
+  async deleteNotification(id: number): Promise<void> {
     throw new Error('Supabase integration draft only.');
   }
 }

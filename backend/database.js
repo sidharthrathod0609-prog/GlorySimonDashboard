@@ -160,6 +160,27 @@ async function initDb() {
       status TEXT CHECK(status IN ('Pending', 'Approved', 'Declined')) DEFAULT 'Pending',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS communications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER,
+      type TEXT DEFAULT 'email',
+      recipient TEXT NOT NULL,
+      message TEXT NOT NULL,
+      status TEXT DEFAULT 'Sent',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      date TEXT,
+      read INTEGER DEFAULT 0,
+      requestEmail TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   // Run dynamic migrations for pre-existing databases

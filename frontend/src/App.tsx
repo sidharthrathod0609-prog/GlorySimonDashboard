@@ -411,6 +411,13 @@ function DashboardLayout() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Global Project Details Modal Pop-up */}
+      <AnimatePresence>
+        {showDetailsPopup && projectDetails && activeProjectId === projectDetails.project.id && (
+          <ProjectDetailsModal />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

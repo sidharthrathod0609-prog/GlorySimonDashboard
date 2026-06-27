@@ -173,7 +173,10 @@ function DashboardLayout() {
     backgroundStyle,
     themeMode,
     setThemeMode,
-    logout
+    logout,
+    showDetailsPopup,
+    setShowDetailsPopup,
+    projectDetails
   } = useAppStore();
 
   const location = useLocation();

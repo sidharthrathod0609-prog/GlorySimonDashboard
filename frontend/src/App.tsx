@@ -1423,6 +1423,8 @@ interface ProjectsViewProps {
   handleUpdateTaskStatus: (taskId: number, status: string) => Promise<void>;
   handleDeleteTask: (taskId: number) => Promise<void>;
   currentUser: User;
+  showDetailsPopup: boolean;
+  setShowDetailsPopup: (val: boolean) => void;
 }
 
 function ProjectsView({
@@ -1430,7 +1432,7 @@ function ProjectsView({
   activeProjectId, setActiveProjectId, projectDetails, detailsLoading, materials, vendors,
   handleAddRoom, handleAddSelection, handleUpdateSelection, handleDeleteSelection, handleAddExpense,
   handleUpdateConceptStatus, handleCreateSiteVisit, handleCreateTask, handleUpdateTaskStatus, handleDeleteTask,
-  currentUser
+  currentUser, showDetailsPopup, setShowDetailsPopup
 }: ProjectsViewProps) {
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');

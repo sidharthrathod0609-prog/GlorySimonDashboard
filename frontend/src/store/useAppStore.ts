@@ -385,6 +385,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().fetchProjects();
       get().setActiveProjectId(newProject.id);
       await get().fetchStats();
+      // Add email communication and notification!
+      await get().createCommunication({
+        projectId: newProject.id,
+        type: 'email',
+        recipient: `${newProject.client_name || 'Client'} (Client)`,
+        message: `✉️ Project Folder Registered: Welcome email sent with portal activation link. Allocated budget INR ${newProject.budget.toLocaleString()}.`,
+        status: 'Sent'
+      });
+      await get().createNotification({
+        type: 'approval',
+        title: 'Project Registered',
+        message: `Welcome email sent to ${newProject.client_name || 'Client'} for project ${newProject.name}.`,
+        date: 'Just now'
+      });
     } catch (err) {
       console.error('Error creating project:', err);
     }
@@ -455,9 +469,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         userName: currentUser.name
       });
       
+      const selectionItem = projectDetails?.selections?.find((s: any) => s.id === selectionId);
+
       // Seed procurement tracking entry automatically if approved
       if (updateData.status === 'Approved') {
-        const selectionItem = projectDetails?.selections?.find((s: any) => s.id === selectionId);
         if (selectionItem) {
           const alreadyExists = procurements.some((p: any) => p.selectionId === selectionId);
           if (!alreadyExists) {
@@ -486,6 +501,23 @@ export const useAppStore = create<AppState>((set, get) => ({
         await get().fetchProjectDetails(activeProjectId);
       }
       await get().fetchStats();
+
+      // Create communication email and notification!
+      if (selectionItem) {
+        await get().createCommunication({
+          projectId: activeProjectId || null,
+          type: 'email',
+          recipient: `${selectionItem.vendor_name || 'Vendor'} (Supplier)`,
+          message: `✉️ PO dispatched for ${selectionItem.quantity || 1} units of ${selectionItem.material_name}. Status: ${updateData.status || 'Pending'}.`,
+          status: 'Sent'
+        });
+        await get().createNotification({
+          type: 'vendor',
+          title: 'Selection Status Updated',
+          message: `PO status for ${selectionItem.material_name} updated to ${updateData.status || 'Pending'}.`,
+          date: 'Just now'
+        });
+      }
     } catch (err) {
       console.error('Error updating selection:', err);
     }
@@ -526,6 +558,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       await db.updateConceptStatus(activeProjectId, conceptId, status, currentUser.name);
       await get().fetchProjectDetails(activeProjectId);
       await get().fetchStats();
+
+      await get().createCommunication({
+        projectId: activeProjectId,
+        type: 'email',
+        recipient: 'Interior Designer (Team)',
+        message: `✉️ Design Concept Status Update: concept was marked as "${status}" by ${currentUser.name}.`,
+        status: 'Sent'
+      });
+      await get().createNotification({
+        type: 'approval',
+        title: `Concept Status: ${status}`,
+        message: `Design concept marked as ${status} by ${currentUser.name}.`,
+        date: 'Just now'
+      });
     } catch (err) {
       console.error('Error updating concept approval:', err);
     }
@@ -533,12 +579,27 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Operations CRUD
   createSiteVisit: async (visitData) => {
-    const { activeProjectId } = get();
+    const { activeProjectId, projectDetails } = get();
     if (!activeProjectId) return;
     try {
       await db.createSiteVisit(activeProjectId, visitData);
       await get().fetchProjectDetails(activeProjectId);
       await get().fetchStats();
+
+      const clientName = projectDetails?.project?.client_name || 'Client';
+      await get().createCommunication({
+        projectId: activeProjectId,
+        type: 'email',
+        recipient: `${clientName} (Client)`,
+        message: `✉️ Site Visit Confirmed: Schedule booked for ${visitData.visitorName} layout measurements verification on ${visitData.visitDate}.`,
+        status: 'Sent'
+      });
+      await get().createNotification({
+        type: 'visit',
+        title: 'Site Visit Confirmed',
+        message: `Schedule booked for ${visitData.visitorName} measurements verification on ${visitData.visitDate}.`,
+        date: 'Just now'
+      });
     } catch (err) {
       console.error('Error logging site visit:', err);
     }
@@ -550,6 +611,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await db.createTask(activeProjectId, taskData);
       await get().fetchProjectDetails(activeProjectId);
+
+      await get().createCommunication({
+        projectId: activeProjectId,
+        type: 'email',
+        recipient: `${taskData.assignedTo} (Assignee)`,
+        message: `📋 Task Assigned: New snag item "${taskData.title}" created. Due date: ${taskData.dueDate || 'N/A'}.`,
+        status: 'Sent'
+      });
+      await get().createNotification({
+        type: 'vendor',
+        title: 'New Snag Task Assigned',
+        message: `Task "${taskData.title}" assigned to ${taskData.assignedTo}.`,
+        date: 'Just now'
+      });
     } catch (err) {
       console.error('Error adding task:', err);
     }
@@ -657,89 +732,83 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Live Alerts & Notifications Feed
   fetchNotifications: async () => {
-    const { projects, stats } = get();
-    const list: any[] = [];
-
-    // Fetch users first to see if any are pending
-    let fetchedUsersList: User[] = [];
     try {
-      fetchedUsersList = await db.getUsers();
-    } catch (e) {
-      console.error('Error getting users for notifications:', e);
-      fetchedUsersList = get().usersList;
+      const list = await db.getNotifications();
+      let fetchedUsersList: User[] = [];
+      try {
+        fetchedUsersList = await db.getUsers();
+      } catch (e) {
+        console.error('Error getting users for notifications:', e);
+      }
+      const pendingUsers = fetchedUsersList.filter(u => u.status === 'Pending');
+      const mergedList = [...list];
+      pendingUsers.forEach((u, index) => {
+        if (!mergedList.some(n => n.type === 'access' && n.requestEmail === u.email)) {
+          mergedList.unshift({
+            id: Date.now() + 100 + index,
+            type: 'access',
+            title: 'New Access Request',
+            message: `${u.name} has requested access as ${u.role}.`,
+            date: 'Just now',
+            read: false,
+            requestEmail: u.email
+          });
+        }
+      });
+      set({ notifications: mergedList });
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
     }
+  },
 
-    // 0. Access requests (highest priority - insert first)
-    const pendingUsers = fetchedUsersList.filter(u => u.status === 'Pending');
-    pendingUsers.forEach((u, index) => {
-      list.push({
-        id: Date.now() + 100 + index,
-        type: 'access',
-        title: 'New Access Request',
-        message: `${u.name} has requested access as ${u.role}.`,
-        date: 'Just now',
-        read: false,
-        requestEmail: u.email
-      });
-    });
-    
-    // 1. Budget Alerts
-    if (stats?.budgetUsage && stats.budgetUsage.utilizationPct > 100) {
-      list.push({
-        id: Date.now() + 1,
-        type: 'budget',
-        title: 'Budget Exceeded Alert',
-        message: `Sourced costs exceed budget cap by INR ${(stats.budgetUsage.totalSpent - stats.budgetUsage.totalBudget).toLocaleString()}!`,
-        date: 'Just now',
-        read: false
-      });
-    } else if (stats?.budgetUsage && stats.budgetUsage.utilizationPct >= 75) {
-      list.push({
-        id: Date.now() + 1,
-        type: 'budget',
-        title: 'Budget Utilization Warning',
-        message: `Sourced costs have reached ${stats.budgetUsage.utilizationPct}% of the allocated budget.`,
-        date: '10 mins ago',
-        read: false
-      });
+  fetchCommunications: async () => {
+    try {
+      const list = await db.getCommunications();
+      set({ communications: list });
+    } catch (err) {
+      console.error('Error fetching communications:', err);
     }
+  },
 
-    // 2. Material Approvals Pending
-    const pendingCount = stats?.pendingMaterials || 0;
-    if (pendingCount > 0) {
-      list.push({
-        id: Date.now() + 2,
-        type: 'approval',
-        title: 'Material Approval Pending',
-        message: `You have ${pendingCount} material selections awaiting client sign-off validation.`,
-        date: '15 mins ago',
-        read: false
-      });
+  createCommunication: async (commData) => {
+    try {
+      const newComm = await db.createCommunication(commData);
+      const { communications } = get();
+      set({ communications: [newComm, ...communications] });
+    } catch (err) {
+      console.error('Error creating communication:', err);
     }
+  },
 
-    // 3. Site Visits
-    const visitsCount = stats?.siteVisitsScheduled || 0;
-    if (visitsCount > 0) {
-      list.push({
-        id: Date.now() + 3,
-        type: 'visit',
-        title: 'Site Visit Scheduled',
-        message: `Site visit scheduled for measurements check of active project.`,
-        date: '2 hours ago',
-        read: true
-      });
+  createNotification: async (notifData) => {
+    try {
+      const newNotif = await db.createNotification(notifData);
+      const { notifications } = get();
+      set({ notifications: [newNotif, ...notifications] });
+    } catch (err) {
+      console.error('Error creating notification:', err);
     }
+  },
 
-    // 4. Default coordinator checks
-    list.push({
-      id: Date.now() + 4,
-      type: 'vendor',
-      title: 'Vendor Follow-up',
-      message: 'Apex Marble PO invoice verification is pending vendor dispatcher.',
-      date: '4 hours ago',
-      read: false
-    });
+  markNotificationRead: async (id, read) => {
+    try {
+      await db.markNotificationRead(id, read);
+      const { notifications } = get();
+      const updated = notifications.map(n => n.id === id ? { ...n, read } : n);
+      set({ notifications: updated });
+    } catch (err) {
+      console.error('Error marking notification read:', err);
+    }
+  },
 
-    set({ notifications: list });
+  deleteNotification: async (id) => {
+    try {
+      await db.deleteNotification(id);
+      const { notifications } = get();
+      const updated = notifications.filter(n => n.id !== id);
+      set({ notifications: updated });
+    } catch (err) {
+      console.error('Error deleting notification:', err);
+    }
   }
 }));

@@ -39,6 +39,7 @@ interface AppState {
   installations: any[];
   quotations: any[];
   notifications: any[];
+  communications: any[];
 
   // Actions
   setCurrentTab: (tab: string) => void;

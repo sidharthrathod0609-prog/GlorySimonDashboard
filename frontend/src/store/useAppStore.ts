@@ -26,6 +26,7 @@ interface AppState {
   activeProjectId: number | null;
   projectDetails: any;
   detailsLoading: boolean;
+  showDetailsPopup: boolean;
   
   // Auth States
   isAuthenticated: boolean;
@@ -46,6 +47,7 @@ interface AppState {
   setBackgroundStyle: (style: 'villa' | 'living-room' | 'office' | 'architectural') => void;
   setCurrentUser: (user: User) => void;
   setActiveProjectId: (id: number | null) => void;
+  setShowDetailsPopup: (val: boolean) => void;
   
   // Auth Actions
   fetchUsers: () => Promise<void>;
@@ -122,6 +124,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeProjectId: null,
   projectDetails: null,
   detailsLoading: false,
+  showDetailsPopup: false,
 
   // Auth defaults with localStorage persistence
   isAuthenticated: localStorage.getItem('gs_isAuthenticated') === 'true',
@@ -308,6 +311,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     } else {
       get().fetchProjectDetails(id);
     }
+  },
+  setShowDetailsPopup: (val) => {
+    set({ showDetailsPopup: val });
   },
 
   // Sourcing Data Layer

@@ -164,6 +164,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     { id: 3, type: 'vendor', title: 'Vendor Follow-up', message: 'Linen Beige Blackout Curtain PO requires coordinator dispatch signature', date: '5 hours ago', read: true },
     { id: 4, type: 'budget', title: 'Budget Exceeded Alert', message: "Rathod's Villa has exceeded its allocated budget cap limit!", date: '1 day ago', read: false }
   ],
+  communications: [],
 
   // State Switchers
   setCurrentTab: (tab) => set({ currentTab: tab }),

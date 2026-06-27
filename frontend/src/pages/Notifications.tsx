@@ -8,7 +8,9 @@ export default function Notifications() {
     notifications,
     fetchNotifications,
     currentUser,
-    handleAccessRequest
+    handleAccessRequest,
+    markNotificationRead,
+    deleteNotification
   } = useAppStore();
 
   const [activeFilter, setActiveFilter] = useState<'All' | 'budget' | 'approval' | 'visit' | 'vendor' | 'access'>('All');

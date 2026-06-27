@@ -44,18 +44,22 @@ export default function Notifications() {
   };
 
   const markAllAsRead = () => {
-    const updated = notifications.map(n => ({ ...n, read: true }));
-    useAppStore.setState({ notifications: updated });
+    notifications.forEach(n => {
+      if (!n.read) {
+        markNotificationRead(n.id, true);
+      }
+    });
   };
 
   const toggleReadStatus = (id: number) => {
-    const updated = notifications.map(n => n.id === id ? { ...n, read: !n.read } : n);
-    useAppStore.setState({ notifications: updated });
+    const n = notifications.find(notif => notif.id === id);
+    if (n) {
+      markNotificationRead(id, !n.read);
+    }
   };
 
   const dismissNotification = (id: number) => {
-    const updated = notifications.filter(n => n.id !== id);
-    useAppStore.setState({ notifications: updated });
+    deleteNotification(id);
   };
 
   const filteredNotifications = notifications.filter(n => {

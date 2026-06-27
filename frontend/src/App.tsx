@@ -1338,36 +1338,29 @@ function AIDesignAssistant({ materials }: { materials: Material[] }) {
 }
 
 function CommunicationsFeed({ stats }: { stats: any }) {
-  const communications = [
-    {
-      id: 1,
-      type: 'whatsapp',
-      to: 'Sidharth Rathod (Client)',
-      msg: '⚠️ Sourcing Approval Pending: Deep Teal Matte Accent backdrop wall design requires client validation signature.',
-      time: 'Just now'
-    },
-    {
-      id: 2,
-      type: 'email',
-      to: 'Apex Marble & Tiles (Supplier)',
-      msg: 'PO #AP-928 dispatched for 432 units of Italian Carrara Vitrified Tile.',
-      time: '12 mins ago'
-    },
-    {
-      id: 3,
-      type: 'whatsapp',
-      to: 'Rahul Dev (PM)',
-      msg: '🚨 Budget Cap Notice: Penthouse Villa budget reaches 92.5% utilization cap threshold.',
-      time: '1 hour ago'
-    },
-    {
-      id: 4,
-      type: 'email',
-      to: 'Suman Sharma (Client)',
-      msg: '📅 Site Visit Confirmed: Schedule booked for Rahul Dev layout measurements verification on 2026-06-20.',
-      time: '2 hours ago'
+  const { communications, fetchCommunications } = useAppStore();
+
+  useEffect(() => {
+    fetchCommunications();
+  }, []);
+
+  const formatCommTime = (dateStr: string) => {
+    try {
+      // Handle both ISO strings and SQLite spaces
+      const normalizedStr = dateStr.includes('Z') || dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T');
+      const d = new Date(normalizedStr);
+      if (isNaN(d.getTime())) return 'Recently';
+      const diffMs = Date.now() - d.getTime();
+      const diffMins = Math.round(diffMs / 60000);
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} mins ago`;
+      const diffHours = Math.round(diffMins / 60);
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      return d.toLocaleDateString();
+    } catch (e) {
+      return 'Recently';
     }
-  ];
+  };
 
   return (
     <div className="bg-white dark:bg-[#0F172A] border border-slate-200/60 dark:border-slate-800/80 p-6 rounded-[24px] space-y-4 shadow-sm">
@@ -1380,18 +1373,19 @@ function CommunicationsFeed({ stats }: { stats: any }) {
           <div key={c.id} className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-xl text-[11px] space-y-1.5 shadow-sm">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1.5">
-                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
-                  c.type === 'whatsapp' ? 'bg-[#8AA17A]/15 text-[#8AA17A] border border-[#8AA17A]/30' : 'bg-slate-100 dark:bg-slate-800 text-[#4B4B4B] dark:text-slate-300 border border-slate-200 dark:border-slate-800'
-                }`}>
-                  {c.type === 'whatsapp' ? 'WhatsApp PO' : 'SMTP Email'}
+                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-[#4B4B4B] dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                  SMTP Email
                 </span>
-                <span className="text-[#7D7D7D] dark:text-[#94A3B8] font-semibold">To: {c.to}</span>
+                <span className="text-[#7D7D7D] dark:text-[#94A3B8] font-semibold">To: {c.recipient}</span>
               </div>
-              <span className="text-slate-400 dark:text-slate-500 text-[9px]">{c.time}</span>
+              <span className="text-slate-400 dark:text-slate-500 text-[9px]">{formatCommTime(c.created_at || new Date().toISOString())}</span>
             </div>
-            <p className="text-[#4B4B4B] dark:text-slate-300 font-light leading-relaxed">{c.msg}</p>
+            <p className="text-[#4B4B4B] dark:text-slate-300 font-light leading-relaxed">{c.message}</p>
           </div>
         ))}
+        {communications.length === 0 && (
+          <p className="text-center text-slate-450 dark:text-slate-500 italic py-6 text-xs">No communications logged yet.</p>
+        )}
       </div>
     </div>
   );

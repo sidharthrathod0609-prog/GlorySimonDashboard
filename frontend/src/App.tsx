@@ -1443,24 +1443,6 @@ function ProjectsView({
   // Modals state
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Project | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState('overview');
-  const [showDetailsPopup, setShowDetailsPopup] = useState(false);
-
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.state && location.state.openDetails && location.state.projectId) {
-      setActiveProjectId(location.state.projectId);
-      setShowDetailsPopup(true);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state, setActiveProjectId]);
-
-  // Site visits and tasks form state
-  const [showAddVisit, setShowAddVisit] = useState(false);
-  const [visitForm, setVisitForm] = useState({ visitDate: '', visitorName: '', notes: '' });
-  const [showAddTask, setShowAddTask] = useState(false);
-  const [taskForm, setTaskForm] = useState({ title: '', assignedTo: 'Designer', dueDate: '' });
 
   const [formData, setFormData] = useState({
     name: '', clientName: '', phone: '', email: '', location: '', type: 'Residential', budget: '', notes: '', startDate: '', assignedDesigner: ''

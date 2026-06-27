@@ -1762,7 +1762,7 @@ function ProjectsView({
             ))}
           </div>
         </div>
-  AnimatePresence>
+      </div>
 
       {/* Add Project Modal */}
       {showAdd && (

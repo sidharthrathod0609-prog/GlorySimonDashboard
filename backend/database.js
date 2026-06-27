@@ -216,6 +216,33 @@ async function initDb() {
     console.error('Error seeding default users:', err);
   }
 
+  // Seed communications & notifications if they are empty
+  try {
+    const commsCount = await db.get('SELECT COUNT(*) as count FROM communications');
+    if (commsCount.count === 0) {
+      console.log('Seeding default communications and notifications...');
+      await db.run(`INSERT INTO communications (project_id, type, recipient, message, status, created_at) VALUES
+        (1, 'email', 'Sidharth Rathod (Client)', '⚠️ Sourcing Approval Pending: Deep Teal Matte Accent backdrop wall design requires client validation signature.', 'Sent', '2026-06-25 10:00:00'),
+        (1, 'email', 'Apex Marble & Tiles (Supplier)', 'PO #AP-928 dispatched for 432 units of Italian Carrara Vitrified Tile.', 'Sent', '2026-06-25 10:12:00'),
+        (1, 'email', 'Rahul Dev (PM)', '🚨 Budget Cap Notice: Penthouse Villa budget reaches 92.5% utilization cap threshold.', 'Sent', '2026-06-25 11:00:00'),
+        (2, 'email', 'Suman Sharma (Client)', '📅 Site Visit Confirmed: Schedule booked for Rahul Dev layout measurements verification on 2026-06-20.', 'Sent', '2026-06-25 12:00:00')
+      `);
+      
+      await db.run(`INSERT INTO notifications (type, title, message, date, read, created_at) VALUES
+        ('approval', 'Material Approval Pending', 'Deep Teal Matte Accent backdrop wall design requires client validation signature', 'Just now', 0, '2026-06-25 10:00:00'),
+        ('vendor', 'Vendor Purchase Order', 'PO #AP-928 dispatched for 432 units of Italian Carrara Vitrified Tile.', '12 mins ago', 0, '2026-06-25 10:12:00'),
+        ('budget', 'Budget Warning', 'Penthouse Villa budget reaches 92.5% utilization cap threshold.', '1 hour ago', 0, '2026-06-25 11:00:00'),
+        ('visit', 'Site Visit Confirmed', 'Schedule booked for Rahul Dev layout measurements verification on 2026-06-20.', '2 hours ago', 0, '2026-06-25 12:00:00'),
+        ('approval', 'Material Approval Pending', 'Chevron Dark Slate Tile for Executive Boardroom requires client approval', '10 mins ago', 0, '2026-06-25 13:00:00'),
+        ('visit', 'Site Visit Reminder', 'Drywall check booked for Priya Cozy 2BHK Apartment at 10:00 AM tomorrow', '2 hours ago', 0, '2026-06-25 14:00:00'),
+        ('vendor', 'Vendor Follow-up', 'Linen Beige Blackout Curtain PO requires coordinator dispatch signature', '5 hours ago', 1, '2026-06-25 15:00:00'),
+        ('budget', 'Budget Exceeded Alert', 'Rathods Villa has exceeded its allocated budget cap limit!', '1 day ago', 0, '2026-06-24 10:00:00')
+      `);
+    }
+  } catch (err) {
+    console.error('Error seeding communications & notifications:', err);
+  }
+
   // Check if we already have clients. If so, database is seeded, skip.
   const clientsCount = await db.get('SELECT COUNT(*) as count FROM clients');
   if (clientsCount.count > 0) {

@@ -758,15 +758,28 @@ export class MockDatabaseService implements IDatabaseService {
   async getProjects(filters = '') {
     await this.simulateDelay();
     const projects = this.getLocalStorage<Project[]>('mock_projects', []);
-    // Simple search emulation
+    const selections = this.getLocalStorage<MaterialSelection[]>('mock_selections', []);
+
+    // Dynamically calculate selection stats for each project
+    const projectsWithStats = projects.map(p => {
+      const projectSelections = selections.filter(s => s.project_id === p.id);
+      const total = projectSelections.length;
+      const approved = projectSelections.filter(s => s.status === 'Approved').length;
+      return {
+        ...p,
+        total_selections: total,
+        approved_selections: approved
+      };
+    });
+
     if (filters.includes('search=')) {
       const match = filters.match(/search=([^&]*)/);
       if (match) {
         const query = decodeURIComponent(match[1]).toLowerCase();
-        return projects.filter(p => p.name.toLowerCase().includes(query) || (p.client_name || '').toLowerCase().includes(query));
+        return projectsWithStats.filter(p => p.name.toLowerCase().includes(query) || (p.client_name || '').toLowerCase().includes(query));
       }
     }
-    return projects;
+    return projectsWithStats;
   }
 
   async getProjectDetails(id: number) {

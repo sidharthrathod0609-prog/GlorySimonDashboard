@@ -1,27 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowRight, UserPlus, CheckCircle, User as UserIcon } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, requestAccess } = useAppStore();
-
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const { login } = useAppStore();
 
   // Login states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
-  // Register states
-  const [regName, setRegName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regRole, setRegRole] = useState<'Interior Designer' | 'Project Manager' | 'Vendor Coordinator'>('Interior Designer');
-  const [regSuccess, setRegSuccess] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,37 +36,6 @@ export default function Login() {
       }
     } catch (err) {
       setError('An error occurred during authentication.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!regEmail || !regName || !regPassword) {
-      setError('Please fill in all registration fields.');
-      return;
-    }
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      const { usersList } = useAppStore.getState();
-      if (usersList.some(u => u.email.toLowerCase() === regEmail.trim().toLowerCase())) {
-        setError('An account with this email address already exists.');
-        setLoading(false);
-        return;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 600));
-      await requestAccess(regName, regEmail, regRole, regPassword);
-      setRegSuccess(true);
-      setRegName('');
-      setRegEmail('');
-      setRegPassword('');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during registration.');
     } finally {
       setLoading(false);
     }

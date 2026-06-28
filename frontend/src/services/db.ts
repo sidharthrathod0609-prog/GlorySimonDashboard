@@ -923,7 +923,8 @@ export class MockDatabaseService implements IDatabaseService {
       sku: material?.sku || '',
       unit_price: material?.unit_price || 0,
       category: material?.category || 'Tiles',
-      vendor_name: material?.vendor_name || 'Direct'
+      vendor_name: material?.vendor_name || 'Direct',
+      image_url: material?.image_url || ''
     };
 
     selections.push(newSelection);

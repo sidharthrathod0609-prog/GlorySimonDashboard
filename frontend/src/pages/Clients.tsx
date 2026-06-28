@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Client } from '../types';
-import { Plus, Search, Mail, Phone, MapPin, Edit, FolderOpen, X } from 'lucide-react';
+import { Plus, Search, Mail, Phone, MapPin, Edit, FolderOpen, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 export default function Clients() {
-  const { clients, projects, fetchClients, createClient, updateClient, setActiveProjectId } = useAppStore();
+  const { clients, projects, fetchClients, createClient, updateClient, deleteClient, setActiveProjectId } = useAppStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   
@@ -314,6 +314,17 @@ export default function Clients() {
                         <FolderOpen size={12} />
                         <span>View Projects</span>
                       </button>
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Are you sure you want to delete client ${client.name}?`)) {
+                            await deleteClient(client.id);
+                          }
+                        }}
+                        className="p-1.5 bg-rose-50 border border-rose-100 rounded-lg text-rose-500 hover:bg-rose-100 transition inline-flex items-center"
+                        title="Delete Client"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -365,14 +376,14 @@ export default function Clients() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-2 border-t border-slate-100">
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
                     <button
                       onClick={() => openEditModal(client)}
                       className="flex-1 py-2.5 bg-[#F8F6F3] border border-[#A8B89A]/10 rounded-xl text-[#7D7D7D] hover:text-[#A8B89A] transition text-xs font-semibold flex items-center justify-center gap-1.5 min-h-[38px]"
                       title="Edit Client"
                     >
                       <Edit size={12} />
-                      <span>Edit Details</span>
+                      <span>Edit</span>
                     </button>
                     <button
                       onClick={() => handleViewProjects(client.name)}
@@ -380,7 +391,18 @@ export default function Clients() {
                       title="View Projects"
                     >
                       <FolderOpen size={12} />
-                      <span>View Projects</span>
+                      <span>Projects</span>
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Are you sure you want to delete client ${client.name}?`)) {
+                          await deleteClient(client.id);
+                        }
+                      }}
+                      className="py-2.5 px-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-500 hover:bg-rose-100 transition text-xs font-semibold flex items-center justify-center gap-1.5 min-h-[38px]"
+                      title="Delete Client"
+                    >
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 </div>

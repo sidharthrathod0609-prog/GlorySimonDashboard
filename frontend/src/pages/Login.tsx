@@ -175,50 +175,15 @@ export default function Login() {
           {/* Form Header */}
           <div className="text-center lg:text-left mb-6">
             <h1 className="text-2xl font-light font-display text-[#4B4B4B] mb-2">
-              {activeTab === 'login' ? 'Workspace Sign In' : 'Request Access'}
+              Workspace Sign In
             </h1>
             <p className="text-xs text-[#7D7D7D] font-light">
-              {activeTab === 'login' 
-                ? 'Access your custom selections & workflow tools.' 
-                : 'Submit details below to request access from the system administrator.'}
+              Access your custom selections & workflow tools.
             </p>
           </div>
 
           {/* Login Card */}
           <div className="glass-panel p-8 bg-white/95 dark:bg-white/90 border border-[#A8B89A]/15 rounded-[24px] shadow-sm">
-            {/* Side-by-Side Tabs */}
-            <div className="flex border-b border-[#A8B89A]/15 mb-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('login');
-                  setError('');
-                }}
-                className={`flex-1 pb-3 text-xs font-bold text-center uppercase tracking-wider border-b-2 transition-all min-h-[40px] outline-none ${
-                  activeTab === 'login'
-                    ? 'border-[#A8B89A] text-[#4B4B4B]'
-                    : 'border-transparent text-[#7D7D7D] hover:text-[#4B4B4B]'
-                }`}
-              >
-                Login
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('register');
-                  setError('');
-                  setRegSuccess(false);
-                }}
-                className={`flex-1 pb-3 text-xs font-bold text-center uppercase tracking-wider border-b-2 transition-all min-h-[40px] outline-none ${
-                  activeTab === 'register'
-                    ? 'border-[#A8B89A] text-[#4B4B4B]'
-                    : 'border-transparent text-[#7D7D7D] hover:text-[#4B4B4B]'
-                }`}
-              >
-                Register
-              </button>
-            </div>
-
             {/* Error Alert */}
             <AnimatePresence mode="wait">
               {error && (
@@ -234,228 +199,96 @@ export default function Login() {
               )}
             </AnimatePresence>
 
-            {activeTab === 'login' ? (
-              <form onSubmit={handleLoginSubmit} className="space-y-6">
-                {/* Email Input */}
-                <div className="space-y-2">
-                  <label htmlFor="login-email" className="text-[11px] font-semibold text-[#7D7D7D] uppercase tracking-wider block px-1">
-                    Work Email
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D7D7D]/60">
-                      <Mail size={16} />
-                    </span>
-                    <input
-                      id="login-email"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@company.com"
-                      className="w-full bg-[#F8F6F3]/50 dark:bg-[#F4F2EE]/50 border border-[#A8B89A]/15 text-[#4B4B4B] rounded-xl focus:border-[#A8B89A] outline-none py-3 pl-10 pr-4 text-sm transition-all focus:ring-1 focus:ring-[#A8B89A]/20 min-h-[48px] focus-visible:ring-2 focus-visible:ring-[#A8B89A]/20 focus-visible:border-[#A8B89A]"
-                    />
-                  </div>
-                </div>
-
-                {/* Password Input */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between px-1">
-                    <label htmlFor="login-password" className="text-[11px] font-semibold text-[#7D7D7D] uppercase tracking-wider block">
-                      Password
-                    </label>
-                    <Link
-                      to="/forgot-password"
-                      className="text-[11px] font-bold text-[#A8B89A] hover:text-[#96A689] transition duration-150"
-                    >
-                      Forgot?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D7D7D]/60">
-                      <Lock size={16} />
-                    </span>
-                    <input
-                      id="login-password"
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full bg-[#F8F6F3]/50 dark:bg-[#F4F2EE]/50 border border-[#A8B89A]/15 text-[#4B4B4B] rounded-xl focus:border-[#A8B89A] outline-none py-3 pl-10 pr-10 text-sm transition-all focus:ring-1 focus:ring-[#A8B89A]/20 min-h-[48px] focus-visible:ring-2 focus-visible:ring-[#A8B89A]/20 focus-visible:border-[#A8B89A]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#7D7D7D]/60 hover:text-[#4B4B4B] transition duration-150"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Remember Me Checkbox */}
-                <div className="flex items-center gap-2.5 px-1 py-1">
+            <form onSubmit={handleLoginSubmit} className="space-y-6">
+              {/* Email Input */}
+              <div className="space-y-2">
+                <label htmlFor="login-email" className="text-[11px] font-semibold text-[#7D7D7D] uppercase tracking-wider block px-1">
+                  Work Email
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D7D7D]/60">
+                    <Mail size={16} />
+                  </span>
                   <input
-                    type="checkbox"
-                    id="remember"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-[#A8B89A]/20 bg-[#F8F6F3]/50 text-[#A8B89A] focus:ring-0 outline-none w-4 h-4 cursor-pointer accent-[#A8B89A]"
+                    id="login-email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                    className="w-full bg-[#F8F6F3]/50 dark:bg-[#F4F2EE]/50 border border-[#A8B89A]/15 text-[#4B4B4B] rounded-xl focus:border-[#A8B89A] outline-none py-3 pl-10 pr-4 text-sm transition-all focus:ring-1 focus:ring-[#A8B89A]/20 min-h-[48px] focus-visible:ring-2 focus-visible:ring-[#A8B89A]/20 focus-visible:border-[#A8B89A]"
                   />
-                  <label htmlFor="remember" className="text-xs text-[#7D7D7D] cursor-pointer select-none">
-                    Remember me for 30 days
-                  </label>
                 </div>
+              </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-[#A8B89A] hover:bg-[#96A689] text-white font-medium rounded-xl shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 min-h-[48px]"
-                >
-                  {loading ? (
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      Sign In to Dashboard
-                      <ArrowRight size={16} className="text-white" />
-                    </>
-                  )}
-                </button>
-              </form>
-            ) : (
-              regSuccess ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center py-6 space-y-4"
-                >
-                  <div className="flex justify-center text-[#8AA17A]">
-                    <CheckCircle size={44} className="animate-bounce" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-[#4B4B4B] font-display">Access Requested!</h3>
-                  <p className="text-xs text-[#7D7D7D] leading-relaxed max-w-xs mx-auto font-light">
-                    Your access request was sent to the Admin. Once approved, you can login with your credentials.
-                  </p>
+              {/* Password Input */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <label htmlFor="login-password" className="text-[11px] font-semibold text-[#7D7D7D] uppercase tracking-wider block">
+                    Password
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-[11px] font-bold text-[#A8B89A] hover:text-[#96A689] transition duration-150"
+                  >
+                    Forgot?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D7D7D]/60">
+                    <Lock size={16} />
+                  </span>
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-[#F8F6F3]/50 dark:bg-[#F4F2EE]/50 border border-[#A8B89A]/15 text-[#4B4B4B] rounded-xl focus:border-[#A8B89A] outline-none py-3 pl-10 pr-10 text-sm transition-all focus:ring-1 focus:ring-[#A8B89A]/20 min-h-[48px] focus-visible:ring-2 focus-visible:ring-[#A8B89A]/20 focus-visible:border-[#A8B89A]"
+                  />
                   <button
                     type="button"
-                    onClick={() => {
-                      setRegSuccess(false);
-                      setActiveTab('login');
-                    }}
-                    className="w-full py-3 bg-[#F8F6F3] border border-[#A8B89A]/15 text-[#4B4B4B] font-semibold text-xs rounded-xl hover:bg-[#F8F6F3]/85 transition duration-150 min-h-[48px] active:scale-[0.98]"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#7D7D7D]/60 hover:text-[#4B4B4B] transition duration-150"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    Return to Login
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
-                </motion.div>
-              ) : (
-                <form onSubmit={handleRegisterSubmit} className="space-y-4">
-                  {/* Full Name */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="reg-name" className="text-[11px] font-semibold text-[#7D7D7D] uppercase tracking-wider block px-1">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D7D7D]/60">
-                        <UserIcon size={16} />
-                      </span>
-                      <input
-                        id="reg-name"
-                        type="text"
-                        required
-                        value={regName}
-                        onChange={(e) => setRegName(e.target.value)}
-                        placeholder="Jane Doe"
-                        className="w-full bg-[#F8F6F3]/50 dark:bg-[#F4F2EE]/50 border border-[#A8B89A]/15 text-[#4B4B4B] rounded-xl focus:border-[#A8B89A] outline-none py-3 pl-10 pr-4 text-sm transition-all focus:ring-1 focus:ring-[#A8B89A]/20 min-h-[48px]"
-                      />
-                    </div>
-                  </div>
+                </div>
+              </div>
 
-                  {/* Email Input */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="reg-email" className="text-[11px] font-semibold text-[#7D7D7D] uppercase tracking-wider block px-1">
-                      Work Email
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D7D7D]/60">
-                        <Mail size={16} />
-                      </span>
-                      <input
-                        id="reg-email"
-                        type="email"
-                        required
-                        value={regEmail}
-                        onChange={(e) => setRegEmail(e.target.value)}
-                        placeholder="name@company.com"
-                        className="w-full bg-[#F8F6F3]/50 dark:bg-[#F4F2EE]/50 border border-[#A8B89A]/15 text-[#4B4B4B] rounded-xl focus:border-[#A8B89A] outline-none py-3 pl-10 pr-4 text-sm transition-all focus:ring-1 focus:ring-[#A8B89A]/20 min-h-[48px]"
-                      />
-                    </div>
-                  </div>
+              {/* Remember Me Checkbox */}
+              <div className="flex items-center gap-2.5 px-1 py-1">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-[#A8B89A]/20 bg-[#F8F6F3]/50 text-[#A8B89A] focus:ring-0 outline-none w-4 h-4 cursor-pointer accent-[#A8B89A]"
+                />
+                <label htmlFor="remember" className="text-xs text-[#7D7D7D] cursor-pointer select-none">
+                  Remember me for 30 days
+                </label>
+              </div>
 
-                  {/* Role Select Dropdown */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="reg-role" className="text-[11px] font-semibold text-[#7D7D7D] uppercase tracking-wider block px-1">
-                      Role
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="reg-role"
-                        value={regRole}
-                        onChange={(e) => setRegRole(e.target.value as any)}
-                        className="w-full bg-[#F8F6F3]/50 dark:bg-[#F4F2EE]/50 border border-[#A8B89A]/15 text-[#4B4B4B] rounded-xl focus:border-[#A8B89A] outline-none py-3 px-4 text-sm transition-all focus:ring-1 focus:ring-[#A8B89A]/20 min-h-[48px] cursor-pointer appearance-none"
-                      >
-                        <option value="Interior Designer">Interior Designer</option>
-                        <option value="Project Manager">Project Manager</option>
-                        <option value="Vendor Coordinator">Vendor</option>
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#7D7D7D]">
-                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="reg-password" className="text-[11px] font-semibold text-[#7D7D7D] uppercase tracking-wider block px-1">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D7D7D]/60">
-                        <Lock size={16} />
-                      </span>
-                      <input
-                        id="reg-password"
-                        type="password"
-                        required
-                        value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full bg-[#F8F6F3]/50 dark:bg-[#F4F2EE]/50 border border-[#A8B89A]/15 text-[#4B4B4B] rounded-xl focus:border-[#A8B89A] outline-none py-3 pl-10 pr-4 text-sm transition-all focus:ring-1 focus:ring-[#A8B89A]/20 min-h-[48px]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Submit Request Button */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 bg-[#A8B89A] hover:bg-[#96A689] text-white font-medium rounded-xl shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 min-h-[48px] mt-2"
-                  >
-                    {loading ? (
-                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        Request Access
-                        <UserPlus size={16} className="text-white" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )
-            )}
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-[#A8B89A] hover:bg-[#96A689] text-white font-medium rounded-xl shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 min-h-[48px]"
+              >
+                {loading ? (
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Sign In to Dashboard
+                    <ArrowRight size={16} className="text-white" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
           </div>
         </div>
       </div>

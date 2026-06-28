@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Palette, Check, X, RefreshCw, AlertCircle, FileText, ChevronRight, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import CustomSelect from '../components/CustomSelect';
 
 const COLUMNS = [
   { id: 'Pending', label: 'Pending Approval', color: 'border-[#D7B57D]/30 text-[#D7B57D] bg-[#D7B57D]/5', dot: 'bg-[#D7B57D]' },
@@ -100,21 +101,15 @@ export default function MaterialApproval() {
           <p className="text-xs text-[#7D7D7D] dark:text-[#94A3B8] font-light mt-1">Drag & drop selections to coordinate material approvals and sign-offs.</p>
         </div>
 
-        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-[#A8B89A]/15 dark:border-slate-800/80 px-4 py-2.5 rounded-2xl shadow-sm">
-          <label htmlFor="workspace-selector" className="text-[10px] text-[#7D7D7D] dark:text-[#94A3B8] font-bold uppercase tracking-wider cursor-pointer">Active Project:</label>
-          <select
-            id="workspace-selector"
-            value={activeProjectId || ''}
-            onChange={(e) => setActiveProjectId(Number(e.target.value))}
-            className="bg-transparent text-xs text-[#A8B89A] font-bold focus:outline-none outline-none cursor-pointer"
-          >
-            <option value="" disabled className="bg-white dark:bg-slate-900 text-[#7D7D7D] dark:text-[#94A3B8]">Choose Project Workspace...</option>
-            {projects.map(p => (
-              <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900 text-[#4B4B4B] dark:text-[#E5E7EB]">
-                {p.name}
-              </option>
-            ))}
-          </select>
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-[#A8B89A]/15 dark:border-slate-800/80 px-4 py-1.5 rounded-2xl shadow-sm">
+          <label className="text-[10px] text-[#7D7D7D] dark:text-[#94A3B8] font-bold uppercase tracking-wider cursor-pointer">Active Project:</label>
+          <CustomSelect
+            value={String(activeProjectId || '')}
+            onChange={(val) => setActiveProjectId(Number(val))}
+            options={projects.map(p => ({ value: String(p.id), label: p.name }))}
+            placeholder="Choose Project Workspace..."
+            className="w-56 text-xs"
+          />
         </div>
       </div>
 

@@ -1126,10 +1126,10 @@ export class MockDatabaseService implements IDatabaseService {
       return {
         project_name: p.name,
         total_budget: p.budget,
-        selections_cost: approvedSelectionsCost,
-        direct_expenses: expensesCost,
+        approved_materials_cost: approvedSelectionsCost,
+        total_expenses_cost: expensesCost,
         total_spent: spent,
-        remaining_balance: p.budget - spent,
+        remaining_budget: p.budget - spent,
         utilization_pct: p.budget > 0 ? Math.round((spent / p.budget) * 100) : 0
       };
     });

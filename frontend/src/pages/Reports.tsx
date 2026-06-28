@@ -4,6 +4,35 @@ import { db } from '../services/db';
 import { Printer, FileSpreadsheet, Download, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const calculateProjectProgress = (p: any): number => {
+  const statusProgressMap: Record<string, number> = {
+    'Enquiry': 10,
+    'Site Visit': 25,
+    'Space Planning': 40,
+    'Quotation': 55,
+    'Design Approval': 70,
+    'Material Selection': 80,
+    'Execution': 90,
+    'Quality Inspection': 95,
+    'Completed': 100
+  };
+  const basePct = statusProgressMap[p.status] || 0;
+  
+  let selectionPct = 0;
+  if (p.total_selections && p.total_selections > 0) {
+    selectionPct = Math.round((p.approved_selections! / p.total_selections) * 100);
+  }
+  
+  let pct = p.total_selections && p.total_selections > 0 
+    ? Math.round((basePct + selectionPct) / 2)
+    : basePct;
+
+  if (p.status === 'Completed') {
+    pct = 100;
+  }
+  return pct;
+};
+
 export default function Reports() {
   const {
     projects,
@@ -78,14 +107,7 @@ export default function Reports() {
     } else if (reportTab === 'progress') {
       headers = ['Project Name', 'Status Stage', 'Assigned Designer', 'Sourced Budget Cap', 'Start Date', 'Approved Selections', 'Sourced Progress Pct'];
       rows = projects.map(p => {
-        const pct = p.status === 'Completed' ? 100 
-                   : p.status === 'Quality Inspection' ? 90 
-                   : p.status === 'Execution' ? 80 
-                   : p.status === 'Material Selection' ? 70 
-                   : p.status === 'Design Approval' ? 50 
-                   : p.status === 'Space Planning' ? 35 
-                   : p.status === 'Site Visit' ? 20 
-                   : 10;
+        const pct = calculateProjectProgress(p);
         return [
           p.name, p.status, p.assigned_designer || 'Nisha Sen', p.budget.toLocaleString(), p.start_date || 'N/A',
           `${p.approved_selections || 0} / ${p.total_selections || 0}`, `${pct}%`
@@ -535,14 +557,7 @@ export default function Reports() {
                     </thead>
                     <tbody>
                       {projects.map(p => {
-                        const pct = p.status === 'Completed' ? 100 
-                                   : p.status === 'Quality Inspection' ? 90 
-                                   : p.status === 'Execution' ? 80 
-                                   : p.status === 'Material Selection' ? 70 
-                                   : p.status === 'Design Approval' ? 50 
-                                   : p.status === 'Space Planning' ? 35 
-                                   : p.status === 'Site Visit' ? 20 
-                                   : 10;
+                        const pct = calculateProjectProgress(p);
                         return (
                           <tr key={p.id} className="border-b border-slate-50 dark:border-slate-800/40 print:border-slate-100 group transition duration-150">
                             <td className="py-3 pr-4 font-bold text-[#4B4B4B] dark:text-[#E2E8F0] print:text-slate-950 transition-all duration-150 group-hover:bg-[#A8B89A]/10 dark:group-hover:bg-slate-800/40 rounded-l-2xl">{p.name}</td>
@@ -566,14 +581,7 @@ export default function Reports() {
                 {/* Mobile Card Stack View */}
                 <div className="space-y-3 sm:hidden">
                   {projects.map(p => {
-                    const pct = p.status === 'Completed' ? 100 
-                               : p.status === 'Quality Inspection' ? 90 
-                               : p.status === 'Execution' ? 80 
-                               : p.status === 'Material Selection' ? 70 
-                               : p.status === 'Design Approval' ? 50 
-                               : p.status === 'Space Planning' ? 35 
-                               : p.status === 'Site Visit' ? 20 
-                               : 10;
+                    const pct = calculateProjectProgress(p);
                     return (
                       <div key={p.id} className="p-4 bg-[#F8F6F3] border border-[#A8B89A]/10 rounded-2xl space-y-3 shadow-sm">
                         <div className="flex justify-between items-start gap-2">

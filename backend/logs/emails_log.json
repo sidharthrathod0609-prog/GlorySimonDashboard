@@ -30,5 +30,109 @@
     "recipient_email": "alex@glorysimon.com",
     "subject": "New Client Enquiry Assigned - Glory Simon Interiors",
     "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30c944999adsm29720486eec.24 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:25.882Z",
+    "trigger": "material_pending",
+    "recipient_role": "Interior Designer",
+    "recipient_email": "alex@glorysimon.com",
+    "subject": "Material Selection Approval Required - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 41be03b00d2f7-c92bc1dfd4esm6074598a12.16 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:27.952Z",
+    "trigger": "deadline_approaching",
+    "recipient_role": "Project Manager",
+    "recipient_email": "phani@glorysimon.com",
+    "subject": "Task Deadline Reminder - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-139e4c33af7sm20847111c88.5 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:30.284Z",
+    "trigger": "milestone_updated",
+    "recipient_role": "Project Manager",
+    "recipient_email": "phani@glorysimon.com",
+    "subject": "Milestone Status Update: Flooring & Tiling Work - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30c7c8b1a80sm34252868eec.18 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:32.598Z",
+    "trigger": "vendor_request_raised",
+    "recipient_role": "Vendor Coordinator",
+    "recipient_email": "abdul@glorysimon.com",
+    "subject": "New Vendor Request Raised - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials d2e1a72fcca58-845a40f05f9sm9835459b3a.42 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:33.967Z",
+    "trigger": "price_pending",
+    "recipient_role": "Vendor Coordinator",
+    "recipient_email": "abdul@glorysimon.com",
+    "subject": "Price Confirmation Pending - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials d2e1a72fcca58-845a411942asm9713981b3a.48 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:35.707Z",
+    "trigger": "issue_escalated",
+    "recipient_role": "Admin",
+    "recipient_email": "zotha@glorysimon.com",
+    "subject": "🚨 Escalation Alert: Slabs delayed due to supplier transit issues. - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-139d90e95c6sm51710505c88.11 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:40.575Z",
+    "trigger": "payment_overdue",
+    "recipient_role": "Admin",
+    "recipient_email": "zotha@glorysimon.com",
+    "subject": "Payment Overdue Reminder - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30d3af0d2e4sm15061064eec.22 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:42.076Z",
+    "trigger": "design_sent_to_client",
+    "recipient_role": "Client",
+    "recipient_email": "sidharthrathod0609@gmail.com",
+    "subject": "Design Concept Approval Request - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials d2e1a72fcca58-845a4121fdbsm9837296b3a.51 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:44.127Z",
+    "trigger": "admin_announcement",
+    "recipient_role": "Admin",
+    "recipient_email": "zotha@glorysimon.com",
+    "subject": "Announcement: System Upgrade & Maintenance Schedule - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30c7c4c691dsm34173981eec.5 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:45.888Z",
+    "trigger": "admin_announcement",
+    "recipient_role": "Interior Designer",
+    "recipient_email": "alex@glorysimon.com",
+    "subject": "Announcement: System Upgrade & Maintenance Schedule - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30c7c9e220bsm37560279eec.21 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:47.168Z",
+    "trigger": "admin_announcement",
+    "recipient_role": "Project Manager",
+    "recipient_email": "phani@glorysimon.com",
+    "subject": "Announcement: System Upgrade & Maintenance Schedule - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials d2e1a72fcca58-8477594750esm720037b3a.21 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:48.297Z",
+    "trigger": "admin_announcement",
+    "recipient_role": "Vendor Coordinator",
+    "recipient_email": "abdul@glorysimon.com",
+    "subject": "Announcement: System Upgrade & Maintenance Schedule - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials d9443c01a7336-2c7f5ac8988sm73537805ad.15 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:50.052Z",
+    "trigger": "admin_announcement",
+    "recipient_role": "Client",
+    "recipient_email": "sidharthrathod0609@gmail.com",
+    "subject": "Announcement: System Upgrade & Maintenance Schedule - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30ca5f14f8asm21823426eec.6 - gsmtp"
   }
 ]

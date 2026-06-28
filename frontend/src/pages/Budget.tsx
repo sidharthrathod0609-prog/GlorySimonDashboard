@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { AlertTriangle, Plus, Wallet, BarChart3, PieChart as PieIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import CustomSelect from '../components/CustomSelect';
 
 export default function Budget() {
   const {
@@ -28,18 +29,14 @@ export default function Budget() {
           Please select an active project workspace from the header selector to load the budget ledger.
         </p>
         <div className="flex flex-col items-center justify-center mt-2 space-y-2">
-          <label htmlFor="budget-fallback-selector" className="text-[9px] text-[#7D7D7D] font-bold uppercase tracking-wider">Select Project Workspace</label>
-          <select
-            id="budget-fallback-selector"
-            value={activeProjectId || ''}
-            onChange={(e) => setActiveProjectId(Number(e.target.value))}
-            className="bg-white border border-[#A8B89A]/20 text-xs text-[#A8B89A] font-bold px-4 py-2.5 rounded-xl focus:outline-none focus:border-[#A8B89A] outline-none cursor-pointer min-h-[44px] transition-all"
-          >
-            <option value="" disabled className="text-slate-400">Select project workspace...</option>
-            {projects.map(p => (
-              <option key={p.id} value={p.id} className="text-[#4B4B4B]">{p.name}</option>
-            ))}
-          </select>
+          <label className="text-[9px] text-[#7D7D7D] font-bold uppercase tracking-wider">Select Project Workspace</label>
+          <CustomSelect
+            value={String(activeProjectId || '')}
+            onChange={(val) => setActiveProjectId(Number(val))}
+            options={projects.map(p => ({ value: String(p.id), label: p.name }))}
+            placeholder="Select project workspace..."
+            className="w-64"
+          />
         </div>
       </div>
     );
@@ -116,20 +113,14 @@ export default function Budget() {
           <p className="text-xs text-[#7D7D7D] font-light mt-1">Run audit controls, log direct expenses, and configure alerts for: <strong className="text-[#A8B89A] font-semibold">{projectDetails.project.name}</strong></p>
         </div>
 
-        <div className="flex items-center gap-3 bg-white border border-[#A8B89A]/15 px-4 py-2.5 rounded-2xl w-full md:w-auto shadow-sm">
-          <label htmlFor="budget-workspace-selector" className="text-[10px] text-[#7D7D7D] font-bold uppercase tracking-wider cursor-pointer">Workspace:</label>
-          <select
-            id="budget-workspace-selector"
-            value={activeProjectId || ''}
-            onChange={(e) => setActiveProjectId(Number(e.target.value))}
-            className="bg-transparent text-xs text-[#A8B89A] font-bold focus:outline-none outline-none cursor-pointer"
-          >
-            {projects.map(p => (
-              <option key={p.id} value={p.id} className="bg-white text-[#4B4B4B]">
-                {p.name}
-              </option>
-            ))}
-          </select>
+        <div className="flex items-center gap-3 bg-white border border-[#A8B89A]/15 px-4 py-1.5 rounded-2xl w-full md:w-auto shadow-sm">
+          <label className="text-[10px] text-[#7D7D7D] font-bold uppercase tracking-wider cursor-pointer">Workspace:</label>
+          <CustomSelect
+            value={String(activeProjectId || '')}
+            onChange={(val) => setActiveProjectId(Number(val))}
+            options={projects.map(p => ({ value: String(p.id), label: p.name }))}
+            className="w-48 text-xs font-bold"
+          />
         </div>
       </div>
 

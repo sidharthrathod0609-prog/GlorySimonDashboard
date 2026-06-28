@@ -83,6 +83,7 @@ import {
 
 import { useAppStore } from './store/useAppStore';
 import { db } from './services/db';
+import CustomSelect from './components/CustomSelect';
 
 // Auth pages & guard
 import Login from './pages/Login';
@@ -1565,39 +1566,38 @@ function ProjectsView({
           />
         </div>
         <div>
-          <select
+          <CustomSelect
             value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-700 dark:text-gray-300 outline-none cursor-pointer focus:border-emerald-500 transition-all"
-          >
-            <option value="">All Project Types</option>
-            <option value="Residential">Residential</option>
-            <option value="Commercial">Commercial</option>
-          </select>
+            onChange={setType}
+            options={[
+              { value: '', label: 'All Project Types' },
+              { value: 'Residential', label: 'Residential' },
+              { value: 'Commercial', label: 'Commercial' }
+            ]}
+          />
         </div>
         <div>
-          <select
+          <CustomSelect
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-700 dark:text-gray-300 outline-none cursor-pointer focus:border-emerald-500 transition-all"
-          >
-            <option value="">All Pipeline Stages</option>
-            {filterStages.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+            onChange={setStatus}
+            options={[
+              { value: '', label: 'All Pipeline Stages' },
+              ...filterStages.map(s => ({ value: s, label: s }))
+            ]}
+          />
         </div>
         <div className="flex gap-2">
-          <select
+          <CustomSelect
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-700 dark:text-gray-300 outline-none cursor-pointer focus:border-emerald-500 transition-all"
-          >
-            <option value="created_at">Date Created</option>
-            <option value="name">Project Name</option>
-            <option value="budget">Budget Cap</option>
-            <option value="status">Journey Stage</option>
-          </select>
+            onChange={setSortBy}
+            options={[
+              { value: 'created_at', label: 'Date Created' },
+              { value: 'name', label: 'Project Name' },
+              { value: 'budget', label: 'Budget Cap' },
+              { value: 'status', label: 'Journey Stage' }
+            ]}
+            className="flex-1"
+          />
           <button
             onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
             className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3 rounded-xl text-slate-600 dark:text-gray-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition"

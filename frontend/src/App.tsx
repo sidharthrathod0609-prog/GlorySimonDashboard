@@ -38,6 +38,35 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from 'react-router-dom';
 
+const calculateProjectProgress = (p: any): number => {
+  const statusProgressMap: Record<string, number> = {
+    'Enquiry': 10,
+    'Site Visit': 25,
+    'Space Planning': 40,
+    'Quotation': 55,
+    'Design Approval': 70,
+    'Material Selection': 80,
+    'Execution': 90,
+    'Quality Inspection': 95,
+    'Completed': 100
+  };
+  const basePct = statusProgressMap[p.status] || 0;
+  
+  let selectionPct = 0;
+  if (p.total_selections && p.total_selections > 0) {
+    selectionPct = Math.round((p.approved_selections! / p.total_selections) * 100);
+  }
+  
+  let pct = p.total_selections && p.total_selections > 0 
+    ? Math.round((basePct + selectionPct) / 2)
+    : basePct;
+
+  if (p.status === 'Completed') {
+    pct = 100;
+  }
+  return pct;
+};
+
 // Types
 import {
   Project,
@@ -922,9 +951,7 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
           {projects.slice(0, 4).map((p) => {
-            const pct = p.total_selections && p.total_selections > 0 
-              ? Math.round((p.approved_selections! / p.total_selections) * 100) 
-              : 0;
+            const pct = calculateProjectProgress(p);
             // Circular progress SVG
             const radius = 28;
             const circumference = 2 * Math.PI * radius;
@@ -1066,9 +1093,7 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
               </thead>
               <tbody>
                 {projects.slice(0, 5).map(p => {
-                  const pct = p.total_selections && p.total_selections > 0 
-                    ? Math.round((p.approved_selections! / p.total_selections) * 100) 
-                    : 0;
+                  const pct = calculateProjectProgress(p);
                   return (
                     <tr key={p.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition duration-150">
                       <td className="py-3 pr-4">
@@ -1105,9 +1130,7 @@ function DashboardView({ stats, projects, setCurrentTab, setActiveProjectId, han
           {/* Mobile Card List View */}
           <div className="space-y-3 sm:hidden">
             {projects.slice(0, 5).map(p => {
-              const pct = p.total_selections && p.total_selections > 0 
-                ? Math.round((p.approved_selections! / p.total_selections) * 100) 
-                : 0;
+              const pct = calculateProjectProgress(p);
               return (
                 <div key={p.id} className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl space-y-3">
                   <div className="flex justify-between items-start">

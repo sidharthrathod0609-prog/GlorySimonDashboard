@@ -188,7 +188,7 @@ export default function MaterialApproval() {
                           layoutId={`selection-card-${item.id}`}
                           className="bg-white dark:bg-slate-900 border border-[#A8B89A]/10 dark:border-slate-800/80 rounded-[24px] p-4 space-y-3.5 hover:border-[#A8B89A]/30 hover:shadow-md cursor-pointer transition-all active:scale-[0.98] group"
                         >
-                          {item.image_url && (
+                          {item.image_url ? (
                             <div className="w-20 h-20 bg-[#F8F6F3] dark:bg-slate-950 rounded-full overflow-hidden relative flex items-center justify-center border border-[#A8B89A]/15 mx-auto mb-1">
                               <img
                                 src={item.image_url}
@@ -198,6 +198,10 @@ export default function MaterialApproval() {
                                   (e.target as HTMLElement).style.display = 'none';
                                 }}
                               />
+                            </div>
+                          ) : (
+                            <div className="w-20 h-20 bg-[#F8F6F3] dark:bg-slate-950 rounded-full overflow-hidden relative flex items-center justify-center border border-[#A8B89A]/15 mx-auto mb-1 font-bold text-[10px] uppercase text-[#7D7D7D]">
+                              {item.category?.substring(0, 4) || 'ITEM'}
                             </div>
                           )}
                           

@@ -1,0 +1,34 @@
+[
+  {
+    "timestamp": "2026-06-28T10:58:11.167Z",
+    "trigger": "site_visit_booked",
+    "recipient_role": "Client",
+    "recipient_email": "sidharthrathod0609@gmail.com",
+    "subject": "Site Visit Confirmed - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30c7c9e9214sm35792247eec.20 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:12.990Z",
+    "trigger": "design_approved",
+    "recipient_role": "Client",
+    "recipient_email": "sidharthrathod0609@gmail.com",
+    "subject": "Design Concept Status Update: Approved - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30e79bc5ca6sm19990895eec.29 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:16.843Z",
+    "trigger": "invoice_generated",
+    "recipient_role": "Client",
+    "recipient_email": "sidharthrathod0609@gmail.com",
+    "subject": "New Invoice Generated - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30c7c4c691dsm34171639eec.5 - gsmtp"
+  },
+  {
+    "timestamp": "2026-06-28T10:58:18.730Z",
+    "trigger": "enquiry_submitted",
+    "recipient_role": "Interior Designer",
+    "recipient_email": "alex@glorysimon.com",
+    "subject": "New Client Enquiry Assigned - Glory Simon Interiors",
+    "status": "failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-30c944999adsm29720486eec.24 - gsmtp"
+  }
+]

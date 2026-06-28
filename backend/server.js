@@ -8,6 +8,10 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Import and use Email notification routes
+const emailRoutes = require('./routes/emailRoutes');
+app.use('/api/email', emailRoutes);
+
 // Initialize SQLite database on startup
 initDb()
   .then(() => {

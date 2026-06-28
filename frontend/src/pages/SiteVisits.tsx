@@ -43,7 +43,7 @@ export default function SiteVisits() {
   const firstDayIndex = getFirstDayOfMonth(currentYear, currentMonth);
 
   // Load visits
-  const visits = projectDetails?.visits || [];
+  const visits = projectDetails?.siteVisits || projectDetails?.visits || [];
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -224,7 +224,7 @@ export default function SiteVisits() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Calendar Grid View */}
-          <div className="lg:col-span-3 bg-white dark:bg-slate-905 border border-[#A8B89A]/10 dark:border-slate-800/80 p-4 sm:p-5 rounded-[24px] space-y-4 shadow-sm">
+          <div className="lg:col-span-3 bg-white dark:bg-[#0F172A] border border-[#A8B89A]/10 dark:border-slate-800/80 p-4 sm:p-5 rounded-[24px] space-y-4 shadow-sm">
             <div className="flex justify-between items-center pb-2 border-b border-slate-50 dark:border-slate-800/50">
               <h3 className="text-sm font-semibold text-[#4B4B4B] dark:text-white font-display">
                 {monthNames[currentMonth]} {currentYear}
@@ -264,14 +264,16 @@ export default function SiteVisits() {
           </div>
 
           {/* Visits Detail Feed panel */}
-          <div className="bg-white dark:bg-slate-905 border border-[#A8B89A]/10 dark:border-slate-800/80 p-4 sm:p-6 rounded-[24px] space-y-4 flex flex-col justify-between shadow-sm">
+          <div className="bg-white dark:bg-[#0F172A] border border-[#A8B89A]/10 dark:border-slate-800/80 p-4 sm:p-6 rounded-[24px] space-y-4 flex flex-col justify-between shadow-sm">
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-[#4B4B4B] dark:text-white font-display">Upcoming Logs Registry</h3>
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
                 {visits.map((v: any) => {
                   const vDate = v.visit_date || v.visitDate;
                   const dateObj = vDate ? new Date(vDate) : null;
-                  const formattedDate = dateObj ? dateObj.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+                  const formattedDate = dateObj 
+                    ? `${String(dateObj.getDate()).padStart(2, '0')}${String(dateObj.getMonth() + 1).padStart(2, '0')}${dateObj.getFullYear()}` 
+                    : '';
                   const formattedTime = dateObj ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
 
                   let borderClass = 'border-[#A8B89A]/15';
@@ -341,9 +343,21 @@ export default function SiteVisits() {
                 <X size={16} />
               </button>
 
-              <h3 id="visit-modal-title" className="text-md font-semibold text-[#4B4B4B] dark:text-white mb-4 font-display">Log Site Visit ({selectedDateStr})</h3>
+              <h3 id="visit-modal-title" className="text-md font-semibold text-[#4B4B4B] dark:text-white mb-4 font-display">Log Site Visit</h3>
               
               <form onSubmit={handleFormSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <label htmlFor="visit-date" className="text-[9px] uppercase font-bold text-[#7D7D7D] dark:text-slate-400 tracking-wider">Scheduled Date</label>
+                  <input
+                    id="visit-date"
+                    type="date"
+                    value={selectedDateStr}
+                    onChange={(e) => setSelectedDateStr(e.target.value)}
+                    className="w-full bg-[#F8F6F3] dark:bg-slate-950 border border-[#A8B89A]/20 dark:border-slate-800/80 px-3 py-2 rounded-xl text-xs text-[#4B4B4B] dark:text-white focus:outline-none focus:border-[#A8B89A] transition-all min-h-[40px]"
+                    required
+                  />
+                </div>
+
                 <div className="space-y-1">
                   <label htmlFor="visit-visitor" className="text-[9px] uppercase font-bold text-[#7D7D7D] dark:text-slate-400 tracking-wider">Visitor / Consult Designer</label>
                   <input

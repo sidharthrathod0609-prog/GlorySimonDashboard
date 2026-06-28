@@ -451,7 +451,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await db.createSelection({
         ...selectionData,
+        projectId: activeProjectId,
         project_id: activeProjectId,
+        roomId: selectionData.roomId || selectionData.room_id,
+        room_id: selectionData.roomId || selectionData.room_id,
+        materialId: selectionData.materialId || selectionData.material_id,
+        material_id: selectionData.materialId || selectionData.material_id,
+        vendorId: selectionData.vendorId || selectionData.vendor_id,
+        vendor_id: selectionData.vendorId || selectionData.vendor_id,
         userName: currentUser.name
       });
       await get().fetchProjectDetails(activeProjectId);
